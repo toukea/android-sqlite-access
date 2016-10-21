@@ -20,9 +20,8 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
-import android.util.Log;
 
-public abstract class DOEntity extends ABSDOEntity implements JSONAble {
+abstract class DOEntity extends ABSDOEntity implements JSONAble {
 	private HashMap<String, Object> map = new HashMap<String, Object>();
 	private AnnotationParser parser;
 	protected String tb_name, primary_key;
@@ -274,7 +273,7 @@ public abstract class DOEntity extends ABSDOEntity implements JSONAble {
 				}
 			}
 		} catch (Exception e) {
-			//e.printStackTrace();
+			// e.printStackTrace();
 
 		}
 	}

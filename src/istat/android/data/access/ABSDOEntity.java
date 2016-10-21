@@ -13,9 +13,8 @@ import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
-public abstract class ABSDOEntity implements Queryable, Cloneable {
+abstract class ABSDOEntity implements Queryable, Cloneable {
 
-	@Override
 	public long insert(SQLiteDatabase db) {
 		return db.insert(getEntityName(), null, toContentValues());
 	}

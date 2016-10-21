@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 
 import android.annotation.SuppressLint;
@@ -114,27 +113,27 @@ public abstract class SQLiteQueryer implements Closeable {
 		return entity.delete(db);
 	}
 
-	public <T extends DOEntity> List<T> findAll(Class<T> clazz) {
-		return SELECT(clazz).execute(getDataBase());
-	}
-
-	public <T extends DOEntity> List<T> find(Class<T> clazz,
-			HashMap<String, String> filter) {
-		return SELECT(clazz).WHERE(filter).execute(getDataBase());
-	}
-
-	public <T extends DOEntity> T findById(Class<T> clazz, String id) {
-		T instance = null;
-		try {
-			instance = clazz.newInstance();
-		} catch (Exception e) {
-			throw new RuntimeException(
-					"not default constructor found for class::" + clazz);
-		}
-		List<T> list = SELECT(clazz).where(instance.getPrimaryKey()).equal(id)
-				.execute(getDataBase());
-		return list != null && list.size() > 0 ? list.get(0) : null;
-	}
+	// public <T extends DOEntity> List<T> findAll(Class<T> clazz) {
+	// return SELECT(clazz).execute(getDataBase());
+	// }
+	//
+	// public <T extends DOEntity> List<T> find(Class<T> clazz,
+	// HashMap<String, String> filter) {
+	// return SELECT(clazz).WHERE(filter).execute(getDataBase());
+	// }
+	//
+	// public <T extends DOEntity> T findById(Class<T> clazz, String id) {
+	// T instance = null;
+	// try {
+	// instance = clazz.newInstance();
+	// } catch (Exception e) {
+	// throw new RuntimeException(
+	// "not default constructor found for class::" + clazz);
+	// }
+	// List<T> list = SELECT(clazz).where(instance.getPrimaryKey()).equal(id)
+	// .execute(getDataBase());
+	// return list != null && list.size() > 0 ? list.get(0) : null;
+	// }
 
 	public long persist(Queryable entity) {
 		return entity.persist(db);
@@ -146,36 +145,22 @@ public abstract class SQLiteQueryer implements Closeable {
 		}
 	}
 
-	public void update(Queryable entity) {
-		entity.update(db);
-	}
-
-	public void inserts(List<Queryable> entitys) {
-		for (Queryable entity : entitys) {
-			entity.insert(db);
-		}
-	}
-
-	public void insert(Queryable qAble) {
-		qAble.insert(db);
-	}
-
 	public int truncateTable(String table) {
 		return db.delete(table, null, null);
 	}
 
-	public <T extends DOEntity> int truncateTable(Class<T> clazz) {
-		T instance = null;
-		String table = "";
-		try {
-			instance = clazz.newInstance();
-			table = instance.getEntityName();
-		} catch (Exception e) {
-			throw new RuntimeException(
-					"not default constructor found for class::" + clazz);
-		}
-		return db.delete(table, null, null);
-	}
+	// public <T extends DOEntity> int truncateTable(Class<T> clazz) {
+	// T instance = null;
+	// String table = "";
+	// try {
+	// instance = clazz.newInstance();
+	// table = instance.getEntityName();
+	// } catch (Exception e) {
+	// throw new RuntimeException(
+	// "not default constructor found for class::" + clazz);
+	// }
+	// return db.delete(table, null, null);
+	// }
 
 	public Cursor select(DbSelection clause) {
 		return (Cursor) clause.onExecute(db);
@@ -349,10 +334,6 @@ public abstract class SQLiteQueryer implements Closeable {
 
 	public static DbInsert INSERT() {
 		return new DbInsert();
-	}
-
-	public static long insert(ABSDOEntity entity, SQLiteDatabase db) {
-		return entity.insert(db);
 	}
 
 }

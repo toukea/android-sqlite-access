@@ -11,10 +11,6 @@ public abstract interface Queryable {
 
 	public long persist(SQLiteDatabase db);
 
-	public long insert(SQLiteDatabase db);
-
-	abstract int update(SQLiteDatabase db);
-
 	abstract int delete(SQLiteDatabase db);
 
 	public abstract boolean exist(SQLiteDatabase db);

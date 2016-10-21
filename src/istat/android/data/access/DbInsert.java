@@ -20,7 +20,7 @@ public class DbInsert {
 		long[] out = new long[insertions.size()];
 		int index = 0;
 		for (Queryable insertion : insertions) {
-			out[index] = insertion.insert(db);
+			out[index] = insertion.persist(db);
 		}
 		insertions.clear();
 		return out;
