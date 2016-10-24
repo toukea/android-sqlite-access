@@ -1,4 +1,4 @@
-apply plugin: 'android-library'
+apply plugin: 'com.android.library'
 
 dependencies {
     compile fileTree(dir: 'libs', include: '*.jar')
@@ -6,7 +6,10 @@ dependencies {
 
 android {
     compileSdkVersion 18
-    buildToolsVersion "17.0.0"
+    buildToolsVersion "21.1.1"
+    lintOptions {
+        abortOnError false
+    }
 
     sourceSets {
         main {

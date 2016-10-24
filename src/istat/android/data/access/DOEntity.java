@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-import istat.android.data.access.interfaces.JSONAble;
+import istat.android.data.access.interfaces.JSONable;
 import istat.android.data.access.interfaces.Queryable;
 
 import org.json.JSONException;
@@ -21,7 +21,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
-abstract class DOEntity extends ABSDOEntity implements JSONAble {
+abstract class DOEntity extends ABSDOEntity implements JSONable {
 	private HashMap<String, Object> map = new HashMap<String, Object>();
 	private AnnotationParser parser;
 	protected String tb_name, primary_key;
@@ -380,7 +380,7 @@ abstract class DOEntity extends ABSDOEntity implements JSONAble {
 		return fromJson(new JSONObject(json), clazz);
 	}
 
-	public static <T extends DOEntity> T fromQueryable(JSONAble q)
+	public static <T extends DOEntity> T fromQueryable(JSONable q)
 			throws InstantiationException, IllegalAccessException {
 		return fromJson(q.toJSONObject(), q.getClass());
 	}
@@ -408,7 +408,7 @@ abstract class DOEntity extends ABSDOEntity implements JSONAble {
 			} catch (Exception e) {
 				Object obj = Class.forName(clazz).newInstance();
 				if (obj instanceof DOEntity) {
-					JSONAble jsonentity = (DOEntity) obj;
+					JSONable jsonentity = (DOEntity) obj;
 					jsonentity.fillFromJSONObject(json);
 					if (obj instanceof DOEntity)
 						return (T) jsonentity;
@@ -449,8 +449,8 @@ abstract class DOEntity extends ABSDOEntity implements JSONAble {
 				String tmp = keySet.next();
 				Object obj = bundle.get(tmp);
 				if (obj != null) {
-					if (obj instanceof JSONAble) {
-						JSONAble jsonentity = (JSONAble) obj;
+					if (obj instanceof JSONable) {
+						JSONable jsonentity = (JSONable) obj;
 						json.put(tmp, jsonentity.toJSONObject());
 					} else {
 						String value = obj.toString();
@@ -488,8 +488,8 @@ abstract class DOEntity extends ABSDOEntity implements JSONAble {
 			} catch (Exception e) {
 				// e.printStackTrace();
 				Object obj = Class.forName(clazz).newInstance();
-				if (obj instanceof JSONAble) {
-					JSONAble jsonentity = (JSONAble) obj;
+				if (obj instanceof JSONable) {
+					JSONable jsonentity = (JSONable) obj;
 					jsonentity.fillFromJSONObject(json);
 					return jsonentity;
 				} else {
@@ -625,8 +625,8 @@ abstract class DOEntity extends ABSDOEntity implements JSONAble {
 						|| field.isAnnotationPresent(EntityProperty.class)) {
 					field.setAccessible(true);
 					Object obj = field.get(instance);
-					if (obj instanceof JSONAble) {
-						JSONAble jsonentity = (JSONAble) obj;
+					if (obj instanceof JSONable) {
+						JSONable jsonentity = (JSONable) obj;
 						json.put(field.getName(), jsonentity.toJSONObject());
 					} else {
 						json.put(field.getName(), field.get(instance));
