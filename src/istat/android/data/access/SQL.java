@@ -3,7 +3,7 @@ package istat.android.data.access;
 import android.database.sqlite.SQLiteDatabase;
 import istat.android.data.access.interfaces.Queryable;
 
-public class EntitySql {
+public class SQL {
 	public static DbSelection select(Class<? extends Queryable> clazz) {
 		return new DbSelection(clazz);
 	}
@@ -21,8 +21,8 @@ public class EntitySql {
 	}
 
 	protected static void demo(Queryable entity, SQLiteDatabase db) {
-		EntitySql.insert(entity).insert(entity).execute(db);
-		EntitySql.update(Queryable.class).setAs(null).where("name").equal(2)
+		SQL.insert(entity).insert(entity).execute(db);
+		SQL.update(Queryable.class).setAs(null).where("name").equal(2)
 				.and("lastname").equal("mama").execute(db);
 	}
 

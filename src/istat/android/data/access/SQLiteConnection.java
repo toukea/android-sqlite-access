@@ -41,13 +41,13 @@ import android.util.Log;
  * @author Toukea Tatsi (Istat)
  * 
  */
-public abstract class SQLiteQueryer implements Closeable {
+public abstract class SQLiteConnection implements Closeable {
 
 	/*
 	 * protected static final int BASE_VERSION = 1; protected static final
 	 * String BASE_NOM = "istatLib.db";
 	 */
-	// L’instance de la base qui sera manipulée au travers de cette classe.
+	// Lï¿½instance de la base qui sera manipulï¿½e au travers de cette classe.
 	protected SQLiteDatabase db;
 	private DbOpenHelper dbOpenHelper;
 	public Context context;
@@ -55,7 +55,7 @@ public abstract class SQLiteQueryer implements Closeable {
 			DB_CREATION_TIME = "creation_time",
 			DB_UPDATE_TIME = "creation_time";
 
-	protected SQLiteQueryer(Context ctx, String dbName, int dbVersion) {
+	protected SQLiteConnection(Context ctx, String dbName, int dbVersion) {
 		dbOpenHelper = new DbOpenHelper(ctx, dbName, null, dbVersion);
 		context = ctx;
 	}
@@ -65,7 +65,7 @@ public abstract class SQLiteQueryer implements Closeable {
 	}
 
 	/**
-	 * Ouvre la base de données en écriture.
+	 * Ouvre la base de donnï¿½es en ï¿½criture.
 	 */
 	public SQLiteDatabase open() {
 		db = dbOpenHelper.getWritableDatabase();
@@ -74,7 +74,7 @@ public abstract class SQLiteQueryer implements Closeable {
 	}
 
 	/**
-	 * Ferme la base de données.
+	 * Ferme la base de donnï¿½es.
 	 */
 	public void close() {
 		if (db != null)

@@ -1,6 +1,5 @@
 package istat.android.data.access;
 
-import istat.android.data.access.interfaces.JSONAble;
 import istat.android.data.access.interfaces.Queryable;
 
 import java.util.ArrayList;
@@ -12,7 +11,6 @@ import org.json.JSONObject;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.text.TextUtils;
 
 public abstract class DbClause<Clause extends DbClause<?>> {
 	protected String whereClose = null;
