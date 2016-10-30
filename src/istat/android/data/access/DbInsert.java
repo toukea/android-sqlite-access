@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.database.sqlite.SQLiteDatabase;
-import istat.android.data.access.interfaces.QueryAble;
 
 public class DbInsert {
 	List<QueryAble> insertions = new ArrayList<QueryAble>();

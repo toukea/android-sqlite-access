@@ -1,7 +1,6 @@
 package istat.android.data.access;
 
-import istat.android.data.access.interfaces.QueryAble;
-import istat.android.data.access.util.SQLiteParser;
+import istat.android.data.access.utils.SQLiteParser;
 
 import java.io.Closeable;
 import java.io.IOException;

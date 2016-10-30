@@ -4,7 +4,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-public abstract interface QueryAble {
+abstract interface QueryAble {
 
 
     public long persist(SQLiteDatabase db);

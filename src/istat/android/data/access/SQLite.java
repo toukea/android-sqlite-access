@@ -2,8 +2,6 @@ package istat.android.data.access;
 
 import android.database.sqlite.SQLiteDatabase;
 
-import istat.android.data.access.interfaces.QueryAble;
-
 public class SQLite {
 	public static DbSelection select(Class<? extends QueryAble> clazz) {
 		return new DbSelection(clazz);

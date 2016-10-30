@@ -1,7 +1,5 @@
 package istat.android.data.access;
 
-import istat.android.data.access.interfaces.QueryAble;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;

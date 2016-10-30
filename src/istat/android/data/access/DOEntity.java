@@ -12,7 +12,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import istat.android.data.access.interfaces.JSONable;
-import istat.android.data.access.interfaces.QueryAble;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,7 +31,6 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
     List<String> reflectionFieldNames = new ArrayList<String>();
 
     protected DOEntity() {
-        // TODO Auto-generated constructor stub
         instance = this;
         build();
     }
@@ -152,15 +150,14 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
         try {
             parser.fillMap(getClass(), map);
         } catch (Exception e) {
-            // TODO Auto-generated catch block
-            // e.printStackTrace();
+            e.printStackTrace();
         }
         return map;
     }
 
     @Override
     public JSONObject toJSONObject() {
-        // TODO Auto-generated method stub
+
         JSONObject json = createJsonFromHashMap(map);
         try {
             if (parser == null)
@@ -187,33 +184,33 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
 
     @Override
     public String toString() {
-        // TODO Auto-generated method stub
+
         return toJSONObject().toString();
     }
 
     @Override
     public ContentValues toContentValues() {
-        // TODO Auto-generated method stub
-        ContentValues paires = new ContentValues();
+
+        ContentValues pairs = new ContentValues();
         JSONObject toJson = toJSONObject();
         for (String projection : tb_projection) {
             String values = toJson.optString(projection);
             if (!TextUtils.isEmpty(values)) {
-                paires.put(projection, values);
+                pairs.put(projection, values);
             }
         }
-        return paires;
+        return pairs;
     }
 
     public final void fillFromJSONObject(JSONObject json) {
-        // TODO Auto-generated method stub
+
         onFillFromJson(json);
 
     }
 
     @Override
     public final void fillFromCursor(Cursor c) {
-        // TODO Auto-generated method stub
+
         onFillFromCursor(c);
 
     }
@@ -223,7 +220,7 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
     }
 
     public long merge(SQLiteDatabase db) {
-        // TODO Auto-generated method stub
+
         long out = 0;
         if (exist(db)) {
             out = update(db);
@@ -236,7 +233,6 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
 
     @Override
     public long persist(SQLiteDatabase db) {
-        // TODO Auto-generated method stub
         if (exist(db)) {
             return update(db);
         } else {
@@ -244,12 +240,11 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
         }
     }
 
-    protected void onPersistEmbadedDbEntity(SQLiteDatabase db, QueryAble entity) {
+    protected void onPersistEmbeddedDbEntity(SQLiteDatabase db, QueryAble entity) {
         entity.persist(db);
     }
 
     protected void onFillFromPrimaryKey(String primaryKey, SQLiteDatabase db) {
-        // TODO Auto-generated method stub
         Cursor c = db.query(tb_name, tb_projection, primary_key + "=?",
                 new String[]{primaryKey}, null, null, null);
         if (c.getCount() > 0) {
@@ -260,7 +255,6 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
     }
 
     protected void onFillFromJson(JSONObject json) {
-        // TODO Auto-generated method stub
         try {
             List<String> keySet = JSONArrayToStringList(json.names());
             if (keySet.size() > 0) {
@@ -274,13 +268,11 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
                 }
             }
         } catch (Exception e) {
-            // e.printStackTrace();
-
+            e.printStackTrace();
         }
     }
 
     protected void onFillFromCursor(Cursor c) {
-        // TODO Auto-generated method stub
         for (String projection : tb_projection) {
             int columnIndex = c.getColumnIndex(projection);
             if (columnIndex >= 0) {
@@ -294,12 +286,12 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
 
     @Override
     public long insert(SQLiteDatabase db) {
-        // TODO Auto-generated method stub
+
         long out = 0;
         // db.beginTransaction();
         try {
             out = super.insert(db);
-            persistEmbadedDbEntity(db);
+            persistEmbeddedDbEntity(db);
             // db.setTransactionSuccessful();
         } catch (Exception e) {
             e.printStackTrace();
@@ -311,13 +303,13 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
     }
 
     public int update(SQLiteDatabase db) {
-        // TODO Auto-generated method stub
+
         int out = 0;
         // db.beginTransaction();
         try {
             out = super.update(db, primary_key + "= ?",
                     new String[]{getPrimaryKey()});
-            persistEmbadedDbEntity(db);
+            persistEmbeddedDbEntity(db);
             // db.setTransactionSuccessful();
         } catch (Exception e) {
             e.printStackTrace();
@@ -355,7 +347,6 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
     }
 
     public boolean exist(SQLiteDatabase db) {
-        // TODO Auto-generated method stub
         Cursor c = db.query(tb_name, new String[]{primary_key}, primary_key
                 + "= ?", new String[]{getPrimaryKey()}, null, null, null);
         int count = c.getCount();
@@ -364,7 +355,7 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
     }
 
     public int delete(SQLiteDatabase db) {
-        // TODO Auto-generated method stub
+
         return super.delete(db, primary_key + "= ?",
                 new String[]{getPrimaryKey()});
     }
@@ -426,14 +417,14 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
         }
     }
 
-    private void persistEmbadedDbEntity(SQLiteDatabase db) {
+    private void persistEmbeddedDbEntity(SQLiteDatabase db) {
         try {
             Iterator<String> keySet = map.keySet().iterator();
             while (keySet.hasNext()) {
                 String tmp = keySet.next();
                 Object obj = map.get(tmp);
                 if (obj != null && obj instanceof QueryAble) {
-                    onPersistEmbadedDbEntity(db, ((QueryAble) obj));
+                    onPersistEmbeddedDbEntity(db, ((QueryAble) obj));
                 }
             }
         } catch (Exception e) {
@@ -508,7 +499,6 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
     }
 
     private String getFieldType(String name) {
-        // TODO Auto-generated method stub
         try {
             if (this.reflectionFieldNames.contains(name)) {
                 Field field = this.getClass().getDeclaredField(name);
@@ -559,7 +549,7 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
     }
 
     private boolean hasPrimaryKey() {
-        // TODO Auto-generated method stub
+
         return !TextUtils.isEmpty(getPrimaryKey());
     }
 
