@@ -5,10 +5,10 @@ import java.util.List;
 
 import android.database.sqlite.SQLiteDatabase;
 
-public class DbInsert {
+public class SQLiteInsert {
 	List<QueryAble> insertions = new ArrayList<QueryAble>();
 
-	DbInsert insert(QueryAble insert) {
+	SQLiteInsert insert(QueryAble insert) {
 		insertions.add(insert);
 		return this;
 	}

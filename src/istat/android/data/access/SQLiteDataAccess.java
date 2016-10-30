@@ -111,7 +111,7 @@ public abstract class SQLiteDataAccess implements Closeable {
         return db.delete(table, null, null);
     }
 
-    // public <T extends DOEntity> int truncateTable(Class<T> clazz) {
+    // public <T extends SQLiteModel> int truncateTable(Class<T> clazz) {
     // T instance = null;
     // String table = "";
     // try {
@@ -124,7 +124,7 @@ public abstract class SQLiteDataAccess implements Closeable {
     // return db.delete(table, null, null);
     // }
 
-    public Cursor select(DbSelection clause) {
+    public Cursor select(SQLiteSelect clause) {
         return (Cursor) clause.onExecute(db);
     }
 
@@ -282,20 +282,20 @@ public abstract class SQLiteDataAccess implements Closeable {
         return f.format(date);
     }
 
-    public static DbSelection SELECT(Class<? extends QueryAble> clazz) {
-        return new DbSelection(clazz);
+    public static SQLiteSelect SELECT(Class<? extends QueryAble> clazz) {
+        return new SQLiteSelect(clazz);
     }
 
-    public static DbUpdate UPDATE(Class<? extends QueryAble> clazz) {
-        return new DbUpdate(clazz);
+    public static SQLiteUpdate UPDATE(Class<? extends QueryAble> clazz) {
+        return new SQLiteUpdate(clazz);
     }
 
-    public static DbDelete DELETE(Class<? extends QueryAble> clazz) {
-        return new DbDelete(clazz);
+    public static SQLiteDelete DELETE(Class<? extends QueryAble> clazz) {
+        return new SQLiteDelete(clazz);
     }
 
-    public static DbInsert INSERT() {
-        return new DbInsert();
+    public static SQLiteInsert INSERT() {
+        return new SQLiteInsert();
     }
 
 }

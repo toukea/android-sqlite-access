@@ -2,12 +2,12 @@ package istat.android.data.access;
 
 import android.database.sqlite.SQLiteDatabase;
 
-public class DbDelete extends DbClause<DbDelete> {
-	public DbDelete(String table) {
+public class SQLiteDelete extends SQLiteClause<SQLiteDelete> {
+	public SQLiteDelete(String table) {
 		super(table,null);
 	}
 
-	public DbDelete(Class<? extends QueryAble> clazz) {
+	public SQLiteDelete(Class<? extends QueryAble> clazz) {
 		super(clazz);
 	}
 

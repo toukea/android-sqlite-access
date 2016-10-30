@@ -9,7 +9,7 @@ import com.google.gson.Gson;
 
 import android.content.ContentValues;
 
-public class DaoTools {
+public class SQLiteModelConverter {
 	public final static ContentValues toContentValues(Object obj)
 			throws JSONException {
 		Gson gson = new Gson();

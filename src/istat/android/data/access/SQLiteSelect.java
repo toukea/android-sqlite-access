@@ -7,23 +7,23 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
-public class DbSelection extends DbClause<DbSelection> {
+public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
 	Class<? extends QueryAble> clazz;
 	String join;
 
-	public DbSelection(Class<? extends QueryAble> clazz) {
+	public SQLiteSelect(Class<? extends QueryAble> clazz) {
 		super(clazz);
 		// TODO Auto-generated constructor stub
 		this.clazz = clazz;
 	}
 
-	public DbSelection(Class<? extends QueryAble>... clazz) {
+	public SQLiteSelect(Class<? extends QueryAble>... clazz) {
 		super(clazz[0]);
 		// TODO Auto-generated constructor stub
 		this.clazz = clazz[0];
 	}
 
-	public DbSelection join(Class<? extends QueryAble> clazz, String on) {
+	public SQLiteSelect join(Class<? extends QueryAble> clazz, String on) {
 		QueryAble entity = createEntityInstance(clazz);
 		join = entity.getEntityName();
 		table += " INNER JOIN " + join;
@@ -89,14 +89,14 @@ public class DbSelection extends DbClause<DbSelection> {
 
 	}
 
-	public ClauseBuilder AND_SELECT(DbSelection close) {
+	public ClauseBuilder AND_SELECT(SQLiteSelect close) {
 		this.whereClose = "(SELECT * FROM " + table + " WHERE "
 				+ close.whereClose + ")";
 		this.whereParams = close.whereParams;
 		return new ClauseBuilder(TYPE_CLAUSE_AND);
 	}
 
-	public ClauseBuilder OR_SELECT(DbSelection close) {
+	public ClauseBuilder OR_SELECT(SQLiteSelect close) {
 		this.whereClose = close.whereClose;
 		this.whereParams = close.whereParams;
 		return new ClauseBuilder(TYPE_CLAUSE_AND);

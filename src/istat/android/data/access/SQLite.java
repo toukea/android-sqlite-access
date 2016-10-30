@@ -1,43 +1,43 @@
 package istat.android.data.access;
 
 public class SQLite {
-    public static DbSelection select(Class<?> clazz) {
-        return new DbSelection(clazz);
+    public static SQLiteSelect select(Class<?> clazz) {
+        return null;//new SQLiteSelect(clazz);
     }
 
-    public static DbUpdate update(Class<?> clazz) {
-        return new DbUpdate(clazz);
+    public static SQLiteUpdate update(Class<?> clazz) {
+        return null;//new SQLiteUpdate(clazz);
     }
 
-    public static DbDelete delete(Class<?> clazz) {
-        return new DbDelete(clazz);
+    public static SQLiteDelete delete(Class<?> clazz) {
+        return null;// new SQLiteDelete(clazz);
     }
 
-    public static DbInsert insert(Object entity) {
-        return new DbInsert().insert(entity);
+    public static SQLiteInsert insert(Object entity) {
+        return null;//new SQLiteInsert().insert(entity);
     }
 
     public static class SELECT {
-        public static DbSelection from(Class<?> clazz) {
-            return new DbSelection(clazz);
+        public static SQLiteSelect from(Class<?> clazz) {
+            return null;// new SQLiteSelect(clazz);
         }
     }
 
     public static class UPDATE {
-        public static DbUpdate table(Class<?> clazz) {
-            return new DbUpdate(clazz);
+        public static SQLiteUpdate table(Class<?> clazz) {
+            return null;//new SQLiteUpdate(clazz);
         }
     }
 
     public static class DELETE {
-        public static DbDelete from(Class<?> clazz) {
-            return new DbDelete(clazz);
+        public static SQLiteDelete from(Class<?> clazz) {
+            return null;//new SQLiteDelete(clazz);
         }
     }
 
     public static class INSERT {
-        public static DbInsert entity(QueryAble entity) {
-            return new DbInsert().insert(entity);
+        public static SQLiteInsert entity(QueryAble entity) {
+            return new SQLiteInsert().insert(entity);
         }
     }
 }

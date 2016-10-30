@@ -10,7 +10,7 @@ import org.json.JSONObject;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-public abstract class DbClause<Clause extends DbClause<?>> {
+public abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     protected String whereClose = null;
     protected List<String> whereParams = new ArrayList<String>();
     protected String orderBy = null;
@@ -39,16 +39,16 @@ public abstract class DbClause<Clause extends DbClause<?>> {
         return tmp;
     }
 
-    protected DbClause(String table, String[] projection) {
+    protected SQLiteClause(String table, String[] projection) {
         this.table = table;
         this.projection = projection;
     }
 
-    protected DbClause() {
+    protected SQLiteClause() {
 
     }
 
-    protected DbClause(Class<? extends QueryAble> clazz) {
+    protected SQLiteClause(Class<? extends QueryAble> clazz) {
         QueryAble entity = createEntityInstance(clazz);
         if (entity != null) {
             table = entity.getEntityName();
@@ -127,7 +127,7 @@ public abstract class DbClause<Clause extends DbClause<?>> {
     }
 
     @SuppressWarnings("unchecked")
-    public Clause AND(DbSelection close) {
+    public Clause AND(SQLiteSelect close) {
         this.whereClose = "(" + this.whereClose + ") AND (" + close.whereClose
                 + ")";
         this.whereParams.addAll(close.whereParams);
@@ -191,7 +191,7 @@ public abstract class DbClause<Clause extends DbClause<?>> {
         public Clause equal(Object value) {
             prepare(value);
             whereClose += " = ? ";
-            return (Clause) DbClause.this;
+            return (Clause) SQLiteClause.this;
         }
 
         public Clause greatThan(Object value) {
@@ -206,14 +206,14 @@ public abstract class DbClause<Clause extends DbClause<?>> {
         public Clause greatThan(Object value, boolean acceptEqual) {
             prepare(value);
             whereClose += " >" + (acceptEqual ? "=" : "") + " ? ";
-            return (Clause) DbClause.this;
+            return (Clause) SQLiteClause.this;
         }
 
         @SuppressWarnings("unchecked")
         public Clause lessThan(Object value, boolean acceptEqual) {
             prepare(value);
             whereClose += " <" + (acceptEqual ? "=" : "") + " ? ";
-            return (Clause) DbClause.this;
+            return (Clause) SQLiteClause.this;
         }
 
         private void prepare(Object value) {
@@ -235,7 +235,7 @@ public abstract class DbClause<Clause extends DbClause<?>> {
         public Clause like(Object value) {
             prepare(value);
             whereClose += " like ? ";
-            return (Clause) DbClause.this;
+            return (Clause) SQLiteClause.this;
         }
     }
 

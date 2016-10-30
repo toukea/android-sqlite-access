@@ -13,6 +13,7 @@ import java.util.List;
 
 import istat.android.data.access.interfaces.JSONable;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -21,7 +22,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
-abstract class DOEntity extends ABSDOEntity implements JSONable {
+abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     HashMap<String, Object> map = new HashMap<String, Object>();
     private AnnotationParser parser;
     protected String tb_name, primary_key;
@@ -30,7 +31,7 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
     private Object instance;
     List<String> reflectionFieldNames = new ArrayList<String>();
 
-    protected DOEntity() {
+    protected SQLiteModel() {
         instance = this;
         build();
     }
@@ -100,8 +101,8 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
         }
     }
 
-    protected static <T extends DOEntity> void set(String name, T obj,
-                                                   Object value) {
+    protected static <T extends SQLiteModel> void set(String name, T obj,
+                                                      Object value) {
         try {
             if (obj.reflectionFieldNames.contains(name)) {
                 Field field = obj.getClass().getDeclaredField(name);
@@ -122,7 +123,7 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
         }
     }
 
-    protected static <T extends DOEntity> Object get(String name, T obj) {
+    protected static <T extends SQLiteModel> Object get(String name, T obj) {
         try {
             if (obj.reflectionFieldNames.contains(name)) {
                 Field field = obj.getClass().getDeclaredField(name);
@@ -284,13 +285,11 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
         }
     }
 
-    @Override
     public long insert(SQLiteDatabase db) {
-
         long out = 0;
         // db.beginTransaction();
         try {
-            out = super.insert(db);
+            out = db.insert(getEntityName(), null, toContentValues());
             persistEmbeddedDbEntity(db);
             // db.setTransactionSuccessful();
         } catch (Exception e) {
@@ -307,7 +306,7 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
         int out = 0;
         // db.beginTransaction();
         try {
-            out = super.update(db, primary_key + "= ?",
+            out = update(db, primary_key + "= ?",
                     new String[]{getPrimaryKey()});
             persistEmbeddedDbEntity(db);
             // db.setTransactionSuccessful();
@@ -320,11 +319,11 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
         return out;
     }
 
-    public void merge(DOEntity entity) {
+    public void merge(SQLiteModel entity) {
         merge(entity, true, true);
     }
 
-    public void merge(DOEntity entity, boolean override, boolean mergeEmptyValue) {
+    public void merge(SQLiteModel entity, boolean override, boolean mergeEmptyValue) {
         HashMap<String, Object> bundle = entity.map;
         Iterator<String> keySet = bundle.keySet().iterator();
         while (keySet.hasNext()) {
@@ -356,30 +355,30 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
 
     public int delete(SQLiteDatabase db) {
 
-        return super.delete(db, primary_key + "= ?",
+        return delete(db, primary_key + "= ?",
                 new String[]{getPrimaryKey()});
     }
 
-    public static <T extends DOEntity> T fromJson(String json)
+    public static <T extends SQLiteModel> T fromJson(String json)
             throws InstantiationException, IllegalAccessException,
             JSONException {
         return fromJson(new JSONObject(json), null);
     }
 
-    public static <T extends DOEntity> T fromJson(String json, Class<T> clazz)
+    public static <T extends SQLiteModel> T fromJson(String json, Class<T> clazz)
             throws InstantiationException, IllegalAccessException,
             JSONException {
         return fromJson(new JSONObject(json), clazz);
     }
 
-    public static <T extends DOEntity> T fromQueryable(JSONable q)
+    public static <T extends SQLiteModel> T fromQueryable(JSONable q)
             throws InstantiationException, IllegalAccessException {
         return fromJson(q.toJSONObject(), q.getClass());
     }
 
     @SuppressWarnings("unchecked")
-    public static <T extends DOEntity> T fromJson(JSONObject json,
-                                                  Class<?> clazzs) throws InstantiationException,
+    public static <T extends SQLiteModel> T fromJson(JSONObject json,
+                                                     Class<?> clazzs) throws InstantiationException,
             IllegalAccessException {
         if (json == null)
             return null;
@@ -393,16 +392,16 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
             try {
                 Object obj = clazzs.getConstructor(JSONObject.class)
                         .newInstance(json);
-                if (obj instanceof DOEntity)
+                if (obj instanceof SQLiteModel)
                     return (T) obj;
                 else
                     return null;
             } catch (Exception e) {
                 Object obj = Class.forName(clazz).newInstance();
-                if (obj instanceof DOEntity) {
-                    JSONable jsonentity = (DOEntity) obj;
+                if (obj instanceof SQLiteModel) {
+                    JSONable jsonentity = (SQLiteModel) obj;
                     jsonentity.fillFromJSONObject(json);
-                    if (obj instanceof DOEntity)
+                    if (obj instanceof SQLiteModel)
                         return (T) jsonentity;
                     else
                         return null;
@@ -646,6 +645,48 @@ abstract class DOEntity extends ABSDOEntity implements JSONable {
                 }
             }
         }
+    }
+
+
+    protected int update(SQLiteDatabase db, String whereClause,
+                         String[] whereArgs) {
+        return db.update(getEntityName(), toContentValues(), whereClause,
+                whereArgs);
+    }
+
+    protected int delete(SQLiteDatabase db, String whereClause,
+                         String[] whereArgs) {
+        return db.delete(getEntityName(), whereClause, whereArgs);
+    }
+
+    public static ContentValues createContentValuesFromJSONObject(
+            JSONObject json) throws JSONException {
+        ContentValues paire = new ContentValues();
+        List<String> keySet = JSONArrayToStringList(json.names());
+        if (keySet.size() > 0) {
+            for (String tmp : keySet) {
+                String value = json.optString(tmp);
+                if (!TextUtils.isEmpty(value)) {
+                    paire.put(tmp, value);
+                }
+            }
+        }
+
+        return paire;
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        // TODO Auto-generated method stub
+        return super.clone();
+    }
+
+    public static List<String> JSONArrayToStringList(JSONArray array)
+            throws JSONException {
+        List<String> out = new ArrayList<String>();
+        for (int i = 0; i < array.length(); i++)
+            out.add(array.getString(i));
+        return out;
     }
 
 }

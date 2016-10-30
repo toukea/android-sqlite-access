@@ -2,15 +2,15 @@ package istat.android.data.access;
 
 import android.database.sqlite.SQLiteDatabase;
 
-public class DbUpdate {
+public class SQLiteUpdate {
 	Updater updater;
-	DOEntity setEntity;
+	SQLiteModel setEntity;
 
-	protected DbUpdate(Class<? extends QueryAble> clazz) {
+	protected SQLiteUpdate(Class<? extends QueryAble> clazz) {
 		updater = new Updater(clazz);
 	}
 
-	protected DbUpdate(String table) {
+	protected SQLiteUpdate(String table) {
 		updater = new Updater(table);
 	}
 
@@ -18,7 +18,7 @@ public class DbUpdate {
 		return new Updater(entity.getEntityName());
 	}
 
-	public DbUpdate set(String name, Object value) {
+	public SQLiteUpdate set(String name, Object value) {
 		setEntity.set(name, value);
 		return this;
 	}
@@ -28,7 +28,7 @@ public class DbUpdate {
 		return updater;
 	}
 
-	public class Updater extends DbClause<Updater> {
+	public class Updater extends SQLiteClause<Updater> {
 		protected QueryAble entity;
 
 		protected Updater(QueryAble entity) {
