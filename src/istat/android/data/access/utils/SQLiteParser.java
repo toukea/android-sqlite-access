@@ -1,4 +1,4 @@
-package istat.android.data.access.util;
+package istat.android.data.access.utils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
