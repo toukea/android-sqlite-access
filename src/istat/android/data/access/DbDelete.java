@@ -1,6 +1,7 @@
 package istat.android.data.access;
 
-import istat.android.data.access.interfaces.Queryable;
+import istat.android.data.access.interfaces.QueryAble;
+
 import android.database.sqlite.SQLiteDatabase;
 
 public class DbDelete extends DbClause<DbDelete> {
@@ -9,7 +10,7 @@ public class DbDelete extends DbClause<DbDelete> {
 		// TODO Auto-generated constructor stub
 	}
 
-	public DbDelete(Class<? extends Queryable> clazz) {
+	public DbDelete(Class<? extends QueryAble> clazz) {
 		super(clazz);
 		// TODO Auto-generated constructor stub
 	}

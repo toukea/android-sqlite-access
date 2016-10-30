@@ -1,6 +1,6 @@
 package istat.android.data.access;
 
-import istat.android.data.access.interfaces.Queryable;
+import istat.android.data.access.interfaces.QueryAble;
 import istat.android.data.access.util.SQLiteParser;
 
 import java.io.Closeable;
@@ -46,7 +46,7 @@ public abstract class SQLiteQueryer implements Closeable {
 	 * protected static final int BASE_VERSION = 1; protected static final
 	 * String BASE_NOM = "istatLib.db";
 	 */
-	// L’instance de la base qui sera manipulée au travers de cette classe.
+	// Lï¿½instance de la base qui sera manipulï¿½e au travers de cette classe.
 	protected SQLiteDatabase db;
 	private DbOpenHelper dbOpenHelper;
 	public Context context;
@@ -64,7 +64,7 @@ public abstract class SQLiteQueryer implements Closeable {
 	}
 
 	/**
-	 * Ouvre la base de données en écriture.
+	 * Ouvre la base de donnï¿½es en ï¿½criture.
 	 */
 	public SQLiteDatabase open() {
 		db = dbOpenHelper.getWritableDatabase();
@@ -73,7 +73,7 @@ public abstract class SQLiteQueryer implements Closeable {
 	}
 
 	/**
-	 * Ferme la base de données.
+	 * Ferme la base de donnï¿½es.
 	 */
 	public void close() {
 		if (db != null)
@@ -109,7 +109,7 @@ public abstract class SQLiteQueryer implements Closeable {
 		endTransaction();
 	}
 
-	public int delete(Queryable entity) {
+	public int delete(QueryAble entity) {
 		return entity.delete(db);
 	}
 
@@ -135,12 +135,12 @@ public abstract class SQLiteQueryer implements Closeable {
 	// return list != null && list.size() > 0 ? list.get(0) : null;
 	// }
 
-	public long persist(Queryable entity) {
+	public long persist(QueryAble entity) {
 		return entity.persist(db);
 	}
 
-	public void persists(List<Queryable> entitys) {
-		for (Queryable entity : entitys) {
+	public void persists(List<QueryAble> entities) {
+		for (QueryAble entity : entities) {
 			entity.persist(db);
 		}
 	}
@@ -320,15 +320,15 @@ public abstract class SQLiteQueryer implements Closeable {
 		return f.format(date);
 	}
 
-	public static DbSelection SELECT(Class<? extends Queryable> clazz) {
+	public static DbSelection SELECT(Class<? extends QueryAble> clazz) {
 		return new DbSelection(clazz);
 	}
 
-	public static DbUpdate UPDATE(Class<? extends Queryable> clazz) {
+	public static DbUpdate UPDATE(Class<? extends QueryAble> clazz) {
 		return new DbUpdate(clazz);
 	}
 
-	public static DbDelete DELETE(Class<? extends Queryable> clazz) {
+	public static DbDelete DELETE(Class<? extends QueryAble> clazz) {
 		return new DbDelete(clazz);
 	}
 

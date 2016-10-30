@@ -1,24 +1,6 @@
 package istat.android.data.access;
 
-import istat.android.data.access.interfaces.Queryable;
-import istat.android.data.access.util.SQLiteParser;
-
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-
-import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.content.res.Resources;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteDatabase.CursorFactory;
-import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
 /*
  * Copyright (C) 2014 Istat Dev.

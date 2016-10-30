@@ -1,6 +1,6 @@
 package istat.android.data.access;
 
-import istat.android.data.access.interfaces.Queryable;
+import istat.android.data.access.interfaces.QueryAble;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -51,9 +51,9 @@ public abstract class DbClause<Clause extends DbClause<?>> {
 
 	}
 
-	protected DbClause(Class<? extends Queryable> clazz) {
+	protected DbClause(Class<? extends QueryAble> clazz) {
 		// TODO Auto-generated constructor stub
-		Queryable entity = createEntityInstance(clazz);
+		QueryAble entity = createEntityInstance(clazz);
 		if (entity != null) {
 			table = entity.getEntityName();
 			projection = entity.getEntityFieldNames();
@@ -77,10 +77,10 @@ public abstract class DbClause<Clause extends DbClause<?>> {
 		return new Clauser(TYPE_CLAUSE_AND);
 	}
 
-	public Clauser where(Class<? extends Queryable> clazz, String column) {
+	public Clauser where(Class<? extends QueryAble> clazz, String column) {
 		String table = this.table;
 		if (clazz != null) {
-			Queryable entity = createEntityInstance(clazz);
+			QueryAble entity = createEntityInstance(clazz);
 			if (entity != null) {
 				table = entity.getEntityName();
 			}
@@ -140,17 +140,17 @@ public abstract class DbClause<Clause extends DbClause<?>> {
 
 	protected abstract Object onExecute(SQLiteDatabase db);
 
-	protected static Queryable createFromCursor(
-			Class<? extends Queryable> clazz, Cursor c) {
-		Queryable instance = createEntityInstance(clazz);
+	protected static QueryAble createFromCursor(
+			Class<? extends QueryAble> clazz, Cursor c) {
+		QueryAble instance = createEntityInstance(clazz);
 		if (instance != null) {
 			instance.fillFromCursor(c);
 		}
 		return instance;
 	}
 
-	protected static Queryable createEntityInstance(
-			Class<? extends Queryable> clazz) {
+	protected static QueryAble createEntityInstance(
+			Class<? extends QueryAble> clazz) {
 		String className = clazz + "";
 		className = className.substring(6, className.length()).trim();
 		Object obj = null;
@@ -170,8 +170,8 @@ public abstract class DbClause<Clause extends DbClause<?>> {
 		}
 		if (obj != null) {
 			try {
-				if (obj instanceof Queryable) {
-					Queryable jsonentity = (Queryable) obj;
+				if (obj instanceof QueryAble) {
+					QueryAble jsonentity = (QueryAble) obj;
 					return jsonentity;
 				} else {
 					return null;

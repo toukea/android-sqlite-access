@@ -4,7 +4,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-public abstract interface Queryable {
+public abstract interface QueryAble {
 	public abstract ContentValues toContentValues();
 
 	abstract void fillFromCursor(Cursor c);

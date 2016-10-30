@@ -1,6 +1,6 @@
 package istat.android.data.access;
 
-import istat.android.data.access.interfaces.Queryable;
+import istat.android.data.access.interfaces.QueryAble;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +13,7 @@ import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
-abstract class ABSDOEntity implements Queryable, Cloneable {
+abstract class ABSDOEntity implements QueryAble, Cloneable {
 
 	public long insert(SQLiteDatabase db) {
 		return db.insert(getEntityName(), null, toContentValues());

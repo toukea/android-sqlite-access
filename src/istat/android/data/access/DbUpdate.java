@@ -1,13 +1,14 @@
 package istat.android.data.access;
 
-import istat.android.data.access.interfaces.Queryable;
+import istat.android.data.access.interfaces.QueryAble;
+
 import android.database.sqlite.SQLiteDatabase;
 
 public class DbUpdate {
 	Updater updater;
 	DOEntity setEntity;
 
-	protected DbUpdate(Class<? extends Queryable> clazz) {
+	protected DbUpdate(Class<? extends QueryAble> clazz) {
 		updater = new Updater(clazz);
 	}
 
@@ -15,7 +16,7 @@ public class DbUpdate {
 		updater = new Updater(table);
 	}
 
-	public Updater setAs(Queryable entity) {
+	public Updater setAs(QueryAble entity) {
 		return new Updater(entity.getEntityName());
 	}
 
@@ -30,19 +31,19 @@ public class DbUpdate {
 	}
 
 	public class Updater extends DbClause<Updater> {
-		protected Queryable entity;
+		protected QueryAble entity;
 
-		protected Updater(Queryable entity) {
+		protected Updater(QueryAble entity) {
 			super(entity.getClass());
 			// TODO Auto-generated constructor stub
 			this.entity = entity;
 		}
 
-		private void setEntity(Queryable entity) {
+		private void setEntity(QueryAble entity) {
 			this.entity = entity;
 		}
 
-		protected Updater(Class<? extends Queryable> clazz) {
+		protected Updater(Class<? extends QueryAble> clazz) {
 			super(clazz);
 			// TODO Auto-generated constructor stub
 		}
