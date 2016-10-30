@@ -89,17 +89,17 @@ public class DbSelection extends DbClause<DbSelection> {
 
 	}
 
-	public Clauser AND_SELECT(DbSelection close) {
+	public ClauseBuilder AND_SELECT(DbSelection close) {
 		this.whereClose = "(SELECT * FROM " + table + " WHERE "
 				+ close.whereClose + ")";
 		this.whereParams = close.whereParams;
-		return new Clauser(TYPE_CLAUSE_AND);
+		return new ClauseBuilder(TYPE_CLAUSE_AND);
 	}
 
-	public Clauser OR_SELECT(DbSelection close) {
+	public ClauseBuilder OR_SELECT(DbSelection close) {
 		this.whereClose = close.whereClose;
 		this.whereParams = close.whereParams;
-		return new Clauser(TYPE_CLAUSE_AND);
+		return new ClauseBuilder(TYPE_CLAUSE_AND);
 	}
 
 	@Override
