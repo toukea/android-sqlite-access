@@ -4,7 +4,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import istat.android.data.access.interfaces.QueryAble;
 
-public class EntitySql {
+public class SQLite {
 	public static DbSelection select(Class<? extends QueryAble> clazz) {
 		return new DbSelection(clazz);
 	}
@@ -22,8 +22,8 @@ public class EntitySql {
 	}
 
 	protected static void demo(QueryAble entity, SQLiteDatabase db) {
-		EntitySql.insert(entity).insert(entity).execute(db);
-		EntitySql.update(QueryAble.class).setAs(null).where("name").equal(2)
+		SQLite.insert(entity).insert(entity).execute(db);
+		SQLite.update(QueryAble.class).setAs(null).where("name").equal(2)
 				.and("lastname").equal("mama").execute(db);
 	}
 
