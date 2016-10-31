@@ -16,19 +16,24 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         this.clazz = clazz;
     }
 
-    SQLiteSelect(SQLiteDatabase db, Class<? extends QueryAble>... clazz) {
+    SQLiteSelect(SQLiteDatabase db, Class<?>... clazz) {
         super(clazz[0], db);
         this.clazz = clazz[0];
     }
 
-    public SQLiteSelect join(Class<? extends QueryAble> clazz, String on) {
-        QueryAble entity = createEntityInstance(clazz);
+    public SQLiteSelect join(Class<?> clazz, String on) {
+        QueryAble entity = createQueryAble(clazz);
         join = entity.getEntityName();
         table += " INNER JOIN " + join;
         if (!TextUtils.isEmpty(on)) {
             table += " ON (" + on + ") ";
         }
         return this;
+    }
+
+    private QueryAble createQueryAble(Class<?> clazz) {
+        //TODO populate this function.
+        return null;
     }
 
     @Override
@@ -73,7 +78,6 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             }
         }
         c.close();
-
     }
 
     /**
@@ -85,7 +89,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
      * @return
      */
     private <T> T createModelFromCursor(Class<?> clazz, Cursor c) {
-        //TODO populate this fuction.
+        //TODO populate this function.
         return null;
     }
 

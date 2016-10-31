@@ -90,21 +90,25 @@ public abstract class SQLiteDataAccess implements Closeable {
 
     }
 
-    public void beginTransaction() {
+    public final void beginTransaction() {
         db.beginTransaction();
     }
 
-    public void endTransaction() {
+    public final void endTransaction() {
         db.endTransaction();
     }
 
-    public void setTransactionSuccessful() {
+    public final void setTransactionSuccessful() {
         db.setTransactionSuccessful();
     }
 
-    public void commit() {
+    public final void commit() {
         setTransactionSuccessful();
         endTransaction();
+    }
+
+    public final SQLite.SQLiteStatement getStatement() {
+        return SQLite.from(open());
     }
 
     public int truncateTable(String table) {
@@ -124,9 +128,6 @@ public abstract class SQLiteDataAccess implements Closeable {
     // return db.delete(table, null, null);
     // }
 
-    public Cursor select(SQLiteSelect clause) {
-        return (Cursor) clause.onExecute(db);
-    }
 
     /**
      * get the current writable Db
@@ -186,7 +187,7 @@ public abstract class SQLiteDataAccess implements Closeable {
 
     protected abstract void onDbCreate(SQLiteDatabase db);
 
-    protected boolean executeRawRessource(SQLiteDatabase db, int resid) {
+    protected boolean executeRawResource(SQLiteDatabase db, int resid) {
         try {
             Resources res = getContext().getResources();
             InputStream resStream = res.openRawResource(resid);
@@ -200,7 +201,7 @@ public abstract class SQLiteDataAccess implements Closeable {
 
     protected void executeRawRessources(SQLiteDatabase db, int... resids) {
         for (int index : resids) {
-            executeRawRessource(db, index);
+            executeRawResource(db, index);
         }
     }
 

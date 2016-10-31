@@ -74,22 +74,6 @@ public abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         return new ClauseBuilder(TYPE_CLAUSE_AND);
     }
 
-    public ClauseBuilder where(Class<? extends QueryAble> clazz, String column) {
-        String table = this.table;
-        if (clazz != null) {
-            QueryAble entity = createEntityInstance(clazz);
-            if (entity != null) {
-                table = entity.getEntityName();
-            }
-        }
-        if (whereClose == null) {
-            whereClose = table + "." + column;
-        } else {
-            whereClose += " AND " + table + "." + column;
-        }
-        return new ClauseBuilder(TYPE_CLAUSE_AND);
-    }
-
     public ClauseBuilder or(String column) {
         if (whereClose == null)
             whereClose = this.table + "." + column;
