@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import istat.android.data.access.interfaces.JSONable;
+import istat.android.data.access.utils.Toolkits;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -597,9 +598,8 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         public void fillJSON(Class<?> clazz, JSONObject json)
                 throws IllegalAccessException, IllegalArgumentException,
                 JSONException {
-            Field[] fields = clazz.getDeclaredFields();
+            List<Field> fields = Toolkits.getAllFieldIncludingPrivateAndSuper(clazz);
             for (Field field : fields) {
-
                 if (field.isAnnotationPresent(PrimaryKey.class)
                         || field.isAnnotationPresent(EntityProperty.class)) {
                     field.setAccessible(true);
@@ -621,7 +621,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         public void fillMap(Class<?> clazz, HashMap<String, Object> map)
                 throws IllegalAccessException, IllegalArgumentException,
                 JSONException {
-            Field[] fields = clazz.getDeclaredFields();
+            List<Field> fields = Toolkits.getAllFieldIncludingPrivateAndSuper(clazz);
             for (Field field : fields) {
                 if (field.isAnnotationPresent(PrimaryKey.class)
                         || field.isAnnotationPresent(EntityProperty.class)) {
@@ -649,23 +649,22 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     public static ContentValues createContentValuesFromJSONObject(
             JSONObject json) throws JSONException {
-        ContentValues paire = new ContentValues();
+        ContentValues pair = new ContentValues();
         List<String> keySet = JSONArrayToStringList(json.names());
         if (keySet.size() > 0) {
             for (String tmp : keySet) {
                 String value = json.optString(tmp);
                 if (!TextUtils.isEmpty(value)) {
-                    paire.put(tmp, value);
+                    pair.put(tmp, value);
                 }
             }
         }
 
-        return paire;
+        return pair;
     }
 
     @Override
     public Object clone() throws CloneNotSupportedException {
-        // TODO Auto-generated method stub
         return super.clone();
     }
 

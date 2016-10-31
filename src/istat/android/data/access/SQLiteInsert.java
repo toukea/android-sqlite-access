@@ -9,8 +9,8 @@ public class SQLiteInsert {
     List<QueryAble> insertions = new ArrayList<QueryAble>();
     SQLiteDatabase db;
 
-    SQLiteInsert insert(QueryAble insert, SQLiteDatabase db) {
-        insertions.add(insert);
+    SQLiteInsert insert(Object insert, SQLiteDatabase db) {
+      //  insertions.add(insert);
         this.db = db;
         return this;
     }
