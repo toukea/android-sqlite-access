@@ -8,10 +8,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
 public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
-    Class<? extends QueryAble> clazz;
+    Class<?> clazz;
     String join;
 
-    SQLiteSelect(Class<? extends QueryAble> clazz, SQLiteDatabase db) {
+    SQLiteSelect(Class<?> clazz, SQLiteDatabase db) {
         super(clazz, db);
         this.clazz = clazz;
     }
@@ -39,12 +39,13 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends QueryAble> List<T> execute(SQLiteDatabase db) {
+    public <T extends QueryAble> List<T> execute() {
         List<T> list = new ArrayList<T>();
         Cursor c = onExecute(db);
         if (c.getCount() > 0) {
             while (c.moveToNext()) {
-                list.add((T) createFromCursor(clazz, c));
+                T model = createModelFromCursor(clazz, c);
+                list.add(model);
             }
         }
         c.close();
@@ -61,17 +62,31 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends QueryAble> void execute(SQLiteDatabase db, List<T> list) {
+    public <T> void execute(List<T> list) {
         if (list == null)
             list = new ArrayList<T>();
         Cursor c = onExecute(db);
         if (c.getCount() > 0) {
             while (c.moveToNext()) {
-                list.add((T) createFromCursor(clazz, c));
+                T model = createModelFromCursor(clazz, c);
+                list.add(model);
             }
         }
         c.close();
 
+    }
+
+    /**
+     * Create A T instance and fill them from cursor.
+     *
+     * @param clazz
+     * @param c
+     * @param <T>
+     * @return
+     */
+    private <T> T createModelFromCursor(Class<?> clazz, Cursor c) {
+        //TODO populate this fuction.
+        return null;
     }
 
     public ClauseBuilder AND_SELECT(SQLiteSelect close) {

@@ -6,7 +6,7 @@ public class SQLiteUpdate {
     Updater updater;
     SQLiteModel setEntity;
 
-    SQLiteUpdate(Class<? extends QueryAble> clazz, SQLiteDatabase db) {
+    SQLiteUpdate(Class<?> clazz, SQLiteDatabase db) {
         updater = new Updater(clazz, db);
     }
 
@@ -40,7 +40,7 @@ public class SQLiteUpdate {
             this.entity = entity;
         }
 
-        protected Updater(Class<? extends QueryAble> clazz, SQLiteDatabase db) {
+        protected Updater(Class<?> clazz, SQLiteDatabase db) {
             super(clazz, db);
         }
 

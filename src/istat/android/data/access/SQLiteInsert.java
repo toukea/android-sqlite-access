@@ -10,7 +10,6 @@ public class SQLiteInsert {
     SQLiteDatabase db;
 
     SQLiteInsert insert(Object insert, SQLiteDatabase db) {
-      //  insertions.add(insert);
         this.db = db;
         return this;
     }

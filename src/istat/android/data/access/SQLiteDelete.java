@@ -7,7 +7,7 @@ public class SQLiteDelete extends SQLiteClause<SQLiteDelete> {
         super(table, null, db);
     }
 
-    SQLiteDelete(Class<? extends QueryAble> clazz, SQLiteDatabase db) {
+    SQLiteDelete(Class<?> clazz, SQLiteDatabase db) {
         super(clazz, db);
     }
 
