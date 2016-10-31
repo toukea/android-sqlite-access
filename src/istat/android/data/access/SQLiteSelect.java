@@ -8,104 +8,88 @@ import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
 public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
-	Class<? extends QueryAble> clazz;
-	String join;
+    Class<? extends QueryAble> clazz;
+    String join;
 
-	public SQLiteSelect(Class<? extends QueryAble> clazz) {
-		super(clazz);
-		// TODO Auto-generated constructor stub
-		this.clazz = clazz;
-	}
+    SQLiteSelect(Class<? extends QueryAble> clazz, SQLiteDatabase db) {
+        super(clazz, db);
+        this.clazz = clazz;
+    }
 
-	public SQLiteSelect(Class<? extends QueryAble>... clazz) {
-		super(clazz[0]);
-		// TODO Auto-generated constructor stub
-		this.clazz = clazz[0];
-	}
+    SQLiteSelect(SQLiteDatabase db, Class<? extends QueryAble>... clazz) {
+        super(clazz[0], db);
+        this.clazz = clazz[0];
+    }
 
-	public SQLiteSelect join(Class<? extends QueryAble> clazz, String on) {
-		QueryAble entity = createEntityInstance(clazz);
-		join = entity.getEntityName();
-		table += " INNER JOIN " + join;
-		if (!TextUtils.isEmpty(on)) {
-			table += " ON (" + on + ") ";
-		}
-		return this;
-	}
+    public SQLiteSelect join(Class<? extends QueryAble> clazz, String on) {
+        QueryAble entity = createEntityInstance(clazz);
+        join = entity.getEntityName();
+        table += " INNER JOIN " + join;
+        if (!TextUtils.isEmpty(on)) {
+            table += " ON (" + on + ") ";
+        }
+        return this;
+    }
 
-	@Override
-	protected Cursor onExecute(SQLiteDatabase db) {
-		// TODO Auto-generated method stub
-		return db.query(table, projection, getWhereClose(), getWhereParams(),
-				null, null, getOrderBy());
+    @Override
+    protected Cursor onExecute(SQLiteDatabase db) {
+        return db.query(table, projection, getWhereClose(), getWhereParams(),
+                null, null, getOrderBy());
 
-	}
+    }
 
-	// public List<QueryAble> commit(SQLiteDatabase db) {
-	// List<QueryAble> list = new ArrayList<QueryAble>();
-	// Cursor c = execute(db);
-	// if (c.getCount() > 0) {
-	// while (c.moveToNext()) {
-	// list.add(createFromCursor(clazz, c));
-	// }
-	// }
-	// c.close();
-	// return list;
-	//
-	// }
-	@SuppressWarnings("unchecked")
-	public <T extends QueryAble> List<T> execute(SQLiteDatabase db) {
-		List<T> list = new ArrayList<T>();
-		Cursor c = onExecute(db);
-		if (c.getCount() > 0) {
-			while (c.moveToNext()) {
-				list.add((T) createFromCursor(clazz, c));
-			}
-		}
-		c.close();
-		return list;
+    @SuppressWarnings("unchecked")
+    public <T extends QueryAble> List<T> execute(SQLiteDatabase db) {
+        List<T> list = new ArrayList<T>();
+        Cursor c = onExecute(db);
+        if (c.getCount() > 0) {
+            while (c.moveToNext()) {
+                list.add((T) createFromCursor(clazz, c));
+            }
+        }
+        c.close();
+        return list;
 
-	}
+    }
 
-	public int count(SQLiteDatabase db) {
-		Cursor c = onExecute(db);
-		int count = c.getCount();
-		c.close();
-		return count;
+    public int count(SQLiteDatabase db) {
+        Cursor c = onExecute(db);
+        int count = c.getCount();
+        c.close();
+        return count;
 
-	}
+    }
 
-	@SuppressWarnings("unchecked")
-	public <T extends QueryAble> void execute(SQLiteDatabase db, List<T> list) {
-		if (list == null)
-			list = new ArrayList<T>();
-		Cursor c = onExecute(db);
-		if (c.getCount() > 0) {
-			while (c.moveToNext()) {
-				list.add((T) createFromCursor(clazz, c));
-			}
-		}
-		c.close();
+    @SuppressWarnings("unchecked")
+    public <T extends QueryAble> void execute(SQLiteDatabase db, List<T> list) {
+        if (list == null)
+            list = new ArrayList<T>();
+        Cursor c = onExecute(db);
+        if (c.getCount() > 0) {
+            while (c.moveToNext()) {
+                list.add((T) createFromCursor(clazz, c));
+            }
+        }
+        c.close();
 
-	}
+    }
 
-	public ClauseBuilder AND_SELECT(SQLiteSelect close) {
-		this.whereClose = "(SELECT * FROM " + table + " WHERE "
-				+ close.whereClose + ")";
-		this.whereParams = close.whereParams;
-		return new ClauseBuilder(TYPE_CLAUSE_AND);
-	}
+    public ClauseBuilder AND_SELECT(SQLiteSelect close) {
+        this.whereClose = "(SELECT * FROM " + table + " WHERE "
+                + close.whereClose + ")";
+        this.whereParams = close.whereParams;
+        return new ClauseBuilder(TYPE_CLAUSE_AND);
+    }
 
-	public ClauseBuilder OR_SELECT(SQLiteSelect close) {
-		this.whereClose = close.whereClose;
-		this.whereParams = close.whereParams;
-		return new ClauseBuilder(TYPE_CLAUSE_AND);
-	}
+    public ClauseBuilder OR_SELECT(SQLiteSelect close) {
+        this.whereClose = close.whereClose;
+        this.whereParams = close.whereParams;
+        return new ClauseBuilder(TYPE_CLAUSE_AND);
+    }
 
-	@Override
-	public final String getSQL() {
-		// TODO Auto-generated method stub
-		return super.getSQL();
-	}
+    @Override
+    public final String getSQL() {
+        return super.getSQL();
+    }
 
 }

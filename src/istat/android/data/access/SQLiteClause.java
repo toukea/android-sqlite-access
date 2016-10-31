@@ -11,6 +11,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 public abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
+    protected SQLiteDatabase db;
     protected String whereClose = null;
     protected List<String> whereParams = new ArrayList<String>();
     protected String orderBy = null;
@@ -39,16 +40,16 @@ public abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         return tmp;
     }
 
-    protected SQLiteClause(String table, String[] projection) {
+    protected SQLiteClause(String table, String[] projection, SQLiteDatabase db) {
         this.table = table;
         this.projection = projection;
     }
 
-    protected SQLiteClause() {
+    protected SQLiteClause(SQLiteDatabase db) {
 
     }
 
-    protected SQLiteClause(Class<? extends QueryAble> clazz) {
+    protected SQLiteClause(Class<? extends QueryAble> clazz, SQLiteDatabase db) {
         QueryAble entity = createEntityInstance(clazz);
         if (entity != null) {
             table = entity.getEntityName();

@@ -282,20 +282,4 @@ public abstract class SQLiteDataAccess implements Closeable {
         return f.format(date);
     }
 
-    public static SQLiteSelect SELECT(Class<? extends QueryAble> clazz) {
-        return new SQLiteSelect(clazz);
-    }
-
-    public static SQLiteUpdate UPDATE(Class<? extends QueryAble> clazz) {
-        return new SQLiteUpdate(clazz);
-    }
-
-    public static SQLiteDelete DELETE(Class<? extends QueryAble> clazz) {
-        return new SQLiteDelete(clazz);
-    }
-
-    public static SQLiteInsert INSERT() {
-        return new SQLiteInsert();
-    }
-
 }

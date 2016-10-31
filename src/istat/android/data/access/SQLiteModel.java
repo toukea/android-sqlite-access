@@ -158,15 +158,14 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     @Override
     public JSONObject toJSONObject() {
-
         JSONObject json = createJsonFromHashMap(map);
         try {
-            if (parser == null)
+            if (parser == null) {
                 parser = new AnnotationParser();
+            }
             parser.fillJSON(getClass(), json);
             String className = instance.getClass() + "";
             className = className.substring(6, className.length()).trim();
-            // Log.e("AAA---3", className);
             json.put(TAG_CLASS, className);
         } catch (Exception e) {
             e.printStackTrace();
@@ -185,13 +184,11 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     @Override
     public String toString() {
-
         return toJSONObject().toString();
     }
 
     @Override
     public ContentValues toContentValues() {
-
         ContentValues pairs = new ContentValues();
         JSONObject toJson = toJSONObject();
         for (String projection : tb_projection) {
@@ -519,12 +516,6 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     @Target(ElementType.FIELD)
     @Retention(RetentionPolicy.RUNTIME)
-    public @interface DbEntry {
-        String info() default "";
-    }
-
-    @Target(ElementType.FIELD)
-    @Retention(RetentionPolicy.RUNTIME)
     public @interface EntityProperty {
         String info() default "";
     }
@@ -568,7 +559,6 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             for (Field field : fields) {
 
                 if (field.isAnnotationPresent(PrimaryKey.class)
-                        || field.isAnnotationPresent(DbEntry.class)
                         || field.isAnnotationPresent(EntityProperty.class)) {
                     field.setAccessible(true);
                     String name = field.getName();
@@ -610,14 +600,13 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             Field[] fields = clazz.getDeclaredFields();
             for (Field field : fields) {
 
-                if (field.isAnnotationPresent(DbEntry.class)
-                        || field.isAnnotationPresent(PrimaryKey.class)
+                if (field.isAnnotationPresent(PrimaryKey.class)
                         || field.isAnnotationPresent(EntityProperty.class)) {
                     field.setAccessible(true);
                     Object obj = field.get(instance);
                     if (obj instanceof JSONable) {
-                        JSONable jsonentity = (JSONable) obj;
-                        json.put(field.getName(), jsonentity.toJSONObject());
+                        JSONable jsonEntity = (JSONable) obj;
+                        json.put(field.getName(), jsonEntity.toJSONObject());
                     } else {
                         json.put(field.getName(), field.get(instance));
                     }
@@ -634,8 +623,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 JSONException {
             Field[] fields = clazz.getDeclaredFields();
             for (Field field : fields) {
-                if (field.isAnnotationPresent(DbEntry.class)
-                        || field.isAnnotationPresent(PrimaryKey.class)
+                if (field.isAnnotationPresent(PrimaryKey.class)
                         || field.isAnnotationPresent(EntityProperty.class)) {
                     field.setAccessible(true);
                     Object obj = field.get(instance);

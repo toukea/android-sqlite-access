@@ -3,21 +3,21 @@ package istat.android.data.access;
 import android.database.sqlite.SQLiteDatabase;
 
 public class SQLiteDelete extends SQLiteClause<SQLiteDelete> {
-	public SQLiteDelete(String table) {
-		super(table,null);
-	}
+    SQLiteDelete(String table, SQLiteDatabase db) {
+        super(table, null, db);
+    }
 
-	public SQLiteDelete(Class<? extends QueryAble> clazz) {
-		super(clazz);
-	}
+    SQLiteDelete(Class<? extends QueryAble> clazz, SQLiteDatabase db) {
+        super(clazz, db);
+    }
 
-	@Override
-	protected Integer onExecute(SQLiteDatabase db) {
-		return db.delete(table, getWhereClose(), getWhereParams());
-	}
+    @Override
+    protected Integer onExecute(SQLiteDatabase db) {
+        return db.delete(table, getWhereClose(), getWhereParams());
+    }
 
-	public int execute(SQLiteDatabase db) {
-		return onExecute(db);
-	}
+    public int execute() {
+        return onExecute(db);
+    }
 
 }

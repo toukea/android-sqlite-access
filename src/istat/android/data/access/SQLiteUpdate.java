@@ -3,69 +3,64 @@ package istat.android.data.access;
 import android.database.sqlite.SQLiteDatabase;
 
 public class SQLiteUpdate {
-	Updater updater;
-	SQLiteModel setEntity;
+    Updater updater;
+    SQLiteModel setEntity;
 
-	protected SQLiteUpdate(Class<? extends QueryAble> clazz) {
-		updater = new Updater(clazz);
-	}
+    SQLiteUpdate(Class<? extends QueryAble> clazz, SQLiteDatabase db) {
+        updater = new Updater(clazz, db);
+    }
 
-	protected SQLiteUpdate(String table) {
-		updater = new Updater(table);
-	}
+    SQLiteUpdate(String table, SQLiteDatabase db) {
+        updater = new Updater(table, db);
+    }
 
-	public Updater setAs(QueryAble entity) {
-		return new Updater(entity.getEntityName());
-	}
+    public Updater setAs(QueryAble entity) {
+        return new Updater(entity.getEntityName(), this.updater.db);
+    }
 
-	public SQLiteUpdate set(String name, Object value) {
-		setEntity.set(name, value);
-		return this;
-	}
+    public SQLiteUpdate set(String name, Object value) {
+        setEntity.set(name, value);
+        return this;
+    }
 
-	public Updater where(String column) {
-		updater.setEntity(setEntity);
-		return updater;
-	}
+    public Updater where(String column) {
+        updater.setEntity(setEntity);
+        return updater;
+    }
 
-	public class Updater extends SQLiteClause<Updater> {
-		protected QueryAble entity;
+    public class Updater extends SQLiteClause<Updater> {
+        protected QueryAble entity;
 
-		protected Updater(QueryAble entity) {
-			super(entity.getClass());
-			// TODO Auto-generated constructor stub
-			this.entity = entity;
-		}
+        protected Updater(QueryAble entity, SQLiteDatabase db) {
+            super(entity.getClass(), db);
+            this.entity = entity;
+        }
 
-		private void setEntity(QueryAble entity) {
-			this.entity = entity;
-		}
+        private void setEntity(QueryAble entity) {
+            this.entity = entity;
+        }
 
-		protected Updater(Class<? extends QueryAble> clazz) {
-			super(clazz);
-			// TODO Auto-generated constructor stub
-		}
+        protected Updater(Class<? extends QueryAble> clazz, SQLiteDatabase db) {
+            super(clazz, db);
+        }
 
-		protected Updater(String clazz) {
-			super(clazz, null);
-			// TODO Auto-generated constructor stub
-		}
+        protected Updater(String clazz, SQLiteDatabase db) {
+            super(clazz, null, db);
+        }
 
-		@Override
-		protected Object onExecute(SQLiteDatabase db) {
-			// TODO Auto-generated method stub
-			return db.update(entity.getEntityName(), entity.toContentValues(),
-					getWhereClose(), getWhereParams());
-		}
+        @Override
+        protected Object onExecute(SQLiteDatabase db) {
+            return db.update(entity.getEntityName(), entity.toContentValues(),
+                    getWhereClose(), getWhereParams());
+        }
 
-		public int execute(SQLiteDatabase db) {
-			return Integer.valueOf(onExecute(db) + "");
-		}
+        public int execute(SQLiteDatabase db) {
+            return Integer.valueOf(onExecute(db) + "");
+        }
 
-		@Override
-		public final String getSQL() {
-			// TODO Auto-generated method stub
-			return super.getSQL();
-		}
-	}
+        @Override
+        public final String getSQL() {
+            return super.getSQL();
+        }
+    }
 }
