@@ -376,19 +376,19 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     @SuppressWarnings("unchecked")
     public static <T extends SQLiteModel> T fromJson(JSONObject json,
-                                                     Class<?> clazzs) throws InstantiationException,
+                                                     Class<?> cLass) throws InstantiationException,
             IllegalAccessException {
         if (json == null)
             return null;
         try {
             String clazz = json.optString(TAG_CLASS);
             if (!TextUtils.isEmpty(clazz)) {
-                clazzs = Class.forName(clazz);
-            } else if (clazzs == null) {
+                cLass = Class.forName(clazz);
+            } else if (cLass == null) {
                 return null;
             }
             try {
-                Object obj = clazzs.getConstructor(JSONObject.class)
+                Object obj = cLass.getConstructor(JSONObject.class)
                         .newInstance(json);
                 if (obj instanceof SQLiteModel)
                     return (T) obj;
