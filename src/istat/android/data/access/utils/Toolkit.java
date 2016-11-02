@@ -10,7 +10,7 @@ import java.util.List;
  * Created by istat on 31/10/16.
  */
 
-public class Toolkits {
+public class Toolkit {
     public static final Class<?> getGenericTypeClass(Class<?> baseClass, int genericIndex) {
         try {
             String className = ((ParameterizedType) baseClass

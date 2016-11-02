@@ -9,6 +9,6 @@ import com.google.gson.Gson;
 
 import android.content.ContentValues;
 
-public class SQLiteModelConverter {
+public class SQLiteClassLoader {
 
 }

@@ -12,7 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import istat.android.data.access.interfaces.JSONable;
-import istat.android.data.access.utils.Toolkits;
+import istat.android.data.access.utils.Toolkit;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -598,7 +598,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         public void fillJSON(Class<?> clazz, JSONObject json)
                 throws IllegalAccessException, IllegalArgumentException,
                 JSONException {
-            List<Field> fields = Toolkits.getAllFieldIncludingPrivateAndSuper(clazz);
+            List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(clazz);
             for (Field field : fields) {
                 if (field.isAnnotationPresent(PrimaryKey.class)
                         || field.isAnnotationPresent(EntityProperty.class)) {
@@ -621,7 +621,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         public void fillMap(Class<?> clazz, HashMap<String, Object> map)
                 throws IllegalAccessException, IllegalArgumentException,
                 JSONException {
-            List<Field> fields = Toolkits.getAllFieldIncludingPrivateAndSuper(clazz);
+            List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(clazz);
             for (Field field : fields) {
                 if (field.isAnnotationPresent(PrimaryKey.class)
                         || field.isAnnotationPresent(EntityProperty.class)) {
