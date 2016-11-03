@@ -38,7 +38,7 @@ import android.util.Log;
 /**
  * @author Toukea Tatsi (Istat)
  */
-public abstract class SQLiteDataAccess implements Closeable {
+public abstract class SQLiteDataAccess implements Closeable, SQLite.BootDescription {
 
     /*
      * protected static final int BASE_VERSION = 1; protected static final
@@ -182,10 +182,10 @@ public abstract class SQLiteDataAccess implements Closeable {
     }
 
     // -----------------------------------------------------------------------------------------------------------
-    protected abstract void onDbUpgrade(SQLiteDatabase db, int oldVersion,
-                                        int newVersion);
-
-    protected abstract void onDbCreate(SQLiteDatabase db);
+//    protected abstract void onDbUpgrade(SQLiteDatabase db, int oldVersion,
+//                                        int newVersion);
+//
+//    protected abstract void onDbCreate(SQLiteDatabase db);
 
     protected boolean executeRawResource(SQLiteDatabase db, int resid) {
         try {
