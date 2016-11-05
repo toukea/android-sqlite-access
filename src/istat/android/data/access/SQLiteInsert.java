@@ -11,6 +11,11 @@ public class SQLiteInsert {
 
     SQLiteInsert insert(Object insert, SQLiteDatabase db) {
         this.db = db;
+        try {
+            insertions.add(SQLiteModel.fromObject(insert));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return this;
     }
 

@@ -415,11 +415,92 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     @SuppressWarnings("unchecked")
-    public static SQLiteModel fromObject(Object obj) throws InstantiationException,
+    public static SQLiteModel fromObject(final Object obj) throws InstantiationException,
             IllegalAccessException {
+        SQLiteModel model = new SQLiteModel() {
+            @Override
+            public String getEntityName() {
+                return obj.getClass().getCanonicalName();
+            }
 
+            @Override
+            public String[] getEntityFieldNames() {
+                try {
+                    List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(obj.getClass());
+                    String[] fieldArray = new String[fields.size()];
+                    for (int i = 0; i < fields.size(); i++) {
+                        Field field = fields.get(i);
+                        fieldArray[i] = field.getName();
+                    }
+                    return new String[0];
+                } catch (Exception e) {
+                    return new String[0];
+                }
+            }
 
-        return null;
+            @Override
+            public String getEntityPrimaryFieldName() {
+                String primaryKey = null;
+                try {
+                    List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(obj.getClass());
+                    String[] fieldArray = new String[fields.size()];
+                    for (int i = 0; i < fields.size(); i++) {
+                        Field field = fields.get(i);
+                        if (field.isAnnotationPresent(PrimaryKey.class)) {
+                            primaryKey = field.getName();
+                        }
+                    }
+                } catch (Exception e) {
+
+                }
+                return primaryKey;
+            }
+        };
+        return model;
+    }
+
+    public static SQLiteModel fromClass(final Class clazz) throws InstantiationException,
+            IllegalAccessException {
+        SQLiteModel model = new SQLiteModel() {
+            @Override
+            public String getEntityName() {
+                return clazz.getCanonicalName();
+            }
+
+            @Override
+            public String[] getEntityFieldNames() {
+                try {
+                    List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(clazz);
+                    String[] fieldArray = new String[fields.size()];
+                    for (int i = 0; i < fields.size(); i++) {
+                        Field field = fields.get(i);
+                        fieldArray[i] = field.getName();
+                    }
+                    return new String[0];
+                } catch (Exception e) {
+                    return new String[0];
+                }
+            }
+
+            @Override
+            public String getEntityPrimaryFieldName() {
+                String primaryKey = null;
+                try {
+                    List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(clazz);
+                    String[] fieldArray = new String[fields.size()];
+                    for (int i = 0; i < fields.size(); i++) {
+                        Field field = fields.get(i);
+                        if (field.isAnnotationPresent(PrimaryKey.class)) {
+                            primaryKey = field.getName();
+                        }
+                    }
+                } catch (Exception e) {
+
+                }
+                return primaryKey;
+            }
+        };
+        return model;
     }
 
     private void persistEmbeddedDbEntity(SQLiteDatabase db) {
@@ -521,6 +602,13 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
         }
         return null;
+    }
+
+    public static <T> T asClass(Class<T> clazz) throws IllegalAccessException, InstantiationException {
+        T instance = clazz.newInstance();
+
+
+        return instance;
     }
 
     @Target(ElementType.FIELD)

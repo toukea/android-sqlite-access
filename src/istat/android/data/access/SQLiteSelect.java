@@ -22,18 +22,23 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     }
 
     public SQLiteSelect join(Class<?> clazz, String on) {
-        QueryAble entity = createQueryAble(clazz);
-        join = entity.getEntityName();
-        table += " INNER JOIN " + join;
-        if (!TextUtils.isEmpty(on)) {
-            table += " ON (" + on + ") ";
+
+        try {
+            QueryAble entity = createQueryAble(clazz);
+            join = entity.getEntityName();
+            table += " INNER JOIN " + join;
+            if (!TextUtils.isEmpty(on)) {
+                table += " ON (" + on + ") ";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return this;
     }
 
-    private QueryAble createQueryAble(Class<?> clazz) {
-        //TODO populate this function.
-        return null;
+    private QueryAble createQueryAble(Class<?> clazz) throws IllegalAccessException, InstantiationException {
+        //TODO make it better
+        return SQLiteModel.fromClass(clazz);
     }
 
     @Override
@@ -43,20 +48,6 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
 
     }
 
-    @SuppressWarnings("unchecked")
-    public <T extends QueryAble> List<T> execute() {
-        List<T> list = new ArrayList<T>();
-        Cursor c = onExecute(db);
-        if (c.getCount() > 0) {
-            while (c.moveToNext()) {
-                T model = createModelFromCursor(clazz, c);
-                list.add(model);
-            }
-        }
-        c.close();
-        return list;
-
-    }
 
     public int count(SQLiteDatabase db) {
         Cursor c = onExecute(db);
@@ -67,17 +58,41 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> void execute(List<T> list) {
-        if (list == null)
-            list = new ArrayList<T>();
-        Cursor c = onExecute(db);
-        if (c.getCount() > 0) {
-            while (c.moveToNext()) {
-                T model = createModelFromCursor(clazz, c);
-                list.add(model);
+    public <T> List<T> execute() {
+        List<T> list = new ArrayList<T>();
+        try {
+            Cursor c = onExecute(db);
+            if (c.getCount() > 0) {
+                while (c.moveToNext()) {
+                    T model = (T) createModelFromCursor(clazz, c);
+                    list.add(model);
+                }
             }
+            c.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        c.close();
+        return list;
+
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> void execute(List<T> list) {
+        if (list == null) {
+            list = new ArrayList<T>();
+        }
+        try {
+            Cursor c = onExecute(db);
+            if (c.getCount() > 0) {
+                while (c.moveToNext()) {
+                    T model = (T) createModelFromCursor(clazz, c);
+                    list.add(model);
+                }
+            }
+            c.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -88,9 +103,10 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
      * @param <T>
      * @return
      */
-    private <T> T createModelFromCursor(Class<?> clazz, Cursor c) {
-        //TODO populate this function.
-        return null;
+    private <T> T createModelFromCursor(Class<T> clazz, Cursor c) throws InstantiationException, IllegalAccessException {
+        //TODO make it better
+        T model = SQLiteModel.asClass(clazz);
+        return model;
     }
 
     public ClauseBuilder AND_SELECT(SQLiteSelect close) {
