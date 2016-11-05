@@ -51,7 +51,7 @@ public class SQLiteUpdate {
         @Override
         protected Object onExecute(SQLiteDatabase db) {
             return db.update(entity.getEntityName(), entity.toContentValues(),
-                    getWhereClose(), getWhereParams());
+                    getWhereClause(), getWhereParams());
         }
 
         public int execute(SQLiteDatabase db) {

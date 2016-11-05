@@ -414,6 +414,14 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    public static SQLiteModel fromObject(Object obj) throws InstantiationException,
+            IllegalAccessException {
+
+
+        return null;
+    }
+
     private void persistEmbeddedDbEntity(SQLiteDatabase db) {
         try {
             Iterator<String> keySet = map.keySet().iterator();

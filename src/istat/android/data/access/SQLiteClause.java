@@ -12,7 +12,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 public abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     protected SQLiteDatabase db;
-    protected String whereClose = null;
+    protected String whereClause = null;
     protected List<String> whereParams = new ArrayList<String>();
     protected String orderBy = null;
     protected String[] projection;
@@ -20,8 +20,8 @@ public abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     final static int TYPE_CLAUSE_WHERE = 0, TYPE_CLAUSE_AND = 1,
             TYPE_CLAUSE_OR = 2, TYPE_CLAUSE_LIKE = 3;
 
-    protected String getWhereClose() {
-        return whereClose;
+    protected String getWhereClause() {
+        return whereClause;
     }
 
     protected String getOrderBy() {
@@ -33,8 +33,8 @@ public abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             return null;
         String[] tmp = new String[whereParams.size()];
         int i = 0;
-        for (String tmps : whereParams) {
-            tmp[i] = tmps;
+        for (String tmpS : whereParams) {
+            tmp[i] = tmpS;
             i++;
         }
         return tmp;
@@ -67,32 +67,32 @@ public abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     }
 
     public ClauseBuilder where(String column) {
-        if (whereClose == null)
-            whereClose = this.table + "." + column;
+        if (whereClause == null)
+            whereClause = this.table + "." + column;
         else
-            whereClose += " AND " + this.table + "." + column;
+            whereClause += " AND " + this.table + "." + column;
         return new ClauseBuilder(TYPE_CLAUSE_AND);
     }
 
     public ClauseBuilder or(String column) {
-        if (whereClose == null)
-            whereClose = this.table + "." + column;
+        if (whereClause == null)
+            whereClause = this.table + "." + column;
         else
-            whereClose += " OR " + this.table + "." + column;
+            whereClause += " OR " + this.table + "." + column;
         return new ClauseBuilder(TYPE_CLAUSE_OR);
     }
 
     public ClauseBuilder and(String column) {
-        if (whereClose == null)
-            whereClose = this.table + "." + column;
+        if (whereClause == null)
+            whereClause = this.table + "." + column;
         else
-            whereClose += " AND " + this.table + "." + column;
+            whereClause += " AND " + this.table + "." + column;
         return new ClauseBuilder(TYPE_CLAUSE_AND);
     }
 
     @SuppressWarnings("unchecked")
     public Clause WHERE(Clause close) {
-        this.whereClose = close.whereClose;
+        this.whereClause = close.whereClause;
         this.whereParams = close.whereParams;
         return (Clause) this;
     }
@@ -105,7 +105,7 @@ public abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
 
     @SuppressWarnings("unchecked")
     public Clause OR(Clause close) {
-        this.whereClose = "(" + this.whereClose + ") OR (" + close.whereClose
+        this.whereClause = "(" + this.whereClause + ") OR (" + close.whereClause
                 + ")";
         this.whereParams.addAll(close.whereParams);
         return (Clause) this;
@@ -113,7 +113,7 @@ public abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
 
     @SuppressWarnings("unchecked")
     public Clause AND(SQLiteSelect close) {
-        this.whereClose = "(" + this.whereClose + ") AND (" + close.whereClose
+        this.whereClause = "(" + this.whereClause + ") AND (" + close.whereClause
                 + ")";
         this.whereParams.addAll(close.whereParams);
         return (Clause) this;
@@ -141,8 +141,8 @@ public abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             e.printStackTrace();
             try {
 
-                Class<?> clazzs = Class.forName(className);
-                obj = clazzs.getConstructor(JSONObject.class).newInstance(
+                Class<?> cLass = Class.forName(className);
+                obj = cLass.getConstructor(JSONObject.class).newInstance(
                         new JSONObject());
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -175,7 +175,7 @@ public abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         @SuppressWarnings("unchecked")
         public Clause equal(Object value) {
             prepare(value);
-            whereClose += " = ? ";
+            whereClause += " = ? ";
             return (Clause) SQLiteClause.this;
         }
 
@@ -190,14 +190,14 @@ public abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         @SuppressWarnings("unchecked")
         public Clause greatThan(Object value, boolean acceptEqual) {
             prepare(value);
-            whereClose += " >" + (acceptEqual ? "=" : "") + " ? ";
+            whereClause += " >" + (acceptEqual ? "=" : "") + " ? ";
             return (Clause) SQLiteClause.this;
         }
 
         @SuppressWarnings("unchecked")
         public Clause lessThan(Object value, boolean acceptEqual) {
             prepare(value);
-            whereClose += " <" + (acceptEqual ? "=" : "") + " ? ";
+            whereClause += " <" + (acceptEqual ? "=" : "") + " ? ";
             return (Clause) SQLiteClause.this;
         }
 
@@ -219,7 +219,7 @@ public abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         @SuppressWarnings("unchecked")
         public Clause like(Object value) {
             prepare(value);
-            whereClose += " like ? ";
+            whereClause += " like ? ";
             return (Clause) SQLiteClause.this;
         }
     }
@@ -237,7 +237,7 @@ public abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     }
 
     protected String getSQL() {
-        String out = "SELECT * FROM " + table + " WHERE " + whereClose.trim();
+        String out = "SELECT * FROM " + table + " WHERE " + whereClause.trim();
         String[] splits = out.split("\\?");
         String sql = "";
         for (int i = 0; i < (!out.endsWith("?") ? splits.length - 1

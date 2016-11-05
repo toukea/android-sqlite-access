@@ -38,7 +38,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
 
     @Override
     protected Cursor onExecute(SQLiteDatabase db) {
-        return db.query(table, projection, getWhereClose(), getWhereParams(),
+        return db.query(table, projection, getWhereClause(), getWhereParams(),
                 null, null, getOrderBy());
 
     }
@@ -94,14 +94,14 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     }
 
     public ClauseBuilder AND_SELECT(SQLiteSelect close) {
-        this.whereClose = "(SELECT * FROM " + table + " WHERE "
-                + close.whereClose + ")";
+        this.whereClause = "(SELECT * FROM " + table + " WHERE "
+                + close.whereClause + ")";
         this.whereParams = close.whereParams;
         return new ClauseBuilder(TYPE_CLAUSE_AND);
     }
 
     public ClauseBuilder OR_SELECT(SQLiteSelect close) {
-        this.whereClose = close.whereClose;
+        this.whereClause = close.whereClause;
         this.whereParams = close.whereParams;
         return new ClauseBuilder(TYPE_CLAUSE_AND);
     }

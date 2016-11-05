@@ -13,7 +13,7 @@ public class SQLiteDelete extends SQLiteClause<SQLiteDelete> {
 
     @Override
     protected Integer onExecute(SQLiteDatabase db) {
-        return db.delete(table, getWhereClose(), getWhereParams());
+        return db.delete(table, getWhereClause(), getWhereParams());
     }
 
     public int execute() {

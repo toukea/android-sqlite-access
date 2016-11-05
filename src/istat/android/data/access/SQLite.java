@@ -8,28 +8,39 @@ import java.io.File;
 
 public final class SQLite {
     static Context instanceContext;
+    static SQLiteDatabase lastOpenedDb;
+
+    public static SQLiteDatabase getLastOpenedDb() {
+        return lastOpenedDb;
+    }
 
     public static SQLiteStatement from(SQLiteDatabase db) {
+        lastOpenedDb = db;
         return new SQLiteStatement(db);
     }
 
-    public static SQLiteStatement fromDbName(Context context, String dbName) {
-        return from(null);
+
+    public static SQLiteStatement from(Context context) {
+        SQLiteDatabase db = null;
+        return from(db);
     }
 
     public static SQLiteStatement fromDbPath(Context context, String dbPath) {
-        return from(null);
+        SQLiteDatabase db = null;
+        return from(db);
     }
 
     public static SQLiteStatement fromDbFile(Context context, File dbFile) {
-        return from(null);
+        SQLiteDatabase db = null;
+        return from(db);
     }
 
     public static SQLiteStatement fromDbUri(Context context, Uri dbUri) {
-        return from(null);
+        SQLiteDatabase db = null;
+        return from(db);
     }
 
-    public static SQLiteDatabase boot(Context context, String dbName, int dbVersion, final BootDescription description) {
+    public static SQLiteDataAccess boot(Context context, String dbName, int dbVersion, final BootDescription description) {
         instanceContext = context;
         SQLiteDataAccess dAccess = new SQLiteDataAccess(context, dbName, dbVersion) {
             @Override
@@ -46,7 +57,7 @@ public final class SQLite {
                 }
             }
         };
-        return null;
+        return dAccess;
     }
 
 
