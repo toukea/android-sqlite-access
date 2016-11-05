@@ -5,6 +5,11 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
+import istat.android.data.access.utils.SQLiteParser;
 
 public final class SQLite {
     static Context instanceContext;
@@ -20,8 +25,13 @@ public final class SQLite {
     }
 
 
-    public static SQLiteStatement from(Context context) {
-        SQLiteDatabase db = null;
+    public static SQLiteStatement from(Context context, String dbName, int dbVersion, BootDescription description) {
+        SQLiteDatabase db = boot(context, dbName, dbVersion, description).open();
+        return from(db);
+    }
+
+    public static SQLiteStatement from(Context context, SQLiteBoot boot) {
+        SQLiteDatabase db = boot(context, boot).open();
         return from(db);
     }
 
@@ -38,6 +48,10 @@ public final class SQLite {
     public static SQLiteStatement fromDbUri(Context context, Uri dbUri) {
         SQLiteDatabase db = null;
         return from(db);
+    }
+
+    public static SQLiteDataAccess boot(Context context, SQLiteBoot boot) {
+        return boot(context, boot.dbName, boot.dbVersion, boot);
     }
 
     public static SQLiteDataAccess boot(Context context, String dbName, int dbVersion, final BootDescription description) {
@@ -87,6 +101,37 @@ public final class SQLite {
         public SQLiteInsert insert(Object entity) {
             return new SQLiteInsert().insert(entity, this.db);
         }
+
+        public void executeStatements(List<String> statements) {
+            for (String ask : statements) {
+                db.execSQL(ask);
+            }
+        }
+
+        public void executeStatements(String... statements) {
+            for (String ask : statements) {
+                db.execSQL(ask);
+            }
+        }
+
+        public void executeSQLScript(InputStream sqlFileInputStream) throws IOException {
+            List<String> statements = SQLiteParser.parseSqlFile(sqlFileInputStream);
+            for (String statement : statements) {
+                db.execSQL(statement);
+            }
+        }
+
+
+    }
+
+    public static abstract class SQLiteBoot implements BootDescription {
+        String dbName;
+        int dbVersion = 1;
+
+        public SQLiteBoot(String dbName, int dbVersion) {
+            this.dbName = dbName;
+            this.dbVersion = dbVersion;
+        }
     }
 
     public static interface BootDescription {
@@ -94,5 +139,12 @@ public final class SQLite {
                                   int newVersion);
 
         abstract void onDbCreate(SQLiteDatabase db);
+    }
+
+    public static void executeSQLScript(SQLiteDatabase db,
+                                        InputStream sqlFileInputStream) throws IOException {
+        List<String> statements = SQLiteParser.parseSqlFile(sqlFileInputStream);
+        for (String statement : statements)
+            db.execSQL(statement);
     }
 }

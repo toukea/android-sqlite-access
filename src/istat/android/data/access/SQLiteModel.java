@@ -613,25 +613,13 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     @Target(ElementType.FIELD)
     @Retention(RetentionPolicy.RUNTIME)
-    public @interface EntityProperty {
+    public @interface Property {
         String info() default "";
     }
 
     @Target(ElementType.FIELD)
     @Retention(RetentionPolicy.RUNTIME)
     public @interface PrimaryKey {
-
-    }
-
-    @Target(ElementType.FIELD)
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface TableName {
-
-    }
-
-    @Target(ElementType.FIELD)
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface Projection {
 
     }
 
@@ -656,7 +644,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             for (Field field : fields) {
 
                 if (field.isAnnotationPresent(PrimaryKey.class)
-                        || field.isAnnotationPresent(EntityProperty.class)) {
+                        || field.isAnnotationPresent(Property.class)) {
                     field.setAccessible(true);
                     String name = field.getName();
                     reflectionFieldNames.add(name);
@@ -668,23 +656,23 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                         && field.isAnnotationPresent(PrimaryKey.class)) {
                     primary_key = field.getName();
                 }
-                if (field.isAnnotationPresent(Projection.class)) {
-                    try {
-                        field.setAccessible(true);
-                        String[] tmp_prj = (String[]) field.get(instance);
-                        for (String item : tmp_prj) {
-                            if (!projection.contains(item)) {
-                                projection.add(item);
-                            }
-                        }
-                    } catch (Exception e) {
-                        // e.printStackTrace();
-                    }
-                }
-                if (field.isAnnotationPresent(TableName.class)) {
-                    field.setAccessible(true);
-                    tb_name = field.get(instance) + "";
-                }
+//                if (field.isAnnotationPresent(Projection.class)) {
+//                    try {
+//                        field.setAccessible(true);
+//                        String[] tmp_prj = (String[]) field.get(instance);
+//                        for (String item : tmp_prj) {
+//                            if (!projection.contains(item)) {
+//                                projection.add(item);
+//                            }
+//                        }
+//                    } catch (Exception e) {
+//                        // e.printStackTrace();
+//                    }
+//                }
+//                if (field.isAnnotationPresent(TableName.class)) {
+//                    field.setAccessible(true);
+//                    tb_name = field.get(instance) + "";
+//                }
             }
             tb_projection = new String[projection.size()];
             tb_projection = projection.toArray(tb_projection);
@@ -697,7 +685,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(clazz);
             for (Field field : fields) {
                 if (field.isAnnotationPresent(PrimaryKey.class)
-                        || field.isAnnotationPresent(EntityProperty.class)) {
+                        || field.isAnnotationPresent(Property.class)) {
                     field.setAccessible(true);
                     Object obj = field.get(instance);
                     if (obj instanceof JSONable) {
@@ -720,7 +708,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(clazz);
             for (Field field : fields) {
                 if (field.isAnnotationPresent(PrimaryKey.class)
-                        || field.isAnnotationPresent(EntityProperty.class)) {
+                        || field.isAnnotationPresent(Property.class)) {
                     field.setAccessible(true);
                     Object obj = field.get(instance);
                     if (obj != null && !TextUtils.isEmpty(obj + "")) {
