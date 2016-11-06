@@ -158,7 +158,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     @Override
-    public JSONObject toJSONObject() {
+    public JSONObject toJson() {
         JSONObject json = createJsonFromHashMap(map);
         try {
             if (parser == null) {
@@ -176,7 +176,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     public JSONObject toJSONObject(boolean addclassName) {
-        JSONObject json = toJSONObject();
+        JSONObject json = toJson();
         if (!addclassName) {
             json.remove(TAG_CLASS);
         }
@@ -185,13 +185,13 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     @Override
     public String toString() {
-        return toJSONObject().toString();
+        return toJson().toString();
     }
 
     @Override
     public ContentValues toContentValues() {
         ContentValues pairs = new ContentValues();
-        JSONObject toJson = toJSONObject();
+        JSONObject toJson = toJson();
         for (String projection : tb_projection) {
             String values = toJson.optString(projection);
             if (!TextUtils.isEmpty(values)) {
@@ -201,7 +201,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return pairs;
     }
 
-    public final void fillFromJSONObject(JSONObject json) {
+    public final void fillFromJson(JSONObject json) {
 
         onFillFromJson(json);
 
@@ -377,7 +377,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     public static <T extends SQLiteModel> T fromQueryable(JSONable q)
             throws InstantiationException, IllegalAccessException {
-        return fromJson(q.toJSONObject(), q.getClass());
+        return fromJson(q.toJson(), q.getClass());
     }
 
     @SuppressWarnings("unchecked")
@@ -404,7 +404,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 Object obj = Class.forName(clazz).newInstance();
                 if (obj instanceof SQLiteModel) {
                     JSONable jsonentity = (SQLiteModel) obj;
-                    jsonentity.fillFromJSONObject(json);
+                    jsonentity.fillFromJson(json);
                     if (obj instanceof SQLiteModel)
                         return (T) jsonentity;
                     else
@@ -541,7 +541,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 if (obj != null) {
                     if (obj instanceof JSONable) {
                         JSONable jsonentity = (JSONable) obj;
-                        json.put(tmp, jsonentity.toJSONObject());
+                        json.put(tmp, jsonentity.toJson());
                     } else {
                         String value = obj.toString();
                         if (!TextUtils.isEmpty(value)
@@ -580,7 +580,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 Object obj = Class.forName(clazz).newInstance();
                 if (obj instanceof JSONable) {
                     JSONable jsonentity = (JSONable) obj;
-                    jsonentity.fillFromJSONObject(json);
+                    jsonentity.fillFromJson(json);
                     return jsonentity;
                 } else {
                     return objToString;
@@ -717,7 +717,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                     Object obj = field.get(instance);
                     if (obj instanceof JSONable) {
                         JSONable jsonEntity = (JSONable) obj;
-                        json.put(field.getName(), jsonEntity.toJSONObject());
+                        json.put(field.getName(), jsonEntity.toJson());
                     } else {
                         json.put(field.getName(), field.get(instance));
                     }

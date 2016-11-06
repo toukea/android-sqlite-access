@@ -19,33 +19,43 @@ public final class SQLite {
         return lastOpenedDb;
     }
 
-    public static SQLiteStatement from(SQLiteDatabase db) {
+    public static SQL from(SQLiteDatabase db) {
         lastOpenedDb = db;
-        return new SQLiteStatement(db);
+        return new SQL(db);
     }
 
+    public static void from(SQLiteDatabase db, SQLExecutor executor) {
+        SQL sql = SQLite.from(db);
+        executor.onExecute(sql, db);
+        try {
+            db.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-    public static SQLiteStatement from(Context context, String dbName, int dbVersion, BootDescription description) {
+    public static SQL from(Context context, String dbName, int dbVersion, BootDescription description) {
         SQLiteDatabase db = boot(context, dbName, dbVersion, description).open();
         return from(db);
     }
 
-    public static SQLiteStatement from(Context context, SQLiteBoot boot) {
+    public static SQL from(Context context, SQLiteBoot boot) {
         SQLiteDatabase db = boot(context, boot).open();
         return from(db);
     }
 
-    public static SQLiteStatement fromDbPath(Context context, String dbPath) {
+
+    public static SQL fromDbPath(Context context, String dbPath) {
         SQLiteDatabase db = null;
         return from(db);
     }
 
-    public static SQLiteStatement fromDbFile(Context context, File dbFile) {
+    public static SQL fromDbFile(Context context, File dbFile) {
         SQLiteDatabase db = null;
         return from(db);
     }
 
-    public static SQLiteStatement fromDbUri(Context context, Uri dbUri) {
+    public static SQL fromDbUri(Context context, Uri dbUri) {
         SQLiteDatabase db = null;
         return from(db);
     }
@@ -75,10 +85,10 @@ public final class SQLite {
     }
 
 
-    public static class SQLiteStatement {
+    public static class SQL {
         SQLiteDatabase db;
 
-        SQLiteStatement(SQLiteDatabase db) {
+        SQL(SQLiteDatabase db) {
             this.db = db;
         }
 
@@ -150,5 +160,9 @@ public final class SQLite {
         List<String> statements = SQLiteParser.parseSqlFile(sqlFileInputStream);
         for (String statement : statements)
             db.execSQL(statement);
+    }
+
+    public interface SQLExecutor {
+        public void onExecute(SQL sql, SQLiteDatabase db);
     }
 }

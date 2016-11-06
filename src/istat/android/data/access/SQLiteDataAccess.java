@@ -107,7 +107,7 @@ public abstract class SQLiteDataAccess implements Closeable, SQLite.BootDescript
         endTransaction();
     }
 
-    public final SQLite.SQLiteStatement getStatement() {
+    public final SQLite.SQL getStatement() {
         return SQLite.from(open());
     }
 
@@ -199,8 +199,8 @@ public abstract class SQLiteDataAccess implements Closeable, SQLite.BootDescript
         }
     }
 
-    protected void executeRawRessources(SQLiteDatabase db, int... resids) {
-        for (int index : resids) {
+    protected void executeRawRessources(SQLiteDatabase db, int... resourceIds) {
+        for (int index : resourceIds) {
             executeRawResource(db, index);
         }
     }
@@ -218,8 +218,8 @@ public abstract class SQLiteDataAccess implements Closeable, SQLite.BootDescript
 
     protected static void executeStatements(SQLiteDatabase db,
                                             String[] statements) {
-        for (String ask : statements)
-            db.execSQL(ask);
+        for (String statement : statements)
+            db.execSQL(statement);
     }
 
     // ----------------------------------------------------------------------------
