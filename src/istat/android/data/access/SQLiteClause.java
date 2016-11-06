@@ -50,7 +50,12 @@ public abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     }
 
     protected SQLiteClause(Class<?> clazz, SQLiteDatabase db) {
-        QueryAble entity = null;//createEntityInstance(clazz);
+        QueryAble entity = null;//null;//createEntityInstance(clazz);
+        try {
+            entity = SQLiteModel.fromClass(clazz);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         if (entity != null) {
             table = entity.getEntityName();
             projection = entity.getEntityFieldNames();

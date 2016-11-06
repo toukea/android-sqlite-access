@@ -344,6 +344,9 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     public boolean exist(SQLiteDatabase db) {
+        if (TextUtils.isEmpty(primary_key)) {
+            return false;
+        }
         Cursor c = db.query(tb_name, new String[]{primary_key}, primary_key
                 + "= ?", new String[]{getPrimaryKey()}, null, null, null);
         int count = c.getCount();
@@ -420,7 +423,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         SQLiteModel model = new SQLiteModel() {
             @Override
             public String getEntityName() {
-                return obj.getClass().getCanonicalName();
+                return obj.getClass().getSimpleName();
             }
 
             @Override
@@ -464,7 +467,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         SQLiteModel model = new SQLiteModel() {
             @Override
             public String getEntityName() {
-                return clazz.getCanonicalName();
+                return clazz.getSimpleName();
             }
 
             @Override
