@@ -7,20 +7,20 @@ import android.database.sqlite.SQLiteDatabase;
 abstract interface QueryAble {
 
 
-    public long persist(SQLiteDatabase db);
+    long persist(SQLiteDatabase db);
 
     abstract int delete(SQLiteDatabase db);
 
     public abstract boolean exist(SQLiteDatabase db);
 
-    public abstract ContentValues toContentValues();
+    abstract ContentValues toContentValues();
 
-    abstract void fillFromCursor(Cursor c);
+    void fillFromCursor(Cursor c);
 
-    public abstract String getEntityName();
+    abstract String getName();
 
-    public abstract String[] getEntityFieldNames();
+    abstract String[] getProjections();
 
-    public abstract String getEntityPrimaryFieldName();
+    abstract String getPrimaryFieldName();
 
 }

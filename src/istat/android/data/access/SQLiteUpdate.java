@@ -15,7 +15,7 @@ public class SQLiteUpdate {
     }
 
     public Updater setAs(QueryAble entity) {
-        return new Updater(entity.getEntityName(), this.updater.db);
+        return new Updater(entity.getName(), this.updater.db);
     }
 
     public SQLiteUpdate set(String name, Object value) {
@@ -50,7 +50,7 @@ public class SQLiteUpdate {
 
         @Override
         protected Object onExecute(SQLiteDatabase db) {
-            return db.update(entity.getEntityName(), entity.toContentValues(),
+            return db.update(entity.getName(), entity.toContentValues(),
                     getWhereClause(), getWhereParams());
         }
 

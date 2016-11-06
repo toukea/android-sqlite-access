@@ -58,8 +58,8 @@ public abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             e.printStackTrace();
         }
         if (entity != null) {
-            table = entity.getEntityName();
-            projection = entity.getEntityFieldNames();
+            table = entity.getName();
+            projection = entity.getProjections();
         }
     }
 

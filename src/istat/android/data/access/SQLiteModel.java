@@ -6,7 +6,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -25,28 +24,14 @@ import android.text.TextUtils;
 
 abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     HashMap<String, Object> map = new HashMap<String, Object>();
-    private AnnotationParser parser;
-    protected String tb_name, primary_key;
-    protected String[] tb_projection;
+    //    protected String tb_name, primary_key;
+//    protected String[] tb_projection;
     public static String TAG_CLASS = "istat.data.access.DbEntity.class";
     private Object instance;
     List<String> reflectionFieldNames = new ArrayList<String>();
 
     protected SQLiteModel() {
         instance = this;
-        build();
-    }
-
-    protected void build() {
-        tb_name = getEntityName();
-        primary_key = getEntityPrimaryFieldName();
-        tb_projection = getEntityFieldNames();
-        parser = new AnnotationParser();
-        try {
-            parser.parse(this.getClass());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     protected void set(String name, Object value) {
@@ -54,7 +39,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     public String getPrimaryKey() {
-        return getString(primary_key);
+        return getString(getPrimaryFieldName());
     }
 
     protected Object get(String name) {
@@ -149,11 +134,6 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     public HashMap<String, Object> toHashMap() {
         HashMap<String, Object> map = new HashMap<String, Object>();
         map.putAll(map);
-        try {
-            parser.fillMap(getClass(), map);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         return map;
     }
 
@@ -161,10 +141,6 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     public JSONObject toJson() {
         JSONObject json = createJsonFromHashMap(map);
         try {
-            if (parser == null) {
-                parser = new AnnotationParser();
-            }
-            parser.fillJSON(getClass(), json);
             String className = instance.getClass() + "";
             className = className.substring(6, className.length()).trim();
             json.put(TAG_CLASS, className);
@@ -192,7 +168,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     public ContentValues toContentValues() {
         ContentValues pairs = new ContentValues();
         JSONObject toJson = toJson();
-        for (String projection : tb_projection) {
+        for (String projection : getProjections()) {
             String values = toJson.optString(projection);
             if (!TextUtils.isEmpty(values)) {
                 pairs.put(projection, values);
@@ -244,6 +220,9 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     protected void onFillFromPrimaryKey(String primaryKey, SQLiteDatabase db) {
+        String tb_name = getName();
+        String[] tb_projection = getProjections();
+        String primary_key = getPrimaryFieldName();
         Cursor c = db.query(tb_name, tb_projection, primary_key + "=?",
                 new String[]{primaryKey}, null, null, null);
         if (c.getCount() > 0) {
@@ -273,9 +252,9 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     protected void onFillFromCursor(Cursor c) {
 //        if (tb_projection.length <= 0) {
-//            tb_projection = getEntityFieldNames();
+//            tb_projection = getProjections();
 //        }
-        for (String projection : tb_projection) {
+        for (String projection : getProjections()) {
             int columnIndex = c.getColumnIndex(projection);
             if (columnIndex >= 0) {
                 String values = c.getString(columnIndex);
@@ -290,7 +269,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         long out = 0;
         // db.beginTransaction();
         try {
-            out = db.insert(getEntityName(), null, toContentValues());
+            out = db.insert(getName(), null, toContentValues());
             persistEmbeddedDbEntity(db);
             // db.setTransactionSuccessful();
         } catch (Exception e) {
@@ -307,7 +286,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         int out = 0;
         // db.beginTransaction();
         try {
-            out = update(db, primary_key + "= ?",
+            out = update(db, getPrimaryFieldName() + "= ?",
                     new String[]{getPrimaryKey()});
             persistEmbeddedDbEntity(db);
             // db.setTransactionSuccessful();
@@ -347,6 +326,8 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     public boolean exist(SQLiteDatabase db) {
+        String primary_key = getPrimaryFieldName();
+        String tb_name = getName();
         if (TextUtils.isEmpty(primary_key)) {
             return false;
         }
@@ -359,7 +340,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     public int delete(SQLiteDatabase db) {
 
-        return delete(db, primary_key + "= ?",
+        return delete(db, getPrimaryFieldName() + "= ?",
                 new String[]{getPrimaryKey()});
     }
 
@@ -440,18 +421,18 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         SQLiteModel model = new SQLiteModel() {
 
             @Override
-            public String getEntityName() {
+            public String getName() {
                 return obj.getClass().getSimpleName();
             }
 
             @Override
-            public String[] getEntityFieldNames() {
+            public String[] getProjections() {
 
                 return projections;
             }
 
             @Override
-            public String getEntityPrimaryFieldName() {
+            public String getPrimaryFieldName() {
                 String primaryKey = null;
                 try {
                     List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(obj.getClass());
@@ -476,12 +457,12 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             IllegalAccessException {
         SQLiteModel model = new SQLiteModel() {
             @Override
-            public String getEntityName() {
+            public String getName() {
                 return clazz.getSimpleName();
             }
 
             @Override
-            public String[] getEntityFieldNames() {
+            public String[] getProjections() {
                 try {
                     List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(clazz);
                     String[] fieldArray = new String[fields.size()];
@@ -496,7 +477,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             }
 
             @Override
-            public String getEntityPrimaryFieldName() {
+            public String getPrimaryFieldName() {
                 String primaryKey = null;
                 try {
                     List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(clazz);
@@ -656,91 +637,45 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     protected void clear() {
-        for (String name : tb_projection) {
+        for (String name : getProjections()) {
             set(name, null);
         }
     }
 
-    class AnnotationParser {
-        public void parse(Class<?> clazz) throws Exception {
-            List<String> projection = getEntityFieldNames() != null ? new ArrayList<String>(
-                    Arrays.asList(getEntityFieldNames()))
-                    : new ArrayList<String>();
-
-            Field[] fields = clazz.getDeclaredFields();
-            for (Field field : fields) {
-
-                if (field.isAnnotationPresent(PrimaryKey.class)
-                        || field.isAnnotationPresent(Property.class)) {
-                    field.setAccessible(true);
-                    String name = field.getName();
-                    reflectionFieldNames.add(name);
-                    if (!projection.contains(name)) {
-                        projection.add(name);
-                    }
-                }
-                if (!hasPrimaryKey()
-                        && field.isAnnotationPresent(PrimaryKey.class)) {
-                    primary_key = field.getName();
-                }
-//                if (field.isAnnotationPresent(Projection.class)) {
-//                    try {
-//                        field.setAccessible(true);
-//                        String[] tmp_prj = (String[]) field.get(instance);
-//                        for (String item : tmp_prj) {
-//                            if (!projection.contains(item)) {
-//                                projection.add(item);
-//                            }
-//                        }
-//                    } catch (Exception e) {
-//                        // e.printStackTrace();
-//                    }
-//                }
-//                if (field.isAnnotationPresent(TableName.class)) {
-//                    field.setAccessible(true);
-//                    tb_name = field.get(instance) + "";
-//                }
-            }
-            tb_projection = new String[projection.size()];
-            tb_projection = projection.toArray(tb_projection);
-
-        }
-
-        public void fillJSON(Class<?> clazz, JSONObject json)
-                throws IllegalAccessException, IllegalArgumentException,
-                JSONException {
-            List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(clazz);
-            for (Field field : fields) {
-                if (field.isAnnotationPresent(PrimaryKey.class)
-                        || field.isAnnotationPresent(Property.class)) {
-                    field.setAccessible(true);
-                    Object obj = field.get(instance);
-                    if (obj instanceof JSONable) {
-                        JSONable jsonEntity = (JSONable) obj;
-                        json.put(field.getName(), jsonEntity.toJson());
-                    } else {
-                        json.put(field.getName(), field.get(instance));
-                    }
+    public void fillJSON(Class<?> clazz, JSONObject json)
+            throws IllegalAccessException, IllegalArgumentException,
+            JSONException {
+        List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(clazz);
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(PrimaryKey.class)
+                    || field.isAnnotationPresent(Property.class)) {
+                field.setAccessible(true);
+                Object obj = field.get(instance);
+                if (obj instanceof JSONable) {
+                    JSONable jsonEntity = (JSONable) obj;
+                    json.put(field.getName(), jsonEntity.toJson());
                 } else {
-                    // field.setAccessible(true);
-                    // Log.d("filed::" + field.getName(), field.get(instance) +
-                    // "");
+                    json.put(field.getName(), field.get(instance));
                 }
+            } else {
+                // field.setAccessible(true);
+                // Log.d("filed::" + field.getName(), field.get(instance) +
+                // "");
             }
         }
+    }
 
-        public void fillMap(Class<?> clazz, HashMap<String, Object> map)
-                throws IllegalAccessException, IllegalArgumentException,
-                JSONException {
-            List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(clazz);
-            for (Field field : fields) {
-                if (field.isAnnotationPresent(PrimaryKey.class)
-                        || field.isAnnotationPresent(Property.class)) {
-                    field.setAccessible(true);
-                    Object obj = field.get(instance);
-                    if (obj != null && !TextUtils.isEmpty(obj + "")) {
-                        map.put(field.getName(), obj);
-                    }
+    public void fillMap(Class<?> clazz, HashMap<String, Object> map)
+            throws IllegalAccessException, IllegalArgumentException,
+            JSONException {
+        List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(clazz);
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(PrimaryKey.class)
+                    || field.isAnnotationPresent(Property.class)) {
+                field.setAccessible(true);
+                Object obj = field.get(instance);
+                if (obj != null && !TextUtils.isEmpty(obj + "")) {
+                    map.put(field.getName(), obj);
                 }
             }
         }
@@ -749,13 +684,13 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     protected int update(SQLiteDatabase db, String whereClause,
                          String[] whereArgs) {
-        return db.update(getEntityName(), toContentValues(), whereClause,
+        return db.update(getName(), toContentValues(), whereClause,
                 whereArgs);
     }
 
     protected int delete(SQLiteDatabase db, String whereClause,
                          String[] whereArgs) {
-        return db.delete(getEntityName(), whereClause, whereArgs);
+        return db.delete(getName(), whereClause, whereArgs);
     }
 
     public static ContentValues createContentValuesFromJSONObject(

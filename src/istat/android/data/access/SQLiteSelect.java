@@ -25,7 +25,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
 
         try {
             QueryAble entity = createQueryAble(clazz);
-            join = entity.getEntityName();
+            join = entity.getName();
             table += " INNER JOIN " + join;
             if (!TextUtils.isEmpty(on)) {
                 table += " ON (" + on + ") ";

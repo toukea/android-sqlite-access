@@ -120,7 +120,7 @@ public abstract class SQLiteDataAccess implements Closeable, SQLite.BootDescript
     // String table = "";
     // try {
     // instance = clazz.newInstance();
-    // table = instance.getEntityName();
+    // table = instance.getName();
     // } catch (Exception e) {
     // throw new RuntimeException(
     // "not default constructor found for class::" + clazz);
