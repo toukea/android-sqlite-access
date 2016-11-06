@@ -182,10 +182,10 @@ public abstract class SQLiteDataAccess implements Closeable, SQLite.BootDescript
     }
 
     // -----------------------------------------------------------------------------------------------------------
-//    protected abstract void onDbUpgrade(SQLiteDatabase db, int oldVersion,
+//    protected abstract void onUpgradeDb(SQLiteDatabase db, int oldVersion,
 //                                        int newVersion);
 //
-//    protected abstract void onDbCreate(SQLiteDatabase db);
+//    protected abstract void onCreateDb(SQLiteDatabase db);
 
     protected boolean executeRawResource(SQLiteDatabase db, int resid) {
         try {
@@ -235,13 +235,13 @@ public abstract class SQLiteDataAccess implements Closeable, SQLite.BootDescript
         @Override
         public void onCreate(SQLiteDatabase db) {
 
-            onDbCreate(db);
+            onCreateDb(db);
             registerDbCreationTime();
         }
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            onDbUpgrade(db, oldVersion, newVersion);
+            onUpgradeDb(db, oldVersion, newVersion);
             registerDbUpdateTime();
         }
 

@@ -49,7 +49,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     }
 
 
-    public int count(SQLiteDatabase db) {
+    public int count() {
         Cursor c = onExecute(db);
         int count = c.getCount();
         c.close();
@@ -64,7 +64,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             Cursor c = onExecute(db);
             if (c.getCount() > 0) {
                 while (c.moveToNext()) {
-                    T model = (T) createModelFromCursor(clazz, c);
+                    T model = (T) createObjectFromCursor(clazz, c);
                     list.add(model);
                 }
             }
@@ -85,7 +85,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             Cursor c = onExecute(db);
             if (c.getCount() > 0) {
                 while (c.moveToNext()) {
-                    T model = (T) createModelFromCursor(clazz, c);
+                    T model = (T) createObjectFromCursor(clazz, c);
                     list.add(model);
                 }
             }
@@ -103,7 +103,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
      * @param <T>
      * @return
      */
-    private <T> T createModelFromCursor(Class<T> clazz, Cursor c) throws InstantiationException, IllegalAccessException {
+    private <T> T createObjectFromCursor(Class<T> clazz, Cursor c) throws InstantiationException, IllegalAccessException {
         //TODO make it better
         SQLiteModel model = SQLiteModel.fromClass(clazz);
         model.fillFromCursor(c);

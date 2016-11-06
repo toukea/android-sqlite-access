@@ -51,7 +51,7 @@ public abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
 
     protected SQLiteClause(Class<?> clazz, SQLiteDatabase db) {
         this.db = db;
-        QueryAble entity = null;//null;//createEntityInstance(clazz);
+        QueryAble entity = null;//null;//createModelFromClass(clazz);
         try {
             entity = SQLiteModel.fromClass(clazz);
         } catch (Exception e) {
@@ -129,14 +129,14 @@ public abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
 
     protected static QueryAble createFromCursor(
             Class<? extends QueryAble> clazz, Cursor c) {
-        QueryAble instance = createEntityInstance(clazz);
+        QueryAble instance = createModelFromClass(clazz);
         if (instance != null) {
             instance.fillFromCursor(c);
         }
         return instance;
     }
 
-    protected static QueryAble createEntityInstance(
+    protected static QueryAble createModelFromClass(
             Class<? extends QueryAble> clazz) {
         String className = clazz + "";
         className = className.substring(6, className.length()).trim();

@@ -58,16 +58,16 @@ public final class SQLite {
         instanceContext = context;
         SQLiteDataAccess dAccess = new SQLiteDataAccess(context, dbName, dbVersion) {
             @Override
-            public void onDbUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+            public void onUpgradeDb(SQLiteDatabase db, int oldVersion, int newVersion) {
                 if (description != null) {
-                    description.onDbUpgrade(db, oldVersion, newVersion);
+                    description.onUpgradeDb(db, oldVersion, newVersion);
                 }
             }
 
             @Override
-            public void onDbCreate(SQLiteDatabase db) {
+            public void onCreateDb(SQLiteDatabase db) {
                 if (description != null) {
-                    description.onDbCreate(db);
+                    description.onCreateDb(db);
                 }
             }
         };
@@ -121,6 +121,10 @@ public final class SQLite {
             }
         }
 
+        public final void closeDb() {
+            db.close();
+        }
+
 
     }
 
@@ -135,10 +139,10 @@ public final class SQLite {
     }
 
     public static interface BootDescription {
-        abstract void onDbUpgrade(SQLiteDatabase db, int oldVersion,
-                                  int newVersion);
+        abstract void onCreateDb(SQLiteDatabase db);
 
-        abstract void onDbCreate(SQLiteDatabase db);
+        abstract void onUpgradeDb(SQLiteDatabase db, int oldVersion,
+                                  int newVersion);
     }
 
     public static void executeSQLScript(SQLiteDatabase db,
