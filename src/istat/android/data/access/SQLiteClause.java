@@ -50,6 +50,7 @@ public abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     }
 
     protected SQLiteClause(Class<?> clazz, SQLiteDatabase db) {
+        this.db = db;
         QueryAble entity = null;//null;//createEntityInstance(clazz);
         try {
             entity = SQLiteModel.fromClass(clazz);

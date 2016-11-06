@@ -105,8 +105,10 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
      */
     private <T> T createModelFromCursor(Class<T> clazz, Cursor c) throws InstantiationException, IllegalAccessException {
         //TODO make it better
-        T model = SQLiteModel.asClass(clazz);
-        return model;
+        SQLiteModel model = SQLiteModel.fromClass(clazz);
+        model.fillFromCursor(c);
+        T obj = model.asClass(clazz);
+        return obj;
     }
 
     public ClauseBuilder AND_SELECT(SQLiteSelect close) {

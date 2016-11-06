@@ -9,10 +9,11 @@ public class SQLiteInsert {
     List<QueryAble> insertions = new ArrayList<QueryAble>();
     SQLiteDatabase db;
 
-    SQLiteInsert insert(Object insert, SQLiteDatabase db) {
+    public SQLiteInsert insert(Object insert, SQLiteDatabase db) {
         this.db = db;
         try {
-            insertions.add(SQLiteModel.fromObject(insert));
+            QueryAble model = SQLiteModel.fromObject(insert);
+            insertions.add(model);
         } catch (Exception e) {
             e.printStackTrace();
         }

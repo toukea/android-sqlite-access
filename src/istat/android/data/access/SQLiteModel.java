@@ -272,6 +272,9 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     protected void onFillFromCursor(Cursor c) {
+//        if (tb_projection.length <= 0) {
+//            tb_projection = getEntityFieldNames();
+//        }
         for (String projection : tb_projection) {
             int columnIndex = c.getColumnIndex(projection);
             if (columnIndex >= 0) {
@@ -420,7 +423,22 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     @SuppressWarnings("unchecked")
     public static SQLiteModel fromObject(final Object obj) throws InstantiationException,
             IllegalAccessException {
+        String[] tmp = new String[0];
+        HashMap<String, Object> map = new HashMap<String, Object>();
+        try {
+            List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(obj.getClass());
+            tmp = new String[fields.size()];
+            for (int i = 0; i < fields.size(); i++) {
+                Field field = fields.get(i);
+                tmp[i] = field.getName();
+                map.put(tmp[i], field.get(obj));
+            }
+
+        } catch (Exception e) {
+        }
+        final String[] projections = tmp;
         SQLiteModel model = new SQLiteModel() {
+
             @Override
             public String getEntityName() {
                 return obj.getClass().getSimpleName();
@@ -428,17 +446,8 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
             @Override
             public String[] getEntityFieldNames() {
-                try {
-                    List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(obj.getClass());
-                    String[] fieldArray = new String[fields.size()];
-                    for (int i = 0; i < fields.size(); i++) {
-                        Field field = fields.get(i);
-                        fieldArray[i] = field.getName();
-                    }
-                    return new String[0];
-                } catch (Exception e) {
-                    return new String[0];
-                }
+
+                return projections;
             }
 
             @Override
@@ -459,6 +468,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 return primaryKey;
             }
         };
+        model.map.putAll(map);
         return model;
     }
 
@@ -479,7 +489,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                         Field field = fields.get(i);
                         fieldArray[i] = field.getName();
                     }
-                    return new String[0];
+                    return fieldArray;
                 } catch (Exception e) {
                     return new String[0];
                 }
@@ -490,7 +500,6 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 String primaryKey = null;
                 try {
                     List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(clazz);
-                    String[] fieldArray = new String[fields.size()];
                     for (int i = 0; i < fields.size(); i++) {
                         Field field = fields.get(i);
                         if (field.isAnnotationPresent(PrimaryKey.class)) {
@@ -607,10 +616,25 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return null;
     }
 
-    public static <T> T asClass(Class<T> clazz) throws IllegalAccessException, InstantiationException {
+    public <T> T asClass(Class<T> clazz) throws IllegalAccessException, InstantiationException {
         T instance = clazz.newInstance();
-
-
+        List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(clazz);
+        for (Field field : fields) {
+            field.setAccessible(true);
+            if (field.getType().isAssignableFrom(String.class)) {
+                field.set(instance, getString(field.getName()));
+            } else if (field.getType().isAssignableFrom(Double.class)) {
+                field.set(instance, getDouble(field.getName()));
+            } else if (field.getType().isAssignableFrom(Float.class)) {
+                field.set(instance, getFloat(field.getName()));
+            } else if (field.getType().isAssignableFrom(Long.class)) {
+                field.set(instance, getLong(field.getName()));
+            } else if (field.getType().isAssignableFrom(Boolean.class)) {
+                field.set(instance, getBoolean(field.getName()));
+            } else if (field.getType().isAssignableFrom(Integer.class)) {
+                field.set(instance, getInteger(field.getName()));
+            }
+        }
         return instance;
     }
 
