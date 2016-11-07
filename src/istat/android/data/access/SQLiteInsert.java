@@ -5,12 +5,22 @@ import java.util.List;
 
 import android.database.sqlite.SQLiteDatabase;
 
-public class SQLiteInsert {
+public final class SQLiteInsert {
     List<QueryAble> insertions = new ArrayList<QueryAble>();
     SQLiteDatabase db;
 
-    public SQLiteInsert insert(Object insert, SQLiteDatabase db) {
+    SQLiteInsert insert(Object insert, SQLiteDatabase db) {
         this.db = db;
+        try {
+            QueryAble model = SQLiteModel.fromObject(insert);
+            insertions.add(model);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return this;
+    }
+
+    public SQLiteInsert insert(Object insert) {
         try {
             QueryAble model = SQLiteModel.fromObject(insert);
             insertions.add(model);

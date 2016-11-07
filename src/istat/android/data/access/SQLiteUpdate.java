@@ -2,59 +2,70 @@ package istat.android.data.access;
 
 import android.database.sqlite.SQLiteDatabase;
 
-public class SQLiteUpdate {
+public final class SQLiteUpdate {
     Updater updater;
-    SQLiteModel setEntity;
 
     SQLiteUpdate(Class<?> clazz, SQLiteDatabase db) {
         updater = new Updater(clazz, db);
     }
+//
+//    SQLiteUpdate(String table, SQLiteDatabase db) {
+//        updater = new Updater(table, db);
+//    }
 
-    SQLiteUpdate(String table, SQLiteDatabase db) {
-        updater = new Updater(table, db);
+    public Updater setAs(Object entity) {
+        String tbName = entity.getClass().getName();
+        try {
+            SQLiteModel model = SQLiteModel.fromObject(entity);
+            updater.model.map.putAll(model.map);
+            tbName = model.getName();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new Updater(tbName, this.updater.db);
     }
 
-    public Updater setAs(QueryAble entity) {
-        return new Updater(entity.getName(), this.updater.db);
-    }
-
-    public SQLiteUpdate set(String name, Object value) {
-        setEntity.set(name, value);
-        return this;
-    }
-
-    public Updater where(String column) {
-        updater.setEntity(setEntity);
+    public Updater set(String name, Object value) {
+        updater.model.set(name, value);
         return updater;
     }
 
+    public SQLiteClause.ClauseBuilder where(String column) {
+        return updater.where(column);
+    }
+
     public class Updater extends SQLiteClause<Updater> {
-        protected QueryAble entity;
+        protected SQLiteModel model;
 
-        protected Updater(QueryAble entity, SQLiteDatabase db) {
-            super(entity.getClass(), db);
-            this.entity = entity;
-        }
-
-        private void setEntity(QueryAble entity) {
-            this.entity = entity;
+        private void setModel(SQLiteModel model) {
+            this.model = model;
         }
 
         protected Updater(Class<?> clazz, SQLiteDatabase db) {
             super(clazz, db);
+            try {
+                model = SQLiteModel.fromClass(clazz);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         protected Updater(String clazz, SQLiteDatabase db) {
             super(clazz, null, db);
         }
 
+        public Updater set(String name, Object value) {
+            model.set(name, value);
+            return this;
+        }
+
         @Override
         protected Object onExecute(SQLiteDatabase db) {
-            return db.update(entity.getName(), entity.toContentValues(),
+            return db.update(model.getName(), model.toContentValues(),
                     getWhereClause(), getWhereParams());
         }
 
-        public int execute(SQLiteDatabase db) {
+        public int execute() {
             return Integer.valueOf(onExecute(db) + "");
         }
 

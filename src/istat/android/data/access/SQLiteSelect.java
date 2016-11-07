@@ -7,7 +7,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
-public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
+public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     Class<?> clazz;
     String join;
 
