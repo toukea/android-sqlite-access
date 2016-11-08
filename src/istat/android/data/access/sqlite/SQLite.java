@@ -8,12 +8,16 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import istat.android.data.access.sqlite.utils.SQLiteParser;
 
 public final class SQLite {
-    static Context instanceContext;
-    static SQLiteDatabase lastOpenedDb;
+    static SQLiteDatabase
+            lastOpenedDb;
+    final static ConcurrentHashMap<String, SQLiteDataAccess> launchers = new ConcurrentHashMap<String, SQLiteDataAccess>();
+    final static ConcurrentHashMap<String, SQLiteLauncher> dbNameLauncherPair = new ConcurrentHashMap<String, SQLiteLauncher>();
 
     public static SQLiteDatabase getLastOpenedDb() {
         return lastOpenedDb;
@@ -24,9 +28,64 @@ public final class SQLite {
         return new SQL(db);
     }
 
-    public static void from(SQLiteDatabase db, SQLExecutor executor) {
+    public static void addLauncher(SQLiteLauncher launcher) {
+        addLauncher(launcher, false);
+    }
+
+    public static void addLauncher(SQLiteLauncher launcher, boolean bootWhenAdded) {
+        if (bootWhenAdded) {
+            SQLiteDataAccess access = launch(launcher);
+            launchers.put(launcher.dbName, access);
+        } else {
+            dbNameLauncherPair.put(launcher.dbName, launcher);
+        }
+    }
+
+    public static boolean removeLauncher(SQLiteLauncher boot) {
+        boolean contain = launchers.contains(boot.dbName);
+        if (contain) {
+            launchers.remove(boot.dbName);
+        }
+        return contain;
+    }
+
+    public static void prepareSQL(String dbName, SQLPrepare executor) {
+        try {
+            SQLiteDataAccess access = launchers.get(dbName);
+            if (access == null && dbNameLauncherPair.contains(dbName)) {
+                access = launch(dbNameLauncherPair.get(dbName));
+            } else {
+                throw new IllegalAccessException("Oups, no launcher is currently addef dor Data base with name: " + dbName);
+            }
+            SQLiteDatabase db = access.open();
+            SQL sql = SQLite.from(db);
+            executor.onSQLReady(sql);
+            if (db.isOpen()) {
+                db.close();
+            }
+        } catch (Exception e) {
+            executor.onSQLPrepareFail(e);
+
+        }
+    }
+
+    public static void prepareSQL(SQLiteLauncher boot, SQLPrepare executor) {
+        try {
+            SQLiteDataAccess access = launch(boot);
+            SQLiteDatabase db = access.open();
+            SQL sql = SQLite.from(db);
+            executor.onSQLReady(sql);
+            if (db.isOpen()) {
+                db.close();
+            }
+        } catch (Exception e) {
+            executor.onSQLPrepareFail(e);
+        }
+    }
+
+    public static void prepareSQL(SQLiteDatabase db, SQLPrepare executor) {
         SQL sql = SQLite.from(db);
-        executor.onExecute(sql, db);
+        executor.onSQLReady(sql);
         try {
             db.close();
         } catch (Exception e) {
@@ -34,13 +93,15 @@ public final class SQLite {
         }
     }
 
+    @Deprecated
     public static SQL from(Context context, String dbName, int dbVersion, BootDescription description) {
-        SQLiteDatabase db = boot(context, dbName, dbVersion, description).open();
+        SQLiteDatabase db = launch(context, dbName, dbVersion, description).open();
         return from(db);
     }
 
-    public static SQL from(Context context, SQLiteBoot boot) {
-        SQLiteDatabase db = boot(context, boot).open();
+    @Deprecated
+    public static SQL from(Context context, SQLiteLauncher boot) {
+        SQLiteDatabase db = launch(boot).open();
         return from(db);
     }
 
@@ -60,12 +121,11 @@ public final class SQLite {
         return from(db);
     }
 
-    public static SQLiteDataAccess boot(Context context, SQLiteBoot boot) {
-        return boot(context, boot.dbName, boot.dbVersion, boot);
+    public static SQLiteDataAccess launch(SQLiteLauncher boot) {
+        return launch(boot.context, boot.dbName, boot.dbVersion, boot);
     }
 
-    public static SQLiteDataAccess boot(Context context, String dbName, int dbVersion, final BootDescription description) {
-        instanceContext = context;
+    static SQLiteDataAccess launch(Context context, String dbName, int dbVersion, final BootDescription description) {
         SQLiteDataAccess dAccess = new SQLiteDataAccess(context, dbName, dbVersion) {
             @Override
             public void onUpgradeDb(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -138,13 +198,15 @@ public final class SQLite {
 
     }
 
-    public static abstract class SQLiteBoot implements BootDescription {
+    public static abstract class SQLiteLauncher implements BootDescription {
         String dbName;
         int dbVersion = 1;
+        Context context;
 
-        public SQLiteBoot(String dbName, int dbVersion) {
+        public SQLiteLauncher(Context context, String dbName, int dbVersion) {
             this.dbName = dbName;
             this.dbVersion = dbVersion;
+            this.context = context;
         }
     }
 
@@ -162,7 +224,9 @@ public final class SQLite {
             db.execSQL(statement);
     }
 
-    public interface SQLExecutor {
-        public void onExecute(SQL sql, SQLiteDatabase db);
+    public interface SQLPrepare {
+        public void onSQLReady(SQL sql);
+
+        public void onSQLPrepareFail(Exception e);
     }
 }

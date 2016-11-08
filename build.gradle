@@ -1,5 +1,11 @@
 apply plugin: 'com.android.library'
-
+ext {
+    PUBLISH_GROUP_ID = 'istat.android.data.access.sqlite'
+    PUBLISH_ARTIFACT_ID = 'istat-access-sqlite'
+    PUBLISH_VERSION = '1.0.0'
+}
+//apply from: 'release-aar.gradle'
+apply from: 'release-jar.gradle'
 dependencies {
     compile fileTree(dir: 'libs', include: '*.jar')
 }
