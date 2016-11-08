@@ -1,4 +1,4 @@
-package istat.android.data.access.utils;
+package istat.android.data.access.sqlite.utils;
 
 import java.io.BufferedReader;
 import java.io.IOException;

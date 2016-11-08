@@ -1,4 +1,4 @@
-package istat.android.data.access;
+package istat.android.data.access.sqlite;
 
 import android.database.sqlite.SQLiteDatabase;
 

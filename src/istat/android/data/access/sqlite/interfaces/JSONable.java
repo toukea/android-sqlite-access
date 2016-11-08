@@ -1,4 +1,4 @@
-package istat.android.data.access.interfaces;
+package istat.android.data.access.sqlite.interfaces;
 
 import org.json.JSONObject;
 

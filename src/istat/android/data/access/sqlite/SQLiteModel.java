@@ -1,4 +1,4 @@
-package istat.android.data.access;
+package istat.android.data.access.sqlite;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -10,8 +10,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-import istat.android.data.access.interfaces.JSONable;
-import istat.android.data.access.utils.Toolkit;
+import istat.android.data.access.sqlite.interfaces.JSONable;
+import istat.android.data.access.sqlite.utils.Toolkit;
 
 import org.json.JSONArray;
 import org.json.JSONException;

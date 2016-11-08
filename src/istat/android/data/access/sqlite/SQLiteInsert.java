@@ -1,4 +1,4 @@
-package istat.android.data.access;
+package istat.android.data.access.sqlite;
 
 import java.util.ArrayList;
 import java.util.List;

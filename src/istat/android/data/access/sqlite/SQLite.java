@@ -1,4 +1,4 @@
-package istat.android.data.access;
+package istat.android.data.access.sqlite;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import istat.android.data.access.utils.SQLiteParser;
+import istat.android.data.access.sqlite.utils.SQLiteParser;
 
 public final class SQLite {
     static Context instanceContext;

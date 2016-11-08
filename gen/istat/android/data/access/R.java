@@ -5,7 +5,7 @@
  * should not be modified by hand.
  */
 
-package istat.android.data.access;
+package istat.android.data.access.sqlite;
 
 public final class R {
     public static final class attr {
