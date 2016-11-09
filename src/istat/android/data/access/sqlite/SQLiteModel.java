@@ -1,5 +1,6 @@
 package istat.android.data.access.sqlite;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -22,7 +23,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
-abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
+public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     HashMap<String, Object> map = new HashMap<String, Object>();
     //    protected String tb_name, primary_key;
 //    protected String[] tb_projection;
@@ -30,7 +31,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     private Object instance;
     List<String> reflectionFieldNames = new ArrayList<String>();
 
-    protected SQLiteModel() {
+    SQLiteModel() {
         instance = this;
     }
 
@@ -228,7 +229,6 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         if (c.getCount() > 0) {
             c.moveToNext();
             fillFromCursor(c);
-
         }
     }
 
@@ -412,7 +412,15 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             for (int i = 0; i < fields.size(); i++) {
                 Field field = fields.get(i);
                 if (!field.isAnnotationPresent(Ignore.class)) {
-                    tmp[i] = field.getName();
+                    String columnName = null;
+                    if (field.isAnnotationPresent(Column.class)) {
+                        Column column = obj.getClass().getAnnotation(Column.class);
+                        columnName = column.name();
+                    }
+                    if (columnName == null) {
+                        columnName = field.getName();
+                    }
+                    tmp[i] = columnName;
                     map.put(tmp[i], field.get(obj));
                 }
             }
@@ -424,7 +432,15 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
             @Override
             public String getName() {
-                return obj.getClass().getSimpleName();
+                String tableName = null;
+                if (obj.getClass().isAnnotationPresent(Table.class)) {
+                    Table table = obj.getClass().getAnnotation(Table.class);
+                    tableName = table.name();
+                }
+                if (tableName == null) {
+                    tableName = obj.getClass().getSimpleName();
+                }
+                return tableName;
             }
 
             @Override
@@ -438,7 +454,6 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 String primaryKey = null;
                 try {
                     List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(obj.getClass());
-                    String[] fieldArray = new String[fields.size()];
                     for (int i = 0; i < fields.size(); i++) {
                         Field field = fields.get(i);
                         if (field.isAnnotationPresent(PrimaryKey.class)) {
@@ -455,18 +470,28 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return model;
     }
 
-    public static SQLiteModel fromClass(final Class clazz) throws InstantiationException,
+    public static SQLiteModel fromClass(final Class cLass) throws InstantiationException,
             IllegalAccessException {
         SQLiteModel model = new SQLiteModel() {
             @Override
             public String getName() {
-                return clazz.getSimpleName();
+//                return cLass.getSimpleName();
+                String tableName = null;
+                if (cLass.isAnnotationPresent(Table.class)) {
+                    Annotation annotation = cLass.getAnnotation(Table.class);
+                    Table table = (Table) annotation;
+                    tableName = table.name();
+                }
+                if (tableName == null) {
+                    tableName = cLass.getSimpleName();
+                }
+                return tableName;
             }
 
             @Override
             public String[] getProjections() {
                 try {
-                    List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(clazz);
+                    List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(cLass);
                     String[] fieldArray = new String[fields.size()];
                     for (int i = 0; i < fields.size(); i++) {
                         Field field = fields.get(i);
@@ -482,7 +507,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             public String getPrimaryFieldName() {
                 String primaryKey = null;
                 try {
-                    List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(clazz);
+                    List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(cLass);
                     for (int i = 0; i < fields.size(); i++) {
                         Field field = fields.get(i);
                         if (field.isAnnotationPresent(PrimaryKey.class)) {
@@ -624,10 +649,16 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return instance;
     }
 
+    @Target(ElementType.TYPE)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface Table {
+        String name() default "";
+    }
+
     @Target(ElementType.FIELD)
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Column {
-        String info() default "";
+        String name() default "";
     }
 
     @Target(ElementType.FIELD)
@@ -653,7 +684,7 @@ abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         }
     }
 
-    public void fillJSON(Class<?> clazz, JSONObject json)
+    public void fillJson(Class<?> clazz, JSONObject json)
             throws IllegalAccessException, IllegalArgumentException,
             JSONException {
         List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(clazz);

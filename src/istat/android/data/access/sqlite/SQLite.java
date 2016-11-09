@@ -33,6 +33,27 @@ public final class SQLite {
         }
     }
 
+    public static SQLiteDataAccess getAccess(String dbName) {
+        try {
+            return findOrCreateConnectionAcces(dbName);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static SQLiteDatabase getDataBase(String dbName) {
+        try {
+            SQLiteDataAccess access = findOrCreateConnectionAcces(dbName);
+            if (access != null) {
+                return access.open();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public static void addConnection(SQLiteConnection launcher, boolean bootWhenAdded) {
         if (bootWhenAdded) {
             SQLiteDataAccess access = launch(launcher);
@@ -62,17 +83,22 @@ public final class SQLite {
         prepareSQL(dbName, handler, true);
     }
 
+    private static SQLiteDataAccess findOrCreateConnectionAcces(String dbName) throws IllegalAccessException {
+        SQLiteDataAccess access = dbNameAccessPair.get(dbName);
+        boolean hasLauncher = dbNameLauncherPair.containsKey(dbName);
+        if (access == null && hasLauncher) {
+            access = launch(dbNameLauncherPair.get(dbName));
+            dbNameLauncherPair.remove(dbName);
+        } else {
+            throw new IllegalAccessException("Oups, no launcher is currently added dor Data base with name: " + dbName);
+        }
+        return access;
+    }
+
     public static void prepareSQL(String dbName, PrepareHandler handler, boolean transactional) {
         SQLiteDatabase db = null;
         try {
-            SQLiteDataAccess access = dbNameAccessPair.get(dbName);
-            boolean hasLauncher = dbNameLauncherPair.containsKey(dbName);
-            if (access == null && hasLauncher) {
-                access = launch(dbNameLauncherPair.get(dbName));
-                dbNameLauncherPair.remove(dbName);
-            } else {
-                throw new IllegalAccessException("Oups, no launcher is currently added dor Data base with name: " + dbName);
-            }
+            SQLiteDataAccess access = findOrCreateConnectionAcces(dbName);
             db = access.open();
             SQL sql = SQLite.from(db);
             handler.onSQLReady(sql);
@@ -156,17 +182,17 @@ public final class SQLite {
         }
     }
 
-    @Deprecated
-    public static SQL from(Context context, String dbName, int dbVersion, BootDescription description) {
-        SQLiteDatabase db = launch(context, dbName, dbVersion, description).open();
-        return from(db);
-    }
-
-    @Deprecated
-    public static SQL from(Context context, SQLiteConnection boot) {
-        SQLiteDatabase db = launch(boot).open();
-        return from(db);
-    }
+//    public static SQL from(String dbName) throws IllegalAccessException {
+//        SQLiteDataAccess access = findOrCreateConnectionAcces(dbName);
+//        SQLiteDatabase db = access.open();
+//        return from(db);
+//    }
+//
+//    @Deprecated
+//    public static SQL from(Context context, SQLiteConnection boot) {
+//        SQLiteDatabase db = launch(boot).open();
+//        return from(db);
+//    }
 
 
     public static SQL fromDbPath(Context context, String dbPath) {
