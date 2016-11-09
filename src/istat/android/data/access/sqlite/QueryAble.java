@@ -6,7 +6,6 @@ import android.database.sqlite.SQLiteDatabase;
 
 abstract interface QueryAble {
 
-
     long persist(SQLiteDatabase db);
 
     abstract int delete(SQLiteDatabase db);

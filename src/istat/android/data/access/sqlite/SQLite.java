@@ -16,7 +16,7 @@ public final class SQLite {
     static SQLiteDatabase
             lastOpenedDb;
     final static ConcurrentHashMap<String, SQLiteDataAccess> dbNameAccessPair = new ConcurrentHashMap<String, SQLiteDataAccess>();
-    final static ConcurrentHashMap<String, SQLiteLauncher> dbNameLauncherPair = new ConcurrentHashMap<String, SQLiteLauncher>();
+    final static ConcurrentHashMap<String, SQLiteConnection> dbNameLauncherPair = new ConcurrentHashMap<String, SQLiteConnection>();
 
     public static SQLiteDatabase getLastOpenedDb() {
         return lastOpenedDb;
@@ -27,13 +27,13 @@ public final class SQLite {
         return new SQL(db);
     }
 
-    public static void addLauncher(SQLiteLauncher... launchers) {
-        for (SQLiteLauncher launcher : launchers) {
-            addLauncher(launcher, false);
+    public static void addConnection(SQLiteConnection... launchers) {
+        for (SQLiteConnection launcher : launchers) {
+            addConnection(launcher, false);
         }
     }
 
-    public static void addLauncher(SQLiteLauncher launcher, boolean bootWhenAdded) {
+    public static void addConnection(SQLiteConnection launcher, boolean bootWhenAdded) {
         if (bootWhenAdded) {
             SQLiteDataAccess access = launch(launcher);
             dbNameAccessPair.put(launcher.dbName, access);
@@ -42,19 +42,27 @@ public final class SQLite {
         }
     }
 
-    public static boolean removeLauncher(SQLiteLauncher boot) {
-        boolean contain = dbNameAccessPair.containsKey(boot.dbName);
+    public static boolean removeConnection(String dbName) {
+        boolean contain = dbNameAccessPair.containsKey(dbName);
         if (contain) {
-            dbNameAccessPair.remove(boot.dbName);
+            dbNameAccessPair.remove(dbName);
         }
         return contain;
     }
 
-    public static void prepareSQL(String dbName, SQLPrepare executor) {
-        prepareSQL(dbName, executor, false);
+    public static boolean removeConnection(SQLiteConnection boot) {
+        return removeConnection(boot.dbName);
     }
 
-    public static void prepareSQL(String dbName, SQLPrepare executor, boolean transactional) {
+    public static void prepareSQL(String dbName, PrepareHandler handler) {
+        prepareSQL(dbName, handler, false);
+    }
+
+    public static void prepareTransactionalSQL(String dbName, PrepareHandler handler) {
+        prepareSQL(dbName, handler, true);
+    }
+
+    public static void prepareSQL(String dbName, PrepareHandler handler, boolean transactional) {
         SQLiteDatabase db = null;
         try {
             SQLiteDataAccess access = dbNameAccessPair.get(dbName);
@@ -67,12 +75,12 @@ public final class SQLite {
             }
             db = access.open();
             SQL sql = SQLite.from(db);
-            executor.onSQLReady(sql);
+            handler.onSQLReady(sql);
             if (transactional) {
                 db.setTransactionSuccessful();
             }
         } catch (Exception e) {
-            executor.onSQLPrepareFail(e);
+            handler.onSQLPrepareFail(e);
 
         } finally {
             if (transactional && db != null) {
@@ -85,11 +93,15 @@ public final class SQLite {
         }
     }
 
-    public static void prepareSQL(SQLiteLauncher boot, SQLPrepare executor) {
-        prepareSQL(boot, executor, false);
+    public static void prepareSQL(SQLiteConnection connection, PrepareHandler handler) {
+        prepareSQL(connection, handler, false);
     }
 
-    public static void prepareSQL(SQLiteLauncher boot, SQLPrepare executor, boolean transactional) {
+    public static void prepareTransactionalSQL(SQLiteConnection connection, PrepareHandler handler) {
+        prepareSQL(connection, handler, true);
+    }
+
+    public static void prepareSQL(SQLiteConnection boot, PrepareHandler handler, boolean transactional) {
         SQLiteDatabase db = null;
         try {
             SQLiteDataAccess access = launch(boot);
@@ -98,7 +110,7 @@ public final class SQLite {
                 db.beginTransaction();
             }
             SQL sql = SQLite.from(db);
-            executor.onSQLReady(sql);
+            handler.onSQLReady(sql);
             if (db.isOpen()) {
                 db.close();
             }
@@ -106,7 +118,7 @@ public final class SQLite {
                 db.setTransactionSuccessful();
             }
         } catch (Exception e) {
-            executor.onSQLPrepareFail(e);
+            handler.onSQLPrepareFail(e);
         } finally {
             if (transactional && db != null) {
                 db.endTransaction();
@@ -117,17 +129,17 @@ public final class SQLite {
         }
     }
 
-    public static void prepareSQL(SQLiteDatabase db, SQLPrepare executor) {
-        prepareSQL(db, executor, false);
+    public static void prepareSQL(SQLiteDatabase db, PrepareHandler handler) {
+        prepareSQL(db, handler, false);
     }
 
-    public static void prepareSQL(SQLiteDatabase db, SQLPrepare executor, boolean transactional) {
+    public static void prepareSQL(SQLiteDatabase db, PrepareHandler handler, boolean transactional) {
         try {
             if (transactional) {
                 db.beginTransaction();
             }
             SQL sql = SQLite.from(db);
-            executor.onSQLReady(sql);
+            handler.onSQLReady(sql);
 
             if (transactional) {
                 db.setTransactionSuccessful();
@@ -151,7 +163,7 @@ public final class SQLite {
     }
 
     @Deprecated
-    public static SQL from(Context context, SQLiteLauncher boot) {
+    public static SQL from(Context context, SQLiteConnection boot) {
         SQLiteDatabase db = launch(boot).open();
         return from(db);
     }
@@ -172,7 +184,7 @@ public final class SQLite {
         return from(db);
     }
 
-    public static SQLiteDataAccess launch(SQLiteLauncher boot) {
+    public static SQLiteDataAccess launch(SQLiteConnection boot) {
         return launch(boot.context, boot.dbName, boot.dbVersion, boot);
     }
 
@@ -249,12 +261,12 @@ public final class SQLite {
 
     }
 
-    public static abstract class SQLiteLauncher implements BootDescription {
+    public static abstract class SQLiteConnection implements BootDescription {
         String dbName;
         int dbVersion = 1;
         Context context;
 
-        public SQLiteLauncher(Context context, String dbName, int dbVersion) {
+        public SQLiteConnection(Context context, String dbName, int dbVersion) {
             this.dbName = dbName;
             this.dbVersion = dbVersion;
             this.context = context;
@@ -275,7 +287,7 @@ public final class SQLite {
             db.execSQL(statement);
     }
 
-    public interface SQLPrepare {
+    public interface PrepareHandler {
         public void onSQLReady(SQL sql);
 
         public void onSQLPrepareFail(Exception e);
