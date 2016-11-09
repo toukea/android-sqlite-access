@@ -27,8 +27,10 @@ public final class SQLite {
         return new SQL(db);
     }
 
-    public static void addLauncher(SQLiteLauncher launcher) {
-        addLauncher(launcher, false);
+    public static void addLauncher(SQLiteLauncher... launchers) {
+        for (SQLiteLauncher launcher : launchers) {
+            addLauncher(launcher, false);
+        }
     }
 
     public static void addLauncher(SQLiteLauncher launcher, boolean bootWhenAdded) {
@@ -49,6 +51,11 @@ public final class SQLite {
     }
 
     public static void prepareSQL(String dbName, SQLPrepare executor) {
+        prepareSQL(dbName, executor, false);
+    }
+
+    public static void prepareSQL(String dbName, SQLPrepare executor, boolean transactional) {
+        SQLiteDatabase db = null;
         try {
             SQLiteDataAccess access = dbNameAccessPair.get(dbName);
             boolean hasLauncher = dbNameLauncherPair.containsKey(dbName);
@@ -58,39 +65,82 @@ public final class SQLite {
             } else {
                 throw new IllegalAccessException("Oups, no launcher is currently added dor Data base with name: " + dbName);
             }
-            SQLiteDatabase db = access.open();
+            db = access.open();
             SQL sql = SQLite.from(db);
             executor.onSQLReady(sql);
-            if (db.isOpen()) {
-                db.close();
+            if (transactional) {
+                db.setTransactionSuccessful();
             }
         } catch (Exception e) {
             executor.onSQLPrepareFail(e);
+
+        } finally {
+            if (transactional && db != null) {
+                db.endTransaction();
+                if (db.isOpen()) {
+                    db.close();
+                }
+            }
 
         }
     }
 
     public static void prepareSQL(SQLiteLauncher boot, SQLPrepare executor) {
+        prepareSQL(boot, executor, false);
+    }
+
+    public static void prepareSQL(SQLiteLauncher boot, SQLPrepare executor, boolean transactional) {
+        SQLiteDatabase db = null;
         try {
             SQLiteDataAccess access = launch(boot);
-            SQLiteDatabase db = access.open();
+            db = access.open();
+            if (transactional) {
+                db.beginTransaction();
+            }
             SQL sql = SQLite.from(db);
             executor.onSQLReady(sql);
             if (db.isOpen()) {
                 db.close();
             }
+            if (transactional) {
+                db.setTransactionSuccessful();
+            }
         } catch (Exception e) {
             executor.onSQLPrepareFail(e);
+        } finally {
+            if (transactional && db != null) {
+                db.endTransaction();
+                if (db.isOpen()) {
+                    db.close();
+                }
+            }
         }
     }
 
     public static void prepareSQL(SQLiteDatabase db, SQLPrepare executor) {
-        SQL sql = SQLite.from(db);
-        executor.onSQLReady(sql);
+        prepareSQL(db, executor, false);
+    }
+
+    public static void prepareSQL(SQLiteDatabase db, SQLPrepare executor, boolean transactional) {
         try {
-            db.close();
+            if (transactional) {
+                db.beginTransaction();
+            }
+            SQL sql = SQLite.from(db);
+            executor.onSQLReady(sql);
+
+            if (transactional) {
+                db.setTransactionSuccessful();
+            }
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            if (transactional && db != null) {
+                db.endTransaction();
+                if (db.isOpen()) {
+                    db.close();
+                }
+            }
         }
     }
 
