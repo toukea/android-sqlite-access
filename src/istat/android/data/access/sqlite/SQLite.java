@@ -9,14 +9,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import istat.android.data.access.sqlite.utils.SQLiteParser;
 
 public final class SQLite {
     static SQLiteDatabase
             lastOpenedDb;
-    final static ConcurrentHashMap<String, SQLiteDataAccess> launchers = new ConcurrentHashMap<String, SQLiteDataAccess>();
+    final static ConcurrentHashMap<String, SQLiteDataAccess> dbNameAccessPair = new ConcurrentHashMap<String, SQLiteDataAccess>();
     final static ConcurrentHashMap<String, SQLiteLauncher> dbNameLauncherPair = new ConcurrentHashMap<String, SQLiteLauncher>();
 
     public static SQLiteDatabase getLastOpenedDb() {
@@ -35,27 +34,29 @@ public final class SQLite {
     public static void addLauncher(SQLiteLauncher launcher, boolean bootWhenAdded) {
         if (bootWhenAdded) {
             SQLiteDataAccess access = launch(launcher);
-            launchers.put(launcher.dbName, access);
+            dbNameAccessPair.put(launcher.dbName, access);
         } else {
             dbNameLauncherPair.put(launcher.dbName, launcher);
         }
     }
 
     public static boolean removeLauncher(SQLiteLauncher boot) {
-        boolean contain = launchers.contains(boot.dbName);
+        boolean contain = dbNameAccessPair.containsKey(boot.dbName);
         if (contain) {
-            launchers.remove(boot.dbName);
+            dbNameAccessPair.remove(boot.dbName);
         }
         return contain;
     }
 
     public static void prepareSQL(String dbName, SQLPrepare executor) {
         try {
-            SQLiteDataAccess access = launchers.get(dbName);
-            if (access == null && dbNameLauncherPair.contains(dbName)) {
+            SQLiteDataAccess access = dbNameAccessPair.get(dbName);
+            boolean hasLauncher = dbNameLauncherPair.containsKey(dbName);
+            if (access == null && hasLauncher) {
                 access = launch(dbNameLauncherPair.get(dbName));
+                dbNameLauncherPair.remove(dbName);
             } else {
-                throw new IllegalAccessException("Oups, no launcher is currently addef dor Data base with name: " + dbName);
+                throw new IllegalAccessException("Oups, no launcher is currently added dor Data base with name: " + dbName);
             }
             SQLiteDatabase db = access.open();
             SQL sql = SQLite.from(db);
