@@ -9,11 +9,16 @@ public class User {
     @Column(name="userName")//specify this field as Column a give it a name. if not set, default is the property label
     public String userName;
     
-    public String firstName;
+    public String firstName; //schould be persisted with label 'firstName'
     
-    public int year;
+    public int year;        //schould be persisted with label 'year'
     
-    @PrimaryKey //
+    /**
+    make this field as table primary key.
+    ome thing to know is that, if your class doesn't has explicit primary key declaration but contain a
+    property named id (case not sensitive) it will be implicitelly considered as your primaryKey
+    */
+    @PrimaryKey 
     String id;
     
     @Ignore     //ignore this field when persisting and querying on Db.
@@ -51,7 +56,7 @@ NB: it is strongly recommended  to make it on the onCreate of your <extends> and
     });
  ```
  
-#Prepare SQL instance from a SQLiteDatabase Connexion.
+#Prepare SQL instance from  SQLiteDatabase Connexion (using db name [DbName]).
 
  ```java
     SQLite.prepareSQL(DbName, new SQLite.PrepareHandler() {
@@ -72,7 +77,7 @@ You can also make a  transactional Prepare.
 ```
 
 # Make a SQL Insert 
-After SQL instance has been prepared successfully,   you can use them to make one SQL Insert.
+After SQL instance has been prepared successfully, you can use them to perform SQL Insert.
 ```java
     @Override
     public void onSQLReady(SQLite.SQL sql) {
@@ -102,7 +107,7 @@ It is also possible to perform multiple insertion in one step
   ``` 
   
 # Make a SQL Delete 
- After SQL instance has been prepared successfully,   you can use them to make one SQL selection.
+ After SQL instance has been prepared successfully, you can use them to perform SQL delete.
  ```java
          @Override
          public void onSQLReady(SQLite.SQL sql) {
@@ -118,13 +123,13 @@ It is also possible to perform multiple insertion in one step
   ```    
  
 # Make a SQL Update 
-After SQL instance has been prepared successfully,   you can use them to make one SQL selection.
+After SQL instance has been prepared successfully, you can use them to perform SQL update.
 ```java
            @Override
            public void onSQLReady(SQLite.SQL sql) {
                 int updatedCount = sql.update(User.class)
-                                   .set("userName", "TestUpdated" + System.currentTimeMillis())
-                                   .where("jephte")
+                                   .set("userName", "newName")
+                                   .where("firstName")
                                    .like("%Jephte%")
                                    .execute();
                 System.out.println("updated line="+updatedCount);
@@ -151,7 +156,7 @@ It is also possible to update from another model.
 ``` 
 
 # Make a SQL Selection 
-After SQL instance has been prepared successfully,   you can use them to make one SQL selection.
+After SQL instance has been prepared successfully, you can use them to perform SQL selection.
 ```java
            @Override
            public void onSQLReady(SQLite.SQL sql) {

@@ -16,7 +16,7 @@ public final class SQLite {
     static SQLiteDatabase
             lastOpenedDb;
     final static ConcurrentHashMap<String, SQLiteDataAccess> dbNameAccessPair = new ConcurrentHashMap<String, SQLiteDataAccess>();
-    final static ConcurrentHashMap<String, SQLiteConnection> dbNameLauncherPair = new ConcurrentHashMap<String, SQLiteConnection>();
+    final static ConcurrentHashMap<String, SQLiteConnection> dbNameConnectionPair = new ConcurrentHashMap<String, SQLiteConnection>();
 
     private SQLite() {
 
@@ -60,10 +60,10 @@ public final class SQLite {
 
     public static void addConnection(SQLiteConnection launcher, boolean bootWhenAdded) {
         if (bootWhenAdded) {
-            SQLiteDataAccess access = launch(launcher);
+            SQLiteDataAccess access = connect(launcher);
             dbNameAccessPair.put(launcher.dbName, access);
         } else {
-            dbNameLauncherPair.put(launcher.dbName, launcher);
+            dbNameConnectionPair.put(launcher.dbName, launcher);
         }
     }
 
@@ -89,10 +89,10 @@ public final class SQLite {
 
     private static SQLiteDataAccess findOrCreateConnectionAcces(String dbName) throws IllegalAccessException {
         SQLiteDataAccess access = dbNameAccessPair.get(dbName);
-        boolean hasLauncher = dbNameLauncherPair.containsKey(dbName);
+        boolean hasLauncher = dbNameConnectionPair.containsKey(dbName);
         if (access == null && hasLauncher) {
-            access = launch(dbNameLauncherPair.get(dbName));
-            dbNameLauncherPair.remove(dbName);
+            access = connect(dbNameConnectionPair.get(dbName));
+            dbNameConnectionPair.remove(dbName);
         } else {
             throw new IllegalAccessException("Oups, no launcher is currently added dor Data base with name: " + dbName);
         }
@@ -134,7 +134,7 @@ public final class SQLite {
     public static void prepareSQL(SQLiteConnection boot, boolean transactional, PrepareHandler handler) {
         SQLiteDatabase db = null;
         try {
-            SQLiteDataAccess access = launch(boot);
+            SQLiteDataAccess access = connect(boot);
             db = access.open();
             if (transactional) {
                 db.beginTransaction();
@@ -194,7 +194,7 @@ public final class SQLite {
 //
 //    @Deprecated
 //    public static SQL from(Context context, SQLiteConnection boot) {
-//        SQLiteDatabase db = launch(boot).open();
+//        SQLiteDatabase db = connect(boot).open();
 //        return from(db);
 //    }
 
@@ -214,11 +214,11 @@ public final class SQLite {
         return from(db);
     }
 
-    public static SQLiteDataAccess launch(SQLiteConnection boot) {
-        return launch(boot.context, boot.dbName, boot.dbVersion, boot);
+    public static SQLiteDataAccess connect(SQLiteConnection boot) {
+        return connect(boot.context, boot.dbName, boot.dbVersion, boot);
     }
 
-    static SQLiteDataAccess launch(Context context, String dbName, int dbVersion, final BootDescription description) {
+    static SQLiteDataAccess connect(Context context, String dbName, int dbVersion, final BootDescription description) {
         SQLiteDataAccess dAccess = new SQLiteDataAccess(context, dbName, dbVersion) {
             @Override
             public void onUpgradeDb(SQLiteDatabase db, int oldVersion, int newVersion) {

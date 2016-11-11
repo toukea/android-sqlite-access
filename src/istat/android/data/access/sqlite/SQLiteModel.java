@@ -677,7 +677,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     @Target(ElementType.FIELD)
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Ignore {
-        int when();
+        int when() default 0;
     }
 
     private boolean hasPrimaryKey() {
