@@ -18,6 +18,10 @@ public final class SQLite {
     final static ConcurrentHashMap<String, SQLiteDataAccess> dbNameAccessPair = new ConcurrentHashMap<String, SQLiteDataAccess>();
     final static ConcurrentHashMap<String, SQLiteConnection> dbNameLauncherPair = new ConcurrentHashMap<String, SQLiteConnection>();
 
+    private SQLite() {
+
+    }
+
     public static SQLiteDatabase getLastOpenedDb() {
         return lastOpenedDb;
     }

@@ -10,11 +10,13 @@ import org.json.JSONObject;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-public abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
+abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     protected SQLiteDatabase db;
     protected String whereClause = null;
     protected List<String> whereParams = new ArrayList<String>();
     protected String orderBy = null;
+    protected String groupBy = null;
+    protected String having = null;
     protected String[] projection;
     protected String table;
     final static int TYPE_CLAUSE_WHERE = 0, TYPE_CLAUSE_AND = 1,
@@ -69,6 +71,14 @@ public abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             orderBy = this.table + "." + column + " " + value;
         else
             orderBy += this.table + "." + column + " " + value;
+        return (Clause) this;
+    }
+
+    public Clause orderBy(String... columns) {
+        for (String column : columns) {
+            boolean endWithDescOrAsc = column.toLowerCase().matches(".+\\s(desc|asc)$");
+            orderBy(column, endWithDescOrAsc ? "" : "DESC");
+        }
         return (Clause) this;
     }
 
@@ -181,6 +191,66 @@ public abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         @SuppressWarnings("unchecked")
         public Clause equal(Object value) {
             prepare(value);
+            whereClause += " = ? ";
+            return (Clause) SQLiteClause.this;
+        }
+
+        public Clause greatThan(Object value) {
+            return greatThan(value, false);
+        }
+
+        public Clause lessThan(Object value) {
+            return lessThan(value, false);
+        }
+
+        @SuppressWarnings("unchecked")
+        public Clause greatThan(Object value, boolean acceptEqual) {
+            prepare(value);
+            whereClause += " >" + (acceptEqual ? "=" : "") + " ? ";
+            return (Clause) SQLiteClause.this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public Clause lessThan(Object value, boolean acceptEqual) {
+            prepare(value);
+            whereClause += " <" + (acceptEqual ? "=" : "") + " ? ";
+            return (Clause) SQLiteClause.this;
+        }
+
+        private void prepare(Object value) {
+            whereParams.add(value + "");
+            switch (type) {
+                case TYPE_CLAUSE_AND:
+
+                    break;
+                case TYPE_CLAUSE_OR:
+
+                    break;
+                default:
+                    break;
+
+            }
+        }
+
+        @SuppressWarnings("unchecked")
+        public Clause like(Object value) {
+            prepare(value);
+            whereClause += " like ? ";
+            return (Clause) SQLiteClause.this;
+        }
+    }
+
+    //TODO build end of query. GroupBy orderBy, Having with execute
+    public class ClauseSubBuilder {
+        int type = 0;
+
+        public ClauseSubBuilder(int type) {
+            this.type = type;
+        }
+
+        @SuppressWarnings("unchecked")
+        public Clause groupBy(String... column) {
+            prepare(column);
             whereClause += " = ? ";
             return (Clause) SQLiteClause.this;
         }

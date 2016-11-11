@@ -152,9 +152,9 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return json;
     }
 
-    public JSONObject toJSONObject(boolean addclassName) {
+    public JSONObject toJson(boolean addClassName) {
         JSONObject json = toJson();
-        if (!addclassName) {
+        if (!addClassName) {
             json.remove(TAG_CLASS);
         }
         return json;
@@ -171,7 +171,14 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         JSONObject toJson = toJson();
         for (String projection : getProjections()) {
             String values = toJson.optString(projection);
-            if (!TextUtils.isEmpty(values)) {
+//            if (TextUtils.isEmpty(values)
+//                    && projection.equalsIgnoreCase(getPrimaryFieldName())) {
+//
+//            } else {
+//                pairs.put(projection, values);
+//            }
+            if (!(TextUtils.isEmpty(values)
+                    && projection.equalsIgnoreCase(getPrimaryFieldName()))) {
                 pairs.put(projection, values);
             }
         }
@@ -312,11 +319,11 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             if (obj != null) {
                 if (map.containsValue(obj) && override) {
                     if (!mergeEmptyValue && obj == null
-                            || (TextUtils.isEmpty(obj.toString())))
-                        ;
-                    else
-                        map.put(tmp, obj);
+                            || (TextUtils.isEmpty(obj.toString()))) {
 
+                    } else {
+                        map.put(tmp, obj);
+                    }
                 } else {
                     map.put(tmp, obj);
                 }
@@ -670,7 +677,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     @Target(ElementType.FIELD)
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Ignore {
-
+        int when();
     }
 
     private boolean hasPrimaryKey() {
