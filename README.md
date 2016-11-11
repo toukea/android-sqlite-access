@@ -77,7 +77,7 @@ You can also make a  transactional Prepare.
     SQLite.prepareTransactionalSQL(DbName, new SQLite.PrepareHandler() { //Some code
 ```
 
-# Make a SQL Insert 
+# Make SQL Insert 
 After SQL instance has been prepared successfully, you can use them to perform SQL Insert.
 ```java
     @Override
@@ -107,7 +107,7 @@ It is also possible to perform multiple insertion in one step
      }
   ``` 
   
-# Make a SQL Delete 
+# Make SQL Delete 
  After SQL instance has been prepared successfully, you can use them to perform SQL delete.
  ```java
          @Override
@@ -123,7 +123,7 @@ It is also possible to perform multiple insertion in one step
          }
   ```    
  
-# Make a SQL Update 
+# Make SQL Update 
 After SQL instance has been prepared successfully, you can use them to perform SQL update.
 ```java
            @Override
@@ -156,7 +156,7 @@ It is also possible to update from another model.
            
 ``` 
 
-# Make a SQL Selection 
+# Make SQL Selection 
 After SQL instance has been prepared successfully, you can use them to perform SQL selection.
 ```java
            @Override
