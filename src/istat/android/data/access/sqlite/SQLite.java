@@ -124,14 +124,14 @@ public final class SQLite {
     }
 
     public static void prepareSQL(SQLiteConnection connection, PrepareHandler handler) {
-        prepareSQL(connection, handler, false);
+        prepareSQL(connection, false, handler);
     }
 
     public static void prepareTransactionalSQL(SQLiteConnection connection, PrepareHandler handler) {
-        prepareSQL(connection, handler, true);
+        prepareSQL(connection, true, handler);
     }
 
-    public static void prepareSQL(SQLiteConnection boot, PrepareHandler handler, boolean transactional) {
+    public static void prepareSQL(SQLiteConnection boot, boolean transactional, PrepareHandler handler) {
         SQLiteDatabase db = null;
         try {
             SQLiteDataAccess access = launch(boot);
@@ -160,10 +160,10 @@ public final class SQLite {
     }
 
     public static void prepareSQL(SQLiteDatabase db, PrepareHandler handler) {
-        prepareSQL(db, handler, false);
+        prepareSQL(db,false, handler);
     }
 
-    public static void prepareSQL(SQLiteDatabase db, PrepareHandler handler, boolean transactional) {
+    public static void prepareSQL(SQLiteDatabase db, boolean transactional, PrepareHandler handler) {
         try {
             if (transactional) {
                 db.beginTransaction();

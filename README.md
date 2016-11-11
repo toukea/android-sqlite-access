@@ -66,6 +66,10 @@ NB: it is strongly recommended  to make it on the onCreate of your <extends> and
         }
     });
 ```
+You can also make a  transactional Prepare.
+```java
+    SQLite.prepareTransactionalSQL(DbName, new SQLite.PrepareHandler() { //Some code
+```
 
 # Make a SQL Insert 
 After SQL instance has been prepared successfully,   you can use them to make one SQL Insert.
@@ -80,7 +84,7 @@ After SQL instance has been prepared successfully,   you can use them to make on
        long insertIds[] = sql.insert(user).execute();// Array List of insert elements
     }
  ```   
-there is also possible to perform multiple insertion in one step
+It is also possible to perform multiple insertion in one step
  ```java
      @Override
      public void onSQLReady(SQLite.SQL sql) {
@@ -114,7 +118,7 @@ there is also possible to perform multiple insertion in one step
   ```    
  
 # Make a SQL Update 
-   After SQL instance has been prepared successfully,   you can use them to make one SQL selection.
+After SQL instance has been prepared successfully,   you can use them to make one SQL selection.
 ```java
            @Override
            public void onSQLReady(SQLite.SQL sql) {
@@ -127,7 +131,7 @@ there is also possible to perform multiple insertion in one step
            }
            
 ``` 
-There is also possible to update from another model.
+It is also possible to update from another model.
 ```java
            @Override
            public void onSQLReady(SQLite.SQL sql) {
@@ -147,7 +151,7 @@ There is also possible to update from another model.
 ``` 
 
 # Make a SQL Selection 
-   After SQL instance has been prepared successfully,   you can use them to make one SQL selection.
+After SQL instance has been prepared successfully,   you can use them to make one SQL selection.
 ```java
            @Override
            public void onSQLReady(SQLite.SQL sql) {
@@ -174,7 +178,7 @@ dependencies {
 
 minSdkVersion = 10
 ------------------
-There is compatible with Android 2.3 and newer.
+Library is compatible with Android 2.3 and newer.
 
 Download
 --------
