@@ -58,7 +58,7 @@ NB: it is strongly recommended  to make it on the onCreate of your <extends> and
  
 #Prepare SQL instance
 From de DbName given above (when adding connection) you can prepare SQL instance.
-NB: SQL instance will be useful to perform SQL query.
+NB: SQL instance will be useful for perform SQL query.
  ```java
     SQLite.prepareSQL(DbName, new SQLite.PrepareHandler() {
         @Override
