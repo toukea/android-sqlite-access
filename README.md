@@ -3,7 +3,7 @@ android Library to help SQLite db query and Management using a easy and sweet qu
 
 #Create Some class to persist.
 ```java
-@SQLiteModel.Table(name = "User") //if not set, default is class.simpleName()
+@SQLiteModel.Table(name = "User") //if not set, default is class.getSimpleName()
 public class User {
 
     @Column(name="userName")//specify this field as Column and give it a name. if not set, default is the property label
@@ -28,7 +28,7 @@ public class User {
 
 #Add SQLite Connexion 
 you can add one or many 'SQLiteConnexion' to your SQLite context. 
-in this part, we will add connection to a Database defined by:
+in this part, we will add connection to the Database defined by:
 DbName="testDB"
 DBVersion=1;
 NB: it is strongly recommended  to make it on the onCreate of your <extends> android.app.Application class.
@@ -68,7 +68,7 @@ NB: SQL instance will be useful for perform SQL query.
 
         @Override
         public void onSQLPrepareFail(Exception e) {
-           //called when the prepare fail. it give you a Exception which describe the error.
+           //called when the prepare fail. it give you an Exception which describe the error.
         }
     });
 ```
