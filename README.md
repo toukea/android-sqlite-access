@@ -6,7 +6,7 @@ android Library to help SQLite db query and Management using a easy and sweet qu
 @SQLiteModel.Table(name = "User") //if not set, default is class.simpleName()
 public class User {
 
-    @Column(name="userName")//specify this field as Column a give it a name. if not set, default is the property label
+    @Column(name="userName")//specify this field as Column and give it a name. if not set, default is the property label
     public String userName;
     
     public String firstName; //schould be persisted with label 'firstName'
@@ -16,7 +16,7 @@ public class User {
     /**
     make this field as table primary key.
     ome thing to know is that, if your class doesn't has explicit primary key declaration but contain a
-    property named id (case not sensitive) it will be implicitelly considered as your primaryKey
+    property named 'id' (case not sensitive) it will be implicitelly considered as your primaryKey
     */
     @PrimaryKey 
     String id;
@@ -27,8 +27,8 @@ public class User {
 ```
 
 #Add SQLite Connexion 
-you can add one or many SQLiteConnexion to your SQLite context. 
-in this part, we will add some connection to an Database defined by:
+you can add one or many 'SQLiteConnexion' to your SQLite context. 
+in this part, we will add connection to a Database defined by:
 DbName="testDB"
 DBVersion=1;
 NB: it is strongly recommended  to make it on the onCreate of your <extends> android.app.Application class.
