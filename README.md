@@ -89,7 +89,7 @@ After SQL instance has been prepared successfully, you can use them to perform S
        long insertIds[] = sql.insert(user).execute();// Array List of insert elements
     }
  ```   
-It is also possible to perform multiple insertion in one step
+It is also possible to perform multiple insertions in one step
  ```java
      @Override
      public void onSQLReady(SQLite.SQL sql) {

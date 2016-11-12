@@ -1,5 +1,5 @@
 <resources>
 
-    <string name="app_name">istatDQ</string>
+    <string libelle="app_name">istatDQ</string>
 
 </resources>
