@@ -87,7 +87,7 @@ After SQL instance has been prepared successfully, you can use them to perform S
        user.firstName = "Jephte";
        user.year = 25;
                     
-       long insertIds[] = sql.insert(user).execute();// Array List of insert elements
+       long insertIds[] = sql.insert(user).execute();// Array List of last insert 'Id'
     }
  ```   
 It is also possible to perform multiple insertions in one step
@@ -98,7 +98,7 @@ It is also possible to perform multiple insertions in one step
        here, some multiple[3] user definitions
        */
                                    
-        long insertIds[] = sql.insert(user0,user1,user2).execute();// Array List of insert elements
+        long insertIds[] = sql.insert(user0,user1,user2).execute();// Array List of last insert 'Id'
         
         System.out.println("user0 id= "+insertIds[0]);
         System.out.println("user1 id= "+insertIds[1]);
