@@ -31,15 +31,20 @@ public final class SQLite {
         return new SQL(db);
     }
 
-    public static void addConnection(SQLiteConnection... launchers) {
-        for (SQLiteConnection launcher : launchers) {
+    public static SQL fromConnection(String dbName) throws Exception {
+        SQLiteDataAccess access = findOrCreateConnectionAccess(dbName);
+        return SQLite.from(access.open());
+    }
+
+    public static void addConnection(SQLiteConnection... connections) {
+        for (SQLiteConnection launcher : connections) {
             addConnection(launcher, false);
         }
     }
 
     public static SQLiteDataAccess getAccess(String dbName) {
         try {
-            return findOrCreateConnectionAcces(dbName);
+            return findOrCreateConnectionAccess(dbName);
         } catch (IllegalAccessException e) {
             e.printStackTrace();
             return null;
@@ -48,7 +53,7 @@ public final class SQLite {
 
     public static SQLiteDatabase getDataBase(String dbName) {
         try {
-            SQLiteDataAccess access = findOrCreateConnectionAcces(dbName);
+            SQLiteDataAccess access = findOrCreateConnectionAccess(dbName);
             if (access != null) {
                 return access.open();
             }
@@ -58,12 +63,11 @@ public final class SQLite {
         return null;
     }
 
-    public static void addConnection(SQLiteConnection launcher, boolean bootWhenAdded) {
-        if (bootWhenAdded) {
-            SQLiteDataAccess access = connect(launcher);
-            dbNameAccessPair.put(launcher.dbName, access);
+    public static void addConnection(SQLiteConnection connection, boolean connectInstantly) {
+        if (connectInstantly) {
+            connect(connection);
         } else {
-            dbNameConnectionPair.put(launcher.dbName, launcher);
+            dbNameConnectionPair.put(connection.dbName, connection);
         }
     }
 
@@ -87,7 +91,7 @@ public final class SQLite {
         prepareSQL(dbName, handler, true);
     }
 
-    private static SQLiteDataAccess findOrCreateConnectionAcces(String dbName) throws IllegalAccessException {
+    private static SQLiteDataAccess findOrCreateConnectionAccess(String dbName) throws IllegalAccessException {
         SQLiteDataAccess access = dbNameAccessPair.get(dbName);
         boolean hasLauncher = dbNameConnectionPair.containsKey(dbName);
         if (access == null && hasLauncher) {
@@ -102,7 +106,7 @@ public final class SQLite {
     public static void prepareSQL(String dbName, PrepareHandler handler, boolean transactional) {
         SQLiteDatabase db = null;
         try {
-            SQLiteDataAccess access = findOrCreateConnectionAcces(dbName);
+            SQLiteDataAccess access = findOrCreateConnectionAccess(dbName);
             db = access.open();
             SQL sql = SQLite.from(db);
             handler.onSQLReady(sql);
@@ -160,7 +164,7 @@ public final class SQLite {
     }
 
     public static void prepareSQL(SQLiteDatabase db, PrepareHandler handler) {
-        prepareSQL(db,false, handler);
+        prepareSQL(db, false, handler);
     }
 
     public static void prepareSQL(SQLiteDatabase db, boolean transactional, PrepareHandler handler) {
@@ -187,7 +191,7 @@ public final class SQLite {
     }
 
 //    public static SQL from(String dbName) throws IllegalAccessException {
-//        SQLiteDataAccess access = findOrCreateConnectionAcces(dbName);
+//        SQLiteDataAccess access = findOrCreateConnectionAccess(dbName);
 //        SQLiteDatabase db = access.open();
 //        return from(db);
 //    }
@@ -218,8 +222,23 @@ public final class SQLite {
         return connect(boot.context, boot.dbName, boot.dbVersion, boot);
     }
 
-    static SQLiteDataAccess connect(Context context, String dbName, int dbVersion, final BootDescription description) {
-        SQLiteDataAccess dAccess = new SQLiteDataAccess(context, dbName, dbVersion) {
+    public static void close(String dbName) {
+        SQLiteDataAccess access = dbNameAccessPair.get(dbName);
+        if (access != null) {
+            access.close();
+        }
+    }
+
+    public static void desconnect(String dbName) {
+        SQLiteDataAccess access = dbNameAccessPair.get(dbName);
+        if (access != null) {
+            access.close();
+            dbNameAccessPair.remove(dbName);
+        }
+    }
+
+    public static SQLiteDataAccess connect(Context context, String dbName, int dbVersion, final BootDescription description) {
+        SQLiteDataAccess access = new SQLiteDataAccess(context, dbName, dbVersion) {
             @Override
             public void onUpgradeDb(SQLiteDatabase db, int oldVersion, int newVersion) {
                 if (description != null) {
@@ -234,7 +253,8 @@ public final class SQLite {
                 }
             }
         };
-        return dAccess;
+        dbNameAccessPair.put(dbName, access);
+        return access;
     }
 
 
