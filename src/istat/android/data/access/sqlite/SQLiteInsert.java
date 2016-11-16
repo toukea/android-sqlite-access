@@ -30,6 +30,18 @@ public final class SQLiteInsert {
         return this;
     }
 
+    public SQLiteInsert insert(List<?> insert) {
+        for (Object obj : insert) {
+            try {
+                QueryAble model = SQLiteModel.fromObject(obj);
+                insertions.add(model);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return this;
+    }
+
     public SQLiteInsert insert(Object... insert) {
         for (Object obj : insert) {
             try {
