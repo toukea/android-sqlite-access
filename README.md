@@ -3,10 +3,10 @@ android Library to help SQLite db query and Management using a easy and sweet qu
 
 #Create Some class to persist.
 ```java
-@SQLiteModel.Table(name = "User") //if not set, default is class.simpleName()
+@SQLiteModel.Table(name = "User") //if not set, default is class.getSimpleName()
 public class User {
 
-    @Column(name="userName")//specify this field as Column a give it a name. if not set, default is the property label
+    @Column(name="userName")//specify this field as Column and give it a name. if not set, default is the property label
     public String userName;
     
     public String firstName; //schould be persisted with label 'firstName'
@@ -16,7 +16,7 @@ public class User {
     /**
     make this field as table primary key.
     ome thing to know is that, if your class doesn't has explicit primary key declaration but contain a
-    property named id (case not sensitive) it will be implicitelly considered as your primaryKey
+    property named 'id' (case not sensitive) it will be implicitelly considered as your primaryKey
     */
     @PrimaryKey 
     String id;
@@ -27,8 +27,8 @@ public class User {
 ```
 
 #Add SQLite Connexion 
-you can add one or many SQLiteConnexion to your SQLite context. 
-in this part, we will add some connection to an Database defined by:
+you can add one or many 'SQLiteConnexion' to your SQLite context. 
+in this part, we will add connection to the Database defined by:
 DbName="testDB"
 DBVersion=1;
 NB: it is strongly recommended  to make it on the onCreate of your <extends> android.app.Application class.
@@ -68,7 +68,7 @@ NB: SQL instance will be useful for perform SQL query.
 
         @Override
         public void onSQLPrepareFail(Exception e) {
-           //called when the prepare fail. it give you a Exception which describe the error.
+           //called when the prepare fail. it give you an Exception which describe the error.
         }
     });
 ```
@@ -87,7 +87,7 @@ After SQL instance has been prepared successfully, you can use them to perform S
        user.firstName = "Jephte";
        user.year = 25;
                     
-       long insertIds[] = sql.insert(user).execute();// Array List of insert elements
+       long insertIds[] = sql.insert(user).execute();// Array List of last insert 'Id'
     }
  ```   
 It is also possible to perform multiple insertions in one step
@@ -98,7 +98,7 @@ It is also possible to perform multiple insertions in one step
        here, some multiple[3] user definitions
        */
                                    
-        long insertIds[] = sql.insert(user0,user1,user2).execute();// Array List of insert elements
+        long insertIds[] = sql.insert(user0,user1,user2).execute();// Array List of last insert 'Id'
         
         System.out.println("user0 id= "+insertIds[0]);
         System.out.println("user1 id= "+insertIds[1]);
