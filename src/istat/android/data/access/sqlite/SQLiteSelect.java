@@ -48,6 +48,7 @@ public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         Cursor c = onExecute(sql.db);
         int count = c.getCount();
         c.close();
+        notifyExecuted();
         return count;
 
     }
@@ -67,6 +68,7 @@ public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        notifyExecuted();
         return list;
 
     }
@@ -88,6 +90,7 @@ public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        notifyExecuted();
     }
 
     /**

@@ -13,17 +13,6 @@ public final class SQLiteInsert {
         this.sql = sql;
     }
 
-//    SQLiteInsert insert(Object insert, SQLiteDatabase db) {
-//        this.db = db;
-//        try {
-//            QueryAble model = SQLiteModel.fromObject(insert);
-//            insertions.add(model);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return this;
-//    }
-
     public SQLiteInsert insert(Object insert) {
         try {
             QueryAble model = SQLiteModel.fromObject(insert);
@@ -67,6 +56,13 @@ public final class SQLiteInsert {
             out[index] = insertion.persist(sql.db);
         }
         insertions.clear();
+        notifyExecuted();
         return out;
+    }
+
+    private void notifyExecuted() {
+        if (sql.autoClose) {
+            sql.closeDb();
+        }
     }
 }

@@ -12,7 +12,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     protected SQLite.SQL sql;
-   // protected SQLiteDatabase db;
+    // protected SQLiteDatabase db;
     protected String whereClause = null;
     protected List<String> whereParams = new ArrayList<String>();
     protected String orderBy = null;
@@ -324,5 +324,11 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             sql += splits[splits.length - 1];
         }
         return sql;
+    }
+
+    protected void notifyExecuted() {
+        if (sql.autoClose) {
+            sql.closeDb();
+        }
     }
 }

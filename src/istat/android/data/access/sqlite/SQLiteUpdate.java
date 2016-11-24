@@ -66,7 +66,9 @@ public final class SQLiteUpdate {
         }
 
         public int execute() {
-            return Integer.valueOf(onExecute(sql.db) + "");
+            int out = Integer.valueOf(onExecute(sql.db) + "");
+            notifyExecuted();
+            return out;
         }
 
         @Override

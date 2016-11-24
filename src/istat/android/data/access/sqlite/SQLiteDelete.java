@@ -14,7 +14,9 @@ public final class SQLiteDelete extends SQLiteClause<SQLiteDelete> {
     }
 
     public int execute() {
-        return onExecute(sql.db);
+        int out = onExecute(sql.db);
+        notifyExecuted();
+        return out;
     }
 
 }

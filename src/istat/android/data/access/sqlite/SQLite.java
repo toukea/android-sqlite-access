@@ -36,6 +36,13 @@ public final class SQLite {
         return SQLite.from(access.open());
     }
 
+    public static SQL fromConnection(String dbName, boolean autoClose) throws Exception {
+        SQLiteDataAccess access = findOrCreateConnectionAccess(dbName);
+        SQL sql = SQLite.from(access.open());
+        sql.autoClose = autoClose;
+        return sql;
+    }
+
     public static void addConnection(SQLiteConnection... connections) {
         for (SQLiteConnection launcher : connections) {
             addConnection(launcher, false);
@@ -260,6 +267,7 @@ public final class SQLite {
 
     public static class SQL {
         SQLiteDatabase db;
+        boolean autoClose = false;
 
         SQL(SQLiteDatabase db) {
             this.db = db;
