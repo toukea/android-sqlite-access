@@ -7,10 +7,13 @@ import android.database.sqlite.SQLiteDatabase;
 
 public final class SQLiteInsert {
     List<QueryAble> insertions = new ArrayList<QueryAble>();
-    SQLiteDatabase db;
+    SQLite.SQL sql;
 
-    SQLiteInsert insert(Object insert, SQLiteDatabase db) {
-        this.db = db;
+    SQLiteInsert(SQLite.SQL sql) {
+        this.sql = sql;
+    }
+
+    public SQLiteInsert insert(Object insert) {
         try {
             QueryAble model = SQLiteModel.fromObject(insert);
             insertions.add(model);
@@ -20,12 +23,14 @@ public final class SQLiteInsert {
         return this;
     }
 
-    public SQLiteInsert insert(Object insert) {
-        try {
-            QueryAble model = SQLiteModel.fromObject(insert);
-            insertions.add(model);
-        } catch (Exception e) {
-            e.printStackTrace();
+    public SQLiteInsert insert(List<?> insert) {
+        for (Object obj : insert) {
+            try {
+                QueryAble model = SQLiteModel.fromObject(obj);
+                insertions.add(model);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         return this;
     }
@@ -48,9 +53,16 @@ public final class SQLiteInsert {
         long[] out = new long[insertions.size()];
         int index = 0;
         for (QueryAble insertion : insertions) {
-            out[index] = insertion.persist(db);
+            out[index] = insertion.persist(sql.db);
         }
         insertions.clear();
+        notifyExecuted();
         return out;
+    }
+
+    private void notifyExecuted() {
+        if (sql.autoClose) {
+            sql.closeDb();
+        }
     }
 }

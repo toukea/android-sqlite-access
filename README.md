@@ -57,8 +57,8 @@ NB: it is strongly recommended  to make it on the onCreate of your <extends> and
  ```
  
 #Prepare SQL instance
-From de DbName given bellow (when adding connection) you can prepare SQL instance.
-NB: SQL instance will be useful to perform SQL query.
+From de DbName given above (when adding connection) you can prepare SQL instance.
+NB: SQL instance will be useful for perform SQL query.
  ```java
     SQLite.prepareSQL(DbName, new SQLite.PrepareHandler() {
         @Override
@@ -77,7 +77,7 @@ You can also make a  transactional Prepare.
     SQLite.prepareTransactionalSQL(DbName, new SQLite.PrepareHandler() { //Some code
 ```
 
-# Make a SQL Insert 
+# Make SQL Insert 
 After SQL instance has been prepared successfully, you can use them to perform SQL Insert.
 ```java
     @Override
@@ -90,7 +90,7 @@ After SQL instance has been prepared successfully, you can use them to perform S
        long insertIds[] = sql.insert(user).execute();// Array List of insert elements
     }
  ```   
-It is also possible to perform multiple insertion in one step
+It is also possible to perform multiple insertions in one step
  ```java
      @Override
      public void onSQLReady(SQLite.SQL sql) {
@@ -107,7 +107,7 @@ It is also possible to perform multiple insertion in one step
      }
   ``` 
   
-# Make a SQL Delete 
+# Make SQL Delete 
  After SQL instance has been prepared successfully, you can use them to perform SQL delete.
  ```java
          @Override
@@ -123,7 +123,7 @@ It is also possible to perform multiple insertion in one step
          }
   ```    
  
-# Make a SQL Update 
+# Make SQL Update 
 After SQL instance has been prepared successfully, you can use them to perform SQL update.
 ```java
            @Override
@@ -156,7 +156,7 @@ It is also possible to update from another model.
            
 ``` 
 
-# Make a SQL Selection 
+# Make SQL Selection 
 After SQL instance has been prepared successfully, you can use them to perform SQL selection.
 ```java
            @Override

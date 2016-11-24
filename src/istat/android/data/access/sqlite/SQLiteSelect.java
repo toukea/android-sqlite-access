@@ -11,12 +11,7 @@ public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     Class<?> clazz;
     String join;
 
-    SQLiteSelect(Class<?> clazz, SQLiteDatabase db) {
-        super(clazz, db);
-        this.clazz = clazz;
-    }
-
-    SQLiteSelect(SQLiteDatabase db, Class<?>... clazz) {
+    SQLiteSelect(SQLite.SQL db, Class<?>... clazz) {
         super(clazz[0], db);
         this.clazz = clazz[0];
     }
@@ -50,9 +45,10 @@ public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
 
 
     public int count() {
-        Cursor c = onExecute(db);
+        Cursor c = onExecute(sql.db);
         int count = c.getCount();
         c.close();
+        notifyExecuted();
         return count;
 
     }
@@ -61,7 +57,7 @@ public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     public <T> List<T> execute() {
         List<T> list = new ArrayList<T>();
         try {
-            Cursor c = onExecute(db);
+            Cursor c = onExecute(sql.db);
             if (c.getCount() > 0) {
                 while (c.moveToNext()) {
                     T model = (T) createObjectFromCursor(clazz, c);
@@ -72,6 +68,7 @@ public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        notifyExecuted();
         return list;
 
     }
@@ -82,7 +79,7 @@ public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             list = new ArrayList<T>();
         }
         try {
-            Cursor c = onExecute(db);
+            Cursor c = onExecute(sql.db);
             if (c.getCount() > 0) {
                 while (c.moveToNext()) {
                     T model = (T) createObjectFromCursor(clazz, c);
@@ -93,6 +90,7 @@ public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        notifyExecuted();
     }
 
     /**
