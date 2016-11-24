@@ -70,6 +70,10 @@ public abstract class SQLiteDataAccess implements Closeable, SQLite.BootDescript
         return db;
     }
 
+    public boolean isOpened() {
+        return db != null;
+    }
+
     /**
      * Ferme la base de donn�es.
      */
@@ -283,4 +287,14 @@ public abstract class SQLiteDataAccess implements Closeable, SQLite.BootDescript
         return f.format(date);
     }
 
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        Object obj = super.clone();
+        return obj;
+    }
+
+    protected SQLiteDataAccess cloneAccess() throws CloneNotSupportedException {
+        Object obj = super.clone();
+        return (SQLiteDataAccess) obj;
+    }
 }

@@ -100,6 +100,13 @@ public final class SQLite {
 
     private static SQLiteDataAccess findOrCreateConnectionAccess(String dbName) throws IllegalAccessException {
         SQLiteDataAccess access = dbNameAccessPair.get(dbName);
+        if (access.isOpened()) {
+            try {
+                access = access.cloneAccess();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         boolean hasLauncher = dbNameConnectionPair.containsKey(dbName);
         if (access == null && hasLauncher) {
             access = connect(dbNameConnectionPair.get(dbName));
@@ -114,6 +121,7 @@ public final class SQLite {
         SQLiteDatabase db = null;
         try {
             SQLiteDataAccess access = findOrCreateConnectionAccess(dbName);
+
             db = access.open();
             SQL sql = SQLite.from(db);
             handler.onSQLReady(sql);
@@ -321,6 +329,15 @@ public final class SQLite {
             List<String> statements = SQLiteParser.parseSqlFile(sqlFileInputStream);
             for (String statement : statements) {
                 db.execSQL(statement);
+            }
+        }
+
+        public boolean isTableExist(Class<?> cLass) {
+            try {
+                select(cLass).count();
+                return true;
+            } catch (Exception e) {
+                return false;
             }
         }
 
