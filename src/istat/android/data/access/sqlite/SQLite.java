@@ -100,19 +100,19 @@ public final class SQLite {
 
     private static SQLiteDataAccess findOrCreateConnectionAccess(String dbName) throws IllegalAccessException {
         SQLiteDataAccess access = dbNameAccessPair.get(dbName);
-        if (access.isOpened()) {
-            try {
-                access = access.cloneAccess();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
         boolean hasLauncher = dbNameConnectionPair.containsKey(dbName);
         if (access == null && hasLauncher) {
             access = connect(dbNameConnectionPair.get(dbName));
             dbNameConnectionPair.remove(dbName);
         } else {
             throw new IllegalAccessException("Oups, no launcher is currently added dor Data base with name: " + dbName);
+        }
+        if (access.isOpened()) {
+            try {
+                access = access.cloneAccess();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         return access;
     }

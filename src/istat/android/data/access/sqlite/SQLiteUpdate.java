@@ -61,8 +61,10 @@ public final class SQLiteUpdate {
 
         @Override
         protected Object onExecute(SQLiteDatabase db) {
+            String whereClause = getWhereClause();
+            String[] whereParams = getWhereParams();
             return db.update(model.getName(), model.toContentValues(),
-                    getWhereClause(), getWhereParams());
+                    whereClause, whereParams);
         }
 
         public int execute() {

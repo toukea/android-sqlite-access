@@ -4,13 +4,15 @@ import android.database.sqlite.SQLiteDatabase;
 
 public final class SQLiteDelete extends SQLiteClause<SQLiteDelete> {
 
-    SQLiteDelete(Class<?> clazz, SQLite.SQL db) {
-        super(clazz, db);
+    SQLiteDelete(Class<?> clazz, SQLite.SQL sql) {
+        super(clazz, sql);
     }
 
     @Override
     protected Integer onExecute(SQLiteDatabase db) {
-        return db.delete(table, getWhereClause(), getWhereParams());
+        String whereClause = getWhereClause();
+        String[] whereParams = getWhereParams();
+        return db.delete(table, whereClause, whereParams);
     }
 
     public int execute() {
