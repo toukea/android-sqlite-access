@@ -7,10 +7,10 @@ import android.database.sqlite.SQLiteDatabase;
 
 public final class SQLiteInsert {
     List<QueryAble> insertions = new ArrayList<QueryAble>();
-    SQLiteDatabase db;
+    SQLite.SQL sql;
 
-    SQLiteInsert(SQLiteDatabase db) {
-        this.db = db;
+    SQLiteInsert(SQLite.SQL sql) {
+        this.sql = sql;
     }
 
 //    SQLiteInsert insert(Object insert, SQLiteDatabase db) {
@@ -64,7 +64,7 @@ public final class SQLiteInsert {
         long[] out = new long[insertions.size()];
         int index = 0;
         for (QueryAble insertion : insertions) {
-            out[index] = insertion.persist(db);
+            out[index] = insertion.persist(sql.db);
         }
         insertions.clear();
         return out;

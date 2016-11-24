@@ -266,33 +266,33 @@ public final class SQLite {
         }
 
         public SQLiteSelect select(Class<?> clazz) {
-            return new SQLiteSelect(db, clazz);
+            return new SQLiteSelect(this, clazz);
         }
 
         public SQLiteSelect select(Class<?>... clazz) {
-            return new SQLiteSelect(db, clazz);
+            return new SQLiteSelect(this, clazz);
         }
 
         public SQLiteUpdate update(Class<?> clazz) {
-            return new SQLiteUpdate(clazz, db);
+            return new SQLiteUpdate(clazz, this);
         }
 
         public SQLiteDelete delete(Class<?> clazz) {
-            return new SQLiteDelete(clazz, db);
+            return new SQLiteDelete(clazz, this);
         }
 
         public SQLiteInsert insert(Object entity) {
-            SQLiteInsert insert = new SQLiteInsert(this.db);
+            SQLiteInsert insert = new SQLiteInsert(this);
             return insert.insert(entity);
         }
 
         public SQLiteInsert insert(Object... entity) {
-            SQLiteInsert insert = new SQLiteInsert(this.db);
+            SQLiteInsert insert = new SQLiteInsert(this);
             return insert.insert(entity);
         }
 
         public <T> SQLiteInsert insert(List<T> entity) {
-            SQLiteInsert insert = new SQLiteInsert(this.db);
+            SQLiteInsert insert = new SQLiteInsert(this);
             return insert.insert(entity);
         }
 

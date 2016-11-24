@@ -5,8 +5,8 @@ import android.database.sqlite.SQLiteDatabase;
 public final class SQLiteUpdate {
     Updater updater;
 
-    SQLiteUpdate(Class<?> clazz, SQLiteDatabase db) {
-        updater = new Updater(clazz, db);
+    SQLiteUpdate(Class<?> clazz, SQLite.SQL sql) {
+        updater = new Updater(clazz, sql);
     }
 //
 //    SQLiteUpdate(String table, SQLiteDatabase db) {
@@ -22,7 +22,7 @@ public final class SQLiteUpdate {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return new Updater(tbName, this.updater.db);
+        return new Updater(tbName, this.updater.sql);
     }
 
     public Updater set(String name, Object value) {
@@ -41,8 +41,8 @@ public final class SQLiteUpdate {
             this.model = model;
         }
 
-        protected Updater(Class<?> clazz, SQLiteDatabase db) {
-            super(clazz, db);
+        protected Updater(Class<?> clazz, SQLite.SQL sql) {
+            super(clazz, sql);
             try {
                 model = SQLiteModel.fromClass(clazz);
             } catch (Exception e) {
@@ -50,8 +50,8 @@ public final class SQLiteUpdate {
             }
         }
 
-        protected Updater(String clazz, SQLiteDatabase db) {
-            super(clazz, null, db);
+        protected Updater(String clazz, SQLite.SQL sql) {
+            super(clazz, null, sql);
         }
 
         public Updater set(String name, Object value) {
@@ -66,7 +66,7 @@ public final class SQLiteUpdate {
         }
 
         public int execute() {
-            return Integer.valueOf(onExecute(db) + "");
+            return Integer.valueOf(onExecute(sql.db) + "");
         }
 
         @Override
