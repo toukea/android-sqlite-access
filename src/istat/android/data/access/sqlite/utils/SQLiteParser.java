@@ -140,13 +140,13 @@ public class SQLiteParser {
 		List<String> out = new ArrayList<String>();
 		for (String statement : statements) {// INSERT
 			if (statement.length() > 7) {
-				String begginStatement = statement.substring(0, 6)
+				String beginStatement = statement.substring(0, 6)
 						.toLowerCase();
-				if (begginStatement.equals("insert")) {
-					String insertheader = statement.substring(0,
+				if (beginStatement.equals("insert")) {
+					String insertHeader = statement.substring(0,
 							statement.indexOf("VALUES") + 6);
 
-					out.addAll(makeInsertBundle(insertheader,
+					out.addAll(makeInsertBundle(insertHeader,
 							splitInsertion(statement), 0));
 
 				} else {

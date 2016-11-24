@@ -6,6 +6,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -22,6 +23,8 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
+
+import com.google.gson.Gson;
 
 public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     HashMap<String, Object> map = new HashMap<String, Object>();
@@ -618,6 +621,16 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         }
     }
 
+    public Class<?> getFieldTypeClass(String field) {
+        if (map.containsKey(field)) {
+            Object obj = get(field);
+            if (obj != null) {
+                return obj.getClass();
+            }
+        }
+        return Object.class;
+    }
+
     private String getFieldType(String name) {
         try {
             if (this.reflectionFieldNames.contains(name)) {
@@ -655,9 +668,21 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 field.set(instance, getBoolean(field.getName()));
             } else if (field.getType().isAssignableFrom(Integer.class)) {
                 field.set(instance, getInteger(field.getName()));
+            } else if (isNestedTableProperty(clazz, field)) {
+
+            } else {
+                Gson gson = new Gson();
+                Type type = field.getType();
+                String retrievedEntity = getString(field.getName());
+                Object obj = gson.fromJson(retrievedEntity, type);
+                field.set(instance, obj);
             }
         }
         return instance;
+    }
+
+    private <T> boolean isNestedTableProperty(Class<T> clazz, Field field) {
+        return false;
     }
 
     @Target(ElementType.TYPE)
@@ -670,6 +695,8 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Column {
         String name() default "";
+
+        boolean nullable() default true;
     }
 
     @Target(ElementType.FIELD)
@@ -682,6 +709,16 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Ignore {
         int when() default 0;
+    }
+
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface NotNull {
+    }
+
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface NestedTable {
     }
 
     private boolean hasPrimaryKey() {

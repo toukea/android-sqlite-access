@@ -2,12 +2,13 @@ apply plugin: 'com.android.library'
 ext {
     PUBLISH_GROUP_ID = 'istat.android.data.access.sqlite'
     PUBLISH_ARTIFACT_ID = 'istat-access-sqlite'
-    PUBLISH_VERSION = '1.0.0'
+    PUBLISH_VERSION = '1.1.0'
 }
 //apply from: 'release-aar.gradle'
 apply from: 'release-jar.gradle'
 dependencies {
     compile fileTree(dir: 'libs', include: '*.jar')
+    compile 'com.google.code.gson:gson:2.3.1'
 }
 
 android {
@@ -40,4 +41,16 @@ android {
         debug.setRoot('build-types/debug')
         release.setRoot('build-types/release')
     }
+    task clearJar(type: Delete) {
+        delete '../build/libs/sqlite-access.jar'
+    }
+
+    task makeJar(type: Copy) {
+        from('build/intermediates/bundles/release/')
+        into('../build/libs/')
+        include('classes.jar')
+        rename('classes.jar', 'sqlite-access.jar')
+    }
+
+    makeJar.dependsOn(clearJar, build)
 }

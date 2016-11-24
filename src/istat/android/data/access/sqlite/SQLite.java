@@ -282,8 +282,20 @@ public final class SQLite {
         }
 
         public SQLiteInsert insert(Object entity) {
-            return new SQLiteInsert().insert(entity, this.db);
+            SQLiteInsert insert = new SQLiteInsert(this.db);
+            return insert.insert(entity);
         }
+
+        public SQLiteInsert insert(Object... entity) {
+            SQLiteInsert insert = new SQLiteInsert(this.db);
+            return insert.insert(entity);
+        }
+
+        public <T> SQLiteInsert insert(List<T> entity) {
+            SQLiteInsert insert = new SQLiteInsert(this.db);
+            return insert.insert(entity);
+        }
+
 
         public void executeStatements(List<String> statements) {
             for (String ask : statements) {
@@ -306,6 +318,18 @@ public final class SQLite {
 
         public final void closeDb() {
             db.close();
+        }
+
+        public final void beginTransaction() {
+            db.beginTransaction();
+        }
+
+        public final void setTransactionSuccessful() {
+            db.setTransactionSuccessful();
+        }
+
+        public final void endTransaction() {
+            db.endTransaction();
         }
 
 
@@ -341,5 +365,12 @@ public final class SQLite {
         public void onSQLReady(SQL sql);
 
         public void onSQLPrepareFail(Exception e);
+    }
+
+    public static abstract class SQLReadyHandler implements PrepareHandler {
+
+        public void onSQLPrepareFail(Exception e) {
+            e.printStackTrace();
+        }
     }
 }
