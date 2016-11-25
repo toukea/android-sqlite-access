@@ -1,6 +1,7 @@
 package istat.android.data.access.sqlite.utils;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,7 +28,12 @@ public class Toolkit {
     public static List<Field> getAllFieldIncludingPrivateAndSuper(Class<?> klass) {
         List<Field> fields = new ArrayList<Field>();
         while (!klass.equals(Object.class)) {
-            Collections.addAll(fields, klass.getDeclaredFields());
+            for (Field field : klass.getDeclaredFields()) {
+                if (field != null && field.toString().contains("static")) {
+                    continue;
+                }
+                fields.add(field);
+            }
             klass = klass.getSuperclass();
         }
         return fields;

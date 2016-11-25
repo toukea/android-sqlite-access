@@ -1,6 +1,7 @@
 package istat.android.data.access.sqlite.utils;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,6 +9,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import istat.android.data.access.sqlite.SQLite;
 import istat.android.data.access.sqlite.SQLiteModel;
 
 /**
@@ -17,17 +19,71 @@ import istat.android.data.access.sqlite.SQLiteModel;
 public class TableScriptFactory {
     Class<?> cLass;
 
-    public static String create(Class<?> cLass, boolean findAll) throws InstantiationException, IllegalAccessException {
-        return new TableScriptFactory(cLass).create(findAll);
-    }
-
-    public static String create(Class<?> cLass) throws InstantiationException, IllegalAccessException {
-        return new TableScriptFactory(cLass).create(false);
-    }
-
-    public TableScriptFactory(Class<?> cLass) {
+    TableScriptFactory(Class<?> cLass) {
         this.cLass = cLass;
     }
+
+    public static String drop(Class<?>... cLasss) throws IllegalAccessException, InstantiationException {
+        String out = "";
+        for (Class<?> cLass : cLasss) {
+            SQLiteModel model = SQLiteModel.fromClass(cLass);
+            out += "DROP TABLE " + model.getName() + ";";
+        }
+        return out;
+    }
+
+    public static String truncate(Class<?>... cLasss) throws IllegalAccessException, InstantiationException {
+        String out = "";
+        for (Class<?> cLass : cLasss) {
+            SQLiteModel model = SQLiteModel.fromClass(cLass);
+            out += "TRUNCATE TABLE " + model.getName() + ";";
+        }
+        return out;
+    }
+
+    public static String create(boolean findAll, Class<?>... cLasss) throws InstantiationException, IllegalAccessException {
+        String out = "";
+        for (Class<?> cLass : cLasss) {
+            TableScriptFactory factory = new TableScriptFactory(cLass);
+            out += "\n" + factory.create(findAll);
+        }
+        return out;
+    }
+
+    public static String create(Class<?>... cLasss) throws InstantiationException, IllegalAccessException {
+        String out = "";
+        for (Class<?> cLass : cLasss) {
+            TableScriptFactory factory = new TableScriptFactory(cLass);
+            out += "\n" + factory.create(false);
+        }
+        return out;
+    }
+
+
+    //----------------------------------------------
+    public static String create(boolean findAll, HashMap<Class, LineAdapter> classAdapterPair, Class<?>... cLasss) throws InstantiationException, IllegalAccessException {
+
+        String out = "";
+        for (Class<?> cLass : cLasss) {
+            TableScriptFactory factory = new TableScriptFactory(cLass);
+            factory.adapterQueue.putAll(classAdapterPair);
+            out += "\n" + factory.create(findAll);
+        }
+        return out;
+    }
+
+    public static String create(HashMap<Class, LineAdapter> classAdapterPair, Class<?>... cLasss) throws InstantiationException, IllegalAccessException {
+
+        String out = "";
+        for (Class<?> cLass : cLasss) {
+            TableScriptFactory factory = new TableScriptFactory(cLass);
+            factory.adapterQueue.putAll(classAdapterPair);
+            out += "\n" + factory.create(false);
+        }
+
+        return out;
+    }
+
 
     /*
          CREATE TABLE IF NOT EXISTS `commandes_tb` (
@@ -53,14 +109,18 @@ public class TableScriptFactory {
             fields = new ArrayList<Field>();
             Collections.addAll(fields, cLass.getDeclaredFields());
         }
-        model = SQLiteModel.fromObject(cLass);
-        String sql = "CREATE TABLE IF NOT EXISTS `" + cLass.getSimpleName() + "` (";
+        model = SQLiteModel.fromClass(cLass);
+        String sql = "CREATE TABLE IF NOT EXISTS `" + model.getName() + "` (";
         int index = 0;
         for (Field field : fields) {
-            sql += createLine(field);
-            if (index < fields.size() - 1) {
-                sql += ",";
+            if (field != null && field.toString().contains("static")) {
+                continue;
             }
+            String line = createLine(field);
+            if (index > 0) {
+                line = "," + line;
+            }
+            sql += line;
             index++;
         }
         sql += ");";
