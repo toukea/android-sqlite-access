@@ -23,62 +23,62 @@ public class TableScriptFactory {
         this.cLass = cLass;
     }
 
-    public static String drop(Class<?>... cLasss) throws IllegalAccessException, InstantiationException {
-        String out = "";
+    public static List<String> drop(Class<?>... cLasss) throws IllegalAccessException, InstantiationException {
+        List<String> out = new ArrayList<String>();
         for (Class<?> cLass : cLasss) {
             SQLiteModel model = SQLiteModel.fromClass(cLass);
-            out += "DROP TABLE " + model.getName() + ";";
+            out.add("DROP TABLE " + model.getName() + ";");
         }
         return out;
     }
 
-    public static String truncate(Class<?>... cLasss) throws IllegalAccessException, InstantiationException {
-        String out = "";
+    public static List<String> truncate(Class<?>... cLasss) throws IllegalAccessException, InstantiationException {
+        List<String> out = new ArrayList<String>();
         for (Class<?> cLass : cLasss) {
             SQLiteModel model = SQLiteModel.fromClass(cLass);
-            out += "TRUNCATE TABLE " + model.getName() + ";";
+            out.add("TRUNCATE TABLE " + model.getName() + ";");
         }
         return out;
     }
 
-    public static String create(boolean findAll, Class<?>... cLasss) throws InstantiationException, IllegalAccessException {
-        String out = "";
+    public static List<String> create(boolean findAll, Class<?>... cLasss) throws InstantiationException, IllegalAccessException {
+        List<String> out = new ArrayList<String>();
         for (Class<?> cLass : cLasss) {
             TableScriptFactory factory = new TableScriptFactory(cLass);
-            out += "\n" + factory.create(findAll);
+            out.add(factory.create(findAll));
         }
         return out;
     }
 
-    public static String create(Class<?>... cLasss) throws InstantiationException, IllegalAccessException {
-        String out = "";
+    public static List<String> create(Class<?>... cLasss) throws InstantiationException, IllegalAccessException {
+        List<String> out = new ArrayList<String>();
         for (Class<?> cLass : cLasss) {
             TableScriptFactory factory = new TableScriptFactory(cLass);
-            out += "\n" + factory.create(false);
+            out.add(factory.create(false));
         }
         return out;
     }
 
 
     //----------------------------------------------
-    public static String create(boolean findAll, HashMap<Class, LineAdapter> classAdapterPair, Class<?>... cLasss) throws InstantiationException, IllegalAccessException {
+    public static List<String> create(boolean findAll, HashMap<Class, LineAdapter> classAdapterPair, Class<?>... cLasss) throws InstantiationException, IllegalAccessException {
 
-        String out = "";
+        List<String> out = new ArrayList<String>();
         for (Class<?> cLass : cLasss) {
             TableScriptFactory factory = new TableScriptFactory(cLass);
             factory.adapterQueue.putAll(classAdapterPair);
-            out += "\n" + factory.create(findAll);
+            out.add(factory.create(findAll));
         }
         return out;
     }
 
-    public static String create(HashMap<Class, LineAdapter> classAdapterPair, Class<?>... cLasss) throws InstantiationException, IllegalAccessException {
+    public static List<String> create(HashMap<Class, LineAdapter> classAdapterPair, Class<?>... cLasss) throws InstantiationException, IllegalAccessException {
 
-        String out = "";
+        List<String> out = new ArrayList<String>();
         for (Class<?> cLass : cLasss) {
             TableScriptFactory factory = new TableScriptFactory(cLass);
             factory.adapterQueue.putAll(classAdapterPair);
-            out += "\n" + factory.create(false);
+            out.add(factory.create(false));
         }
 
         return out;
@@ -102,13 +102,7 @@ public class TableScriptFactory {
     SQLiteModel model;
 
     public String create(boolean findAll) throws IllegalAccessException, InstantiationException {
-        List<Field> fields;
-        if (findAll) {
-            fields = Toolkit.getAllFieldIncludingPrivateAndSuper(cLass);
-        } else {
-            fields = new ArrayList<Field>();
-            Collections.addAll(fields, cLass.getDeclaredFields());
-        }
+        List<Field> fields = Toolkit.getAllFieldFields(cLass, true, false);
         model = SQLiteModel.fromClass(cLass);
         String sql = "CREATE TABLE IF NOT EXISTS `" + model.getName() + "` (";
         int index = 0;

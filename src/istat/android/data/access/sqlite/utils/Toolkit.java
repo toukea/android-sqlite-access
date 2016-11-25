@@ -25,11 +25,31 @@ public class Toolkit {
         }
     }
 
-    public static List<Field> getAllFieldIncludingPrivateAndSuper(Class<?> klass) {
+    public static List<Field> getAllFieldFields(Class<?> klass, boolean includingPrivateAndSuper, boolean acceptStatic) {
+        if (includingPrivateAndSuper) {
+            return getAllFieldIncludingPrivateAndSuper(klass, acceptStatic);
+        } else {
+            List<Field> fields = new ArrayList<Field>();
+            Field[] tmp = klass.getDeclaredFields();
+            for (Field f : tmp) {
+                if (f != null && (f.toString().contains("static") && !acceptStatic)) {
+                    continue;
+                }
+                fields.add(f);
+            }
+            return fields;
+        }
+    }
+
+    public static List<Field> getAllFieldIncludingPrivateAndSuper(Class<?> klassc) {
+        return getAllFieldIncludingPrivateAndSuper(klassc, false);
+    }
+
+    public static List<Field> getAllFieldIncludingPrivateAndSuper(Class<?> klass, boolean acceptStatic) {
         List<Field> fields = new ArrayList<Field>();
         while (!klass.equals(Object.class)) {
             for (Field field : klass.getDeclaredFields()) {
-                if (field != null && field.toString().contains("static")) {
+                if (field != null && (field.toString().contains("static") && !acceptStatic)) {
                     continue;
                 }
                 fields.add(field);
