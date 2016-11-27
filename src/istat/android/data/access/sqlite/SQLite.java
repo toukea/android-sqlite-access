@@ -39,7 +39,7 @@ public final class SQLite {
     public static SQL fromConnection(String dbName, boolean closeDataBaseOnExecute) throws Exception {
         SQLiteDataAccess access = findOrCreateConnectionAccess(dbName);
         SQL sql = SQLite.from(access.open());
-        sql.autoClose = closeDataBaseOnExecute;
+        sql.setAutoClose(closeDataBaseOnExecute);
         return sql;
     }
 
@@ -100,7 +100,7 @@ public final class SQLite {
 
     private static SQLiteDataAccess findOrCreateConnectionAccess(String dbName) throws IllegalAccessException {
         SQLiteDataAccess access = dbNameAccessPair.get(dbName);
-        if (access!=null && access.isOpened()) {
+        if (access != null && access.isOpened()) {
             try {
                 access = access.cloneAccess();
             } catch (Exception e) {
@@ -282,6 +282,10 @@ public final class SQLite {
         SQLiteDatabase db;
         boolean autoClose = false;
 
+        public void setAutoClose(boolean autoClose) {
+            this.autoClose = autoClose;
+        }
+
         SQL(SQLiteDatabase db) {
             this.db = db;
         }
@@ -363,6 +367,9 @@ public final class SQLite {
         }
 
 
+        public boolean isReady() {
+            return db != null && db.isOpen();
+        }
     }
 
     public static abstract class SQLiteConnection implements BootDescription {
@@ -374,6 +381,12 @@ public final class SQLite {
             this.dbName = dbName;
             this.dbVersion = dbVersion;
             this.context = context;
+        }
+
+        public final static void executeScripts(SQLiteDatabase db, List<String> scripts) {
+            for (String script : scripts) {
+                db.execSQL(script);
+            }
         }
     }
 

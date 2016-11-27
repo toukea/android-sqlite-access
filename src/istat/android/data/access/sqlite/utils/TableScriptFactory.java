@@ -1,15 +1,14 @@
 package istat.android.data.access.sqlite.utils;
 
+import android.text.TextUtils;
+
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import istat.android.data.access.sqlite.SQLite;
 import istat.android.data.access.sqlite.SQLiteModel;
 
 /**
@@ -61,7 +60,7 @@ public class TableScriptFactory {
 
 
     //----------------------------------------------
-    public static List<String> create(boolean findAll, HashMap<Class, LineAdapter> classAdapterPair, Class<?>... cLasss) throws InstantiationException, IllegalAccessException {
+    public static List<String> create(boolean findAll, HashMap<Class, FieldAdapter> classAdapterPair, Class<?>... cLasss) throws InstantiationException, IllegalAccessException {
 
         List<String> out = new ArrayList<String>();
         for (Class<?> cLass : cLasss) {
@@ -72,7 +71,7 @@ public class TableScriptFactory {
         return out;
     }
 
-    public static List<String> create(HashMap<Class, LineAdapter> classAdapterPair, Class<?>... cLasss) throws InstantiationException, IllegalAccessException {
+    public static List<String> create(HashMap<Class, FieldAdapter> classAdapterPair, Class<?>... cLasss) throws InstantiationException, IllegalAccessException {
 
         List<String> out = new ArrayList<String>();
         for (Class<?> cLass : cLasss) {
@@ -111,17 +110,19 @@ public class TableScriptFactory {
                 continue;
             }
             String line = createLine(field);
-            if (index > 0) {
-                line = "," + line;
+            if (!TextUtils.isEmpty(line)) {
+                if (index > 0) {
+                    line = "," + line;
+                }
+                sql += line;
+                index++;
             }
-            sql += line;
-            index++;
         }
         sql += ");";
         return sql;
     }
 
-    HashMap<Class, LineAdapter> adapterQueue = new HashMap() {
+    HashMap<Class, FieldAdapter> adapterQueue = new HashMap() {
         {
             put(String.class, STRING_ADAPTER);
             put(Float.class, FLOAT_ADAPTER);
@@ -135,38 +136,38 @@ public class TableScriptFactory {
         }
     };
 
-    static LineAdapter INTEGER_ADAPTER = new LineAdapter() {
+    static FieldAdapter INTEGER_ADAPTER = new FieldAdapter() {
         @Override
         String onCreateLine(Field field) {
             return "`" + field.getName() + "` INTEGER ";
         }
     };
-    static LineAdapter FLOAT_ADAPTER = new LineAdapter() {
+    static FieldAdapter FLOAT_ADAPTER = new FieldAdapter() {
         @Override
         String onCreateLine(Field field) {
             return "`" + field.getName() + "` FLOAT ";
         }
     };
-    static LineAdapter DOUBLE_ADAPTER = new LineAdapter() {
+    static FieldAdapter DOUBLE_ADAPTER = new FieldAdapter() {
         @Override
         String onCreateLine(Field field) {
             return "`" + field.getName() + "` DOUBLE ";
         }
     };
-    static LineAdapter STRING_ADAPTER = new LineAdapter() {
+    static FieldAdapter STRING_ADAPTER = new FieldAdapter() {
         @Override
         String onCreateLine(Field field) {
             return "`" + field.getName() + "` VARCHAR ";
         }
     };
-    static LineAdapter DATETIME_ADAPTER = new LineAdapter() {
+    static FieldAdapter DATETIME_ADAPTER = new FieldAdapter() {
         @Override
         String onCreateLine(Field field) {
             return "`" + field.getName() + "` DATETIME ";
         }
     };
 
-//    static LineAdapter BOOLEAN_ADAPTER = new LineAdapter() {
+//    static FieldAdapter BOOLEAN_ADAPTER = new FieldAdapter() {
 //        @Override
 //        String onCreateLine(Field field) {
 //            return "`" + field.getName() + "` TINYINT ";
@@ -175,7 +176,7 @@ public class TableScriptFactory {
 
     private String createLine(Field field) {
         Type type = field.getType();
-        LineAdapter adapter = adapterQueue.get(type);
+        FieldAdapter adapter = adapterQueue.get(type);
         if (adapter != null) {
             return adapter.createLine(field);
         } else {
@@ -183,10 +184,10 @@ public class TableScriptFactory {
         }
     }
 
-    public static abstract class LineAdapter {
+    public static abstract class FieldAdapter {
         abstract String onCreateLine(Field field);
 
-        public String createLine(Field field) {
+        public final String createLine(Field field) {
             return onCreateLine(field);
         }
     }
