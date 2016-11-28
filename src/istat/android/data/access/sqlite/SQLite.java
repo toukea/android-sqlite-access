@@ -32,8 +32,11 @@ public final class SQLite {
     }
 
     public static SQL fromConnection(String dbName) throws Exception {
-        SQLiteDataAccess access = findOrCreateConnectionAccess(dbName);
-        return SQLite.from(access.open());
+        return fromConnection(dbName, false);
+    }
+
+    public static SQL fromOneShotConnection(String dbName) throws Exception {
+        return fromConnection(dbName, true);
     }
 
     public static SQL fromConnection(String dbName, boolean closeDataBaseOnExecute) throws Exception {

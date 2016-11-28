@@ -29,6 +29,7 @@ import com.google.gson.Gson;
 
 public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     HashMap<String, Object> map = new HashMap<String, Object>();
+    HashMap<String, Field> nameFieldPaire = new HashMap<String, Field>();
     //    protected String tb_name, primary_key;
 //    protected String[] tb_projection;
     public static String TAG_CLASS = "istat.data.access.DbEntity.class";
@@ -411,11 +412,12 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             IllegalAccessException {
         List<String> tmp = new ArrayList<String>();
         HashMap<String, Object> map = new HashMap<String, Object>();
+        HashMap<String, Field> nameFieldPair = new HashMap<String, Field>();
         boolean hasColumnAnnotation = false;
         String primaryKey = null;
         String eligiblePrimaryName = null;
         try {
-            List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(obj.getClass());
+            List<Field> fields = Toolkit.getAllFieldFields(obj.getClass(), true, false);
             for (int i = 0; i < fields.size(); i++) {
                 Field field = fields.get(i);
                 field.setAccessible(true);
@@ -440,6 +442,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                     if (columnName != null && !tmp.contains(columnName)) {
                         tmp.add(columnName);
                         map.put(columnName, field.get(obj));
+                        nameFieldPair.put(columnName, field);
                     }
                 }
             }
@@ -482,17 +485,19 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             }
         };
         model.map.putAll(map);
+        model.nameFieldPaire.putAll(nameFieldPair);
         return model;
     }
 
     public static SQLiteModel fromClass(final Class cLass) throws InstantiationException,
             IllegalAccessException {
         List<String> projectionAdder = new ArrayList<String>();
+        HashMap<String, Field> nameFieldPair = new HashMap<String, Field>();
         boolean hasColumnAnnotation = false;
         String primaryKey = null;
         String eligiblePrimaryName = null;
         try {
-            List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(cLass);
+            List<Field> fields = Toolkit.getAllFieldFields(cLass, true, false);
             for (int i = 0; i < fields.size(); i++) {
                 Field field = fields.get(i);
                 if (!field.isAnnotationPresent(Ignore.class)) {
@@ -516,6 +521,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                     }
                     if (columnName != null && !projectionAdder.contains(columnName)) {
                         projectionAdder.add(columnName);
+                        nameFieldPair.put(columnName, field);
                     }
                 }
             }
@@ -555,6 +561,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 return primary;
             }
         };
+        model.nameFieldPaire.putAll(nameFieldPair);
         return model;
     }
 
@@ -613,7 +620,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             JSONObject json = new JSONObject(objToString);
             String clazz = json.optString(TAG_CLASS);
             if (TextUtils.isEmpty(clazz)) {
-                clazz = getFieldType(name);
+                clazz = getFieldTypeClass(name).getCanonicalName();
             }
             if (TextUtils.isEmpty(clazz)) {
                 return objToString;
@@ -644,35 +651,29 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         }
     }
 
-    public Class<?> getFieldTypeClass(String field) {
-        if (map.containsKey(field)) {
-            Object obj = get(field);
+    public Field getField(String field) {
+        if (nameFieldPaire.containsKey(field)) {
+            return nameFieldPaire.get(field);
+        } else {
+            return null;
+        }
+    }
+
+    public Class<?> getFieldTypeClass(String fieldName) {
+        if (map.containsKey(fieldName)) {
+            Object obj = get(fieldName);
             if (obj != null) {
                 return obj.getClass();
+            }
+        } else {
+            Field field = getField(fieldName);
+            if (field != null) {
+                return field.getType();
             }
         }
         return Object.class;
     }
 
-    private String getFieldType(String name) {
-        try {
-            if (this.reflectionFieldNames.contains(name)) {
-                Field field = this.getClass().getDeclaredField(name);
-                String className = field.getType() + "";
-                className = className.substring(6, className.length()).trim();
-                return className;
-            }
-
-        } catch (NoSuchFieldException noe) {
-
-            noe.printStackTrace();
-        } catch (Exception e) {
-            // Log.e("ERROR", name);
-            e.printStackTrace();
-
-        }
-        return null;
-    }
 
     public <T> T asClass(Class<T> clazz) throws IllegalAccessException, InstantiationException {
         T instance = clazz.newInstance();
@@ -731,7 +732,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     @Target(ElementType.FIELD)
     @Retention(RetentionPolicy.RUNTIME)
     public @interface PrimaryKey {
-
+        int policy() default 0;
     }
 
     @Target(ElementType.FIELD)
@@ -840,6 +841,10 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         for (int i = 0; i < array.length(); i++)
             out.add(array.getString(i));
         return out;
+    }
+
+    public int getPrimaryKeyPolicy() {
+        return 0;
     }
 
 }

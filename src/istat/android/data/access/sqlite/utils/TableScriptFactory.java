@@ -40,46 +40,29 @@ public class TableScriptFactory {
         return out;
     }
 
-    public static List<String> create(boolean findAll, Class<?>... cLasss) throws InstantiationException, IllegalAccessException {
-        List<String> out = new ArrayList<String>();
-        for (Class<?> cLass : cLasss) {
-            TableScriptFactory factory = new TableScriptFactory(cLass);
-            out.add(factory.create(findAll));
-        }
-        return out;
-    }
-
     public static List<String> create(Class<?>... cLasss) throws InstantiationException, IllegalAccessException {
-        List<String> out = new ArrayList<String>();
-        for (Class<?> cLass : cLasss) {
-            TableScriptFactory factory = new TableScriptFactory(cLass);
-            out.add(factory.create(false));
-        }
-        return out;
+        return create(null, cLasss);
     }
 
-
-    //----------------------------------------------
-    public static List<String> create(boolean findAll, HashMap<Class, FieldAdapter> classAdapterPair, Class<?>... cLasss) throws InstantiationException, IllegalAccessException {
-
-        List<String> out = new ArrayList<String>();
-        for (Class<?> cLass : cLasss) {
-            TableScriptFactory factory = new TableScriptFactory(cLass);
-            factory.adapterQueue.putAll(classAdapterPair);
-            out.add(factory.create(findAll));
-        }
-        return out;
-    }
 
     public static List<String> create(HashMap<Class, FieldAdapter> classAdapterPair, Class<?>... cLasss) throws InstantiationException, IllegalAccessException {
 
         List<String> out = new ArrayList<String>();
         for (Class<?> cLass : cLasss) {
             TableScriptFactory factory = new TableScriptFactory(cLass);
-            factory.adapterQueue.putAll(classAdapterPair);
-            out.add(factory.create(false));
+            if (classAdapterPair != null && !classAdapterPair.isEmpty()) {
+                factory.adapterQueue.putAll(classAdapterPair);
+            }
+            Class<?>[] nestedClasses = cLass.getClasses();
+            if (nestedClasses != null && nestedClasses.length > 0) {
+                for (Class<?> nestedClass : nestedClasses) {
+                    if (nestedClass.isAnnotationPresent(SQLiteModel.Table.class)) {
+                        out.addAll(create(classAdapterPair, nestedClass));
+                    }
+                }
+            }
+            out.add(factory.create());
         }
-
         return out;
     }
 
@@ -98,24 +81,22 @@ public class TableScriptFactory {
           `JSON_CONTENT` text
         );
      */
-    SQLiteModel model;
 
-    public String create(boolean findAll) throws IllegalAccessException, InstantiationException {
-        List<Field> fields = Toolkit.getAllFieldFields(cLass, true, false);
-        model = SQLiteModel.fromClass(cLass);
+    public String create() throws IllegalAccessException, InstantiationException {
+        SQLiteModel model = SQLiteModel.fromClass(cLass);
         String sql = "CREATE TABLE IF NOT EXISTS `" + model.getName() + "` (";
         int index = 0;
-        for (Field field : fields) {
-            if (field != null && field.toString().contains("static")) {
-                continue;
-            }
-            String line = createLine(field);
-            if (!TextUtils.isEmpty(line)) {
-                if (index > 0) {
-                    line = "," + line;
+        for (String columnName : model.getProjections()) {
+            Field field = model.getField(columnName);
+            if (field != null) {
+                String line = createLine(model, columnName, field);
+                if (!TextUtils.isEmpty(line)) {
+                    if (index > 0) {
+                        line = "," + line;
+                    }
+                    sql += line;
+                    index++;
                 }
-                sql += line;
-                index++;
             }
         }
         sql += ");";
@@ -138,57 +119,56 @@ public class TableScriptFactory {
 
     static FieldAdapter INTEGER_ADAPTER = new FieldAdapter() {
         @Override
-        String onCreateLine(Field field) {
-            return "`" + field.getName() + "` INTEGER ";
+        String onCreateLine(String columnName, Field field) {
+            return "`" + columnName + "` INTEGER ";
         }
     };
     static FieldAdapter FLOAT_ADAPTER = new FieldAdapter() {
         @Override
-        String onCreateLine(Field field) {
-            return "`" + field.getName() + "` FLOAT ";
+        String onCreateLine(String columnName, Field field) {
+            return "`" + columnName + "` FLOAT ";
         }
     };
     static FieldAdapter DOUBLE_ADAPTER = new FieldAdapter() {
         @Override
-        String onCreateLine(Field field) {
-            return "`" + field.getName() + "` DOUBLE ";
+        String onCreateLine(String columnName, Field field) {
+            return "`" + columnName + "` DOUBLE ";
         }
     };
     static FieldAdapter STRING_ADAPTER = new FieldAdapter() {
         @Override
-        String onCreateLine(Field field) {
-            return "`" + field.getName() + "` VARCHAR ";
+        String onCreateLine(String columnName, Field field) {
+            return "`" + columnName + "` VARCHAR ";
         }
     };
     static FieldAdapter DATETIME_ADAPTER = new FieldAdapter() {
         @Override
-        String onCreateLine(Field field) {
-            return "`" + field.getName() + "` DATETIME ";
+        String onCreateLine(String columnName, Field field) {
+            return "`" + columnName + "` DATETIME ";
         }
     };
 
-//    static FieldAdapter BOOLEAN_ADAPTER = new FieldAdapter() {
-//        @Override
-//        String onCreateLine(Field field) {
-//            return "`" + field.getName() + "` TINYINT ";
-//        }
-//    };
-
-    private String createLine(Field field) {
+    private String createLine(SQLiteModel model, String columnName, Field field) {
+        String out;
         Type type = field.getType();
         FieldAdapter adapter = adapterQueue.get(type);
         if (adapter != null) {
-            return adapter.createLine(field);
+            out = adapter.createLine(columnName, field);
         } else {
-            return adapterQueue.get(String.class).createLine(field);
+            out = adapterQueue.get(String.class).createLine(columnName, field);
         }
+        if (columnName.equals(model.getPrimaryFieldName())) {
+            int policy = model.getPrimaryKeyPolicy();
+            out += " PRIMARY KEY ";
+        }
+        return out;
     }
 
     public static abstract class FieldAdapter {
-        abstract String onCreateLine(Field field);
+        abstract String onCreateLine(String columnName, Field field);
 
-        public final String createLine(Field field) {
-            return onCreateLine(field);
+        public final String createLine(String columnName, Field field) {
+            return onCreateLine(columnName, field);
         }
     }
 }
