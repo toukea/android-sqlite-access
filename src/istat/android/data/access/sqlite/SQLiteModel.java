@@ -186,16 +186,36 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     public final void fillFromJson(JSONObject json) {
-
-        onFillFromJson(json);
-
+        try {
+            List<String> keySet = JSONArrayToStringList(json.names());
+            if (keySet.size() > 0) {
+                for (String tmp : keySet) {
+                    if (tmp.equals(TAG_CLASS))
+                        continue;
+                    Object value = createObject(tmp, json.optString(tmp));
+                    if (value != null) {
+                        set(tmp, value);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public final void fillFromCursor(Cursor c) {
-
-        onFillFromCursor(c);
-
+        for (String projection : getProjections()) {
+            if (projection != null) {
+                int columnIndex = c.getColumnIndex(projection);
+                if (columnIndex >= 0) {
+                    String values = c.getString(columnIndex);
+                    if (!TextUtils.isEmpty(values)) {
+                        set(projection, values);
+                    }
+                }
+            }
+        }
     }
 
     public final void fillFromPrimaryKey(String primaryKey, SQLiteDatabase db) {
@@ -236,38 +256,6 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         if (c.getCount() > 0) {
             c.moveToNext();
             fillFromCursor(c);
-        }
-    }
-
-    protected void onFillFromJson(JSONObject json) {
-        try {
-            List<String> keySet = JSONArrayToStringList(json.names());
-            if (keySet.size() > 0) {
-                for (String tmp : keySet) {
-                    if (tmp.equals(TAG_CLASS))
-                        continue;
-                    Object value = createObject(tmp, json.optString(tmp));
-                    if (value != null) {
-                        set(tmp, value);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    protected void onFillFromCursor(Cursor c) {
-        for (String projection : getProjections()) {
-            if (projection != null) {
-                int columnIndex = c.getColumnIndex(projection);
-                if (columnIndex >= 0) {
-                    String values = c.getString(columnIndex);
-                    if (!TextUtils.isEmpty(values)) {
-                        set(projection, values);
-                    }
-                }
-            }
         }
     }
 
@@ -677,7 +665,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     public <T> T asClass(Class<T> clazz) throws IllegalAccessException, InstantiationException {
         T instance = clazz.newInstance();
-        List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(clazz);
+        List<Field> fields = Toolkit.getAllFieldFields(clazz, true, false);
         for (Field field : fields) {
             if (!field.isAnnotationPresent(Ignore.class)) {
                 try {
@@ -694,8 +682,6 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                         field.set(instance, getBoolean(field.getName()));
                     } else if (field.getType().isAssignableFrom(Integer.class)) {
                         field.set(instance, getInteger(field.getName()));
-                    } else if (isNestedTableProperty(clazz, field)) {
-
                     } else {
                         Gson gson = new Gson();
                         Type type = field.getType();
@@ -712,7 +698,8 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     private <T> boolean isNestedTableProperty(Class<T> clazz, Field field) {
-        return false;
+        boolean nested = field.isAnnotationPresent(NestedTable.class);
+        return nested;
     }
 
     @Target(ElementType.TYPE)
