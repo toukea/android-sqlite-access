@@ -194,7 +194,7 @@ add the dependency to your pom.xml:
 <dependency>
   <groupId>istat.android.data.access.sqlite</groupId>
   <artifactId>istat-access-sqlite</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <type>pom</type>
 </dependency>
 ```
