@@ -22,33 +22,33 @@ public class TableScriptFactory {
         this.cLass = cLass;
     }
 
-    public static List<String> drop(Class<?>... cLasss) throws IllegalAccessException, InstantiationException {
+    public static List<String> drop(Class<?>... cLassS) throws IllegalAccessException, InstantiationException {
         List<String> out = new ArrayList<String>();
-        for (Class<?> cLass : cLasss) {
+        for (Class<?> cLass : cLassS) {
             SQLiteModel model = SQLiteModel.fromClass(cLass);
             out.add("DROP TABLE " + model.getName() + ";");
         }
         return out;
     }
 
-    public static List<String> truncate(Class<?>... cLasss) throws IllegalAccessException, InstantiationException {
+    public static List<String> truncate(Class<?>... cLassS) throws IllegalAccessException, InstantiationException {
         List<String> out = new ArrayList<String>();
-        for (Class<?> cLass : cLasss) {
+        for (Class<?> cLass : cLassS) {
             SQLiteModel model = SQLiteModel.fromClass(cLass);
             out.add("TRUNCATE TABLE " + model.getName() + ";");
         }
         return out;
     }
 
-    public static List<String> create(Class<?>... cLasss) throws InstantiationException, IllegalAccessException {
-        return create(null, cLasss);
+    public static List<String> create(Class<?>... cLassS) throws InstantiationException, IllegalAccessException {
+        return create(null, cLassS);
     }
 
 
-    public static List<String> create(HashMap<Class, FieldAdapter> classAdapterPair, Class<?>... cLasss) throws InstantiationException, IllegalAccessException {
+    public static List<String> create(HashMap<Class, FieldAdapter> classAdapterPair, Class<?>... cLassS) throws InstantiationException, IllegalAccessException {
 
         List<String> out = new ArrayList<String>();
-        for (Class<?> cLass : cLasss) {
+        for (Class<?> cLass : cLassS) {
             TableScriptFactory factory = new TableScriptFactory(cLass);
             if (classAdapterPair != null && !classAdapterPair.isEmpty()) {
                 factory.adapterQueue.putAll(classAdapterPair);
@@ -160,6 +160,17 @@ public class TableScriptFactory {
         if (columnName.equals(model.getPrimaryFieldName())) {
             int policy = model.getPrimaryKeyPolicy();
             out += " PRIMARY KEY ";
+            if (policy == SQLiteModel.PrimaryKey.POLICY_AUTOINCREMENT) {
+                if (field.getType().isAssignableFrom(Integer.class)) {
+                    out += " AUTOINCREMENT ";
+                } else {
+                    throw new RuntimeException(field.getName() + " is not eligible to be autoincrement. Only integer colum can be AutoIncrement.");
+                }
+            } else if (policy == SQLiteModel.PrimaryKey.POLICY_AUTOGENERATE) {
+
+            } else {
+
+            }
         }
         return out;
     }

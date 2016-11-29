@@ -30,6 +30,7 @@ import com.google.gson.Gson;
 public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     HashMap<String, Object> map = new HashMap<String, Object>();
     HashMap<String, Field> nameFieldPaire = new HashMap<String, Field>();
+    HashMap<String, Field> nestedTableField = new HashMap<String, Field>();
     //    protected String tb_name, primary_key;
 //    protected String[] tb_projection;
     public static String TAG_CLASS = "istat.data.access.DbEntity.class";
@@ -170,6 +171,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return toJson().toString();
     }
 
+
     @Override
     public ContentValues toContentValues() {
         ContentValues pairs = new ContentValues();
@@ -261,33 +263,26 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     public long insert(SQLiteDatabase db) {
         long out = 0;
-        // db.beginTransaction();
         try {
             out = db.insert(getName(), null, toContentValues());
             persistEmbeddedDbEntity(db);
-            // db.setTransactionSuccessful();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            // db.endTransaction();
         }
 
         return out;
     }
 
     public int update(SQLiteDatabase db) {
-
         int out = 0;
-        // db.beginTransaction();
         try {
             out = update(db, getPrimaryFieldName() + "= ?",
                     new String[]{getPrimaryKey()});
             persistEmbeddedDbEntity(db);
-            // db.setTransactionSuccessful();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            // db.endTransaction();
         }
 
         return out;
@@ -401,6 +396,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         List<String> tmp = new ArrayList<String>();
         HashMap<String, Object> map = new HashMap<String, Object>();
         HashMap<String, Field> nameFieldPair = new HashMap<String, Field>();
+        HashMap<String, Field> nestedTableField = new HashMap<String, Field>();
         boolean hasColumnAnnotation = false;
         String primaryKey = null;
         String eligiblePrimaryName = null;
@@ -431,6 +427,9 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                         tmp.add(columnName);
                         map.put(columnName, field.get(obj));
                         nameFieldPair.put(columnName, field);
+                        if (field.isAnnotationPresent(NestedTable.class)) {
+                            nestedTableField.put(columnName, field);
+                        }
                     }
                 }
             }
@@ -474,6 +473,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         };
         model.map.putAll(map);
         model.nameFieldPaire.putAll(nameFieldPair);
+        model.nestedTableField.putAll(nestedTableField);
         return model;
     }
 
@@ -481,6 +481,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             IllegalAccessException {
         List<String> projectionAdder = new ArrayList<String>();
         HashMap<String, Field> nameFieldPair = new HashMap<String, Field>();
+        HashMap<String, Field> nestedTableField = new HashMap<String, Field>();
         boolean hasColumnAnnotation = false;
         String primaryKey = null;
         String eligiblePrimaryName = null;
@@ -510,6 +511,9 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                     if (columnName != null && !projectionAdder.contains(columnName)) {
                         projectionAdder.add(columnName);
                         nameFieldPair.put(columnName, field);
+                        if (field.isAnnotationPresent(NestedTable.class)) {
+                            nestedTableField.put(columnName, field);
+                        }
                     }
                 }
             }
@@ -550,6 +554,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             }
         };
         model.nameFieldPaire.putAll(nameFieldPair);
+        model.nestedTableField.putAll(nestedTableField);
         return model;
     }
 
@@ -719,6 +724,10 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     @Target(ElementType.FIELD)
     @Retention(RetentionPolicy.RUNTIME)
     public @interface PrimaryKey {
+        public final static int POLICY_AUTOGENERATE = 2;
+        public final static int POLICY_AUTOINCREMENT = 1;
+        public final static int POLICY_NONE = 0;
+
         int policy() default 0;
     }
 
@@ -736,7 +745,14 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     @Target(ElementType.FIELD)
     @Retention(RetentionPolicy.RUNTIME)
     public @interface NestedTable {
+        public final static int LIAISON_ONE_TO_ONE = 0;
+        public final static int LIAISON_MANY_TO_ONE = 1;
+        public final static int LIAISON_ONE_TO_MAY = 2;
+        public final static int LIAISON_MANY_TO_MANY = 3;
+
+        int liaisonType() default LIAISON_MANY_TO_MANY;
     }
+
 
     private boolean hasPrimaryKey() {
 
@@ -831,7 +847,35 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     public int getPrimaryKeyPolicy() {
+        Field field = getField(getPrimaryFieldName());
+        if (field != null && field.isAnnotationPresent(PrimaryKey.class)) {
+            PrimaryKey primary = field.getAnnotation(PrimaryKey.class);
+            return primary.policy();
+        }
         return 0;
+    }
+
+    String[] getNestedColumnNames() {
+        String[] out = new String[nestedTableField.size()];
+        Iterator<String> iterator = nestedTableField.keySet().iterator();
+        int index = 0;
+        while (iterator.hasNext()) {
+            out[index] = iterator.next();
+            index++;
+        }
+        return out;
+    }
+
+    Field[] getNestedFields() {
+        Field[] out = new Field[nestedTableField.size()];
+        Iterator<String> iterator = nestedTableField.keySet().iterator();
+        int index = 0;
+        while (iterator.hasNext()) {
+            String name = iterator.next();
+            out[index] = nestedTableField.get(name);
+            index++;
+        }
+        return out;
     }
 
 }
