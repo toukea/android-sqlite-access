@@ -58,4 +58,16 @@ public class Toolkit {
         }
         return fields;
     }
+
+    public static boolean isJson(String json) {
+        return json.matches("(^\\{.*\\}$)|(^\\[.*\\]$)");
+    }
+
+    public static boolean isJArray(String json) {
+        return json.matches("(^\\[.*\\]$)");
+    }
+
+    public static boolean isJsonObject(String json) {
+        return json.matches("(^\\{.*\\}$)");
+    }
 }

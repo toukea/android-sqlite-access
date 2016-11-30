@@ -188,10 +188,15 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         }
 
         @SuppressWarnings("unchecked")
-        public Clause equal(Object value) {
+        public Clause equalTo(Object value) {
             prepare(value);
             whereClause += " = ? ";
             return (Clause) SQLiteClause.this;
+        }
+
+        @Deprecated
+        public Clause equal(Object value) {
+            return equalTo(value);
         }
 
         public Clause greatThan(Object value) {

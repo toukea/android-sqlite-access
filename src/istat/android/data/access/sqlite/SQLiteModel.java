@@ -6,7 +6,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,12 +23,13 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.google.gson.Gson;
 
 public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     HashMap<String, Object> map = new HashMap<String, Object>();
-    HashMap<String, Field> nameFieldPaire = new HashMap<String, Field>();
+    HashMap<String, Field> nameFieldPair = new HashMap<String, Field>();
     HashMap<String, Field> nestedTableField = new HashMap<String, Field>();
     //    protected String tb_name, primary_key;
 //    protected String[] tb_projection;
@@ -472,7 +472,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             }
         };
         model.map.putAll(map);
-        model.nameFieldPaire.putAll(nameFieldPair);
+        model.nameFieldPair.putAll(nameFieldPair);
         model.nestedTableField.putAll(nestedTableField);
         return model;
     }
@@ -553,7 +553,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 return primary;
             }
         };
-        model.nameFieldPaire.putAll(nameFieldPair);
+        model.nameFieldPair.putAll(nameFieldPair);
         model.nestedTableField.putAll(nestedTableField);
         return model;
     }
@@ -645,8 +645,8 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     public Field getField(String field) {
-        if (nameFieldPaire.containsKey(field)) {
-            return nameFieldPaire.get(field);
+        if (nameFieldPair.containsKey(field)) {
+            return nameFieldPair.get(field);
         } else {
             return null;
         }
@@ -691,8 +691,13 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                         Gson gson = new Gson();
                         Type type = field.getType();
                         String retrievedEntity = getString(field.getName());
-                        Object obj = gson.fromJson(retrievedEntity, type);
-                        field.set(instance, obj);
+                        if (Toolkit.isJson(retrievedEntity)) {
+                            Log.d("asClass", "stringularProperty=" + retrievedEntity);
+                            if (!TextUtils.isEmpty(retrievedEntity)) {
+                                Object obj = gson.fromJson(retrievedEntity, type);
+                                field.set(instance, obj);
+                            }
+                        }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -745,12 +750,15 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     @Target(ElementType.FIELD)
     @Retention(RetentionPolicy.RUNTIME)
     public @interface NestedTable {
-        public final static int LIAISON_ONE_TO_ONE = 0;
-        public final static int LIAISON_MANY_TO_ONE = 1;
-        public final static int LIAISON_ONE_TO_MAY = 2;
-        public final static int LIAISON_MANY_TO_MANY = 3;
+        public final static int MODE_ONE_TO_ONE = 0;
+        public final static int MODE_MANY_TO_ONE = 1;
+        public final static int MODE_ONE_TO_MANY = 2;
+        public final static int MODE_MANY_TO_MANY = 3;
+        public final static int MODE_BYTE_ARRAY = 4;
 
-        int liaisonType() default LIAISON_MANY_TO_MANY;
+        int mode() default MODE_BYTE_ARRAY;
+
+        String foreignKey() default "";
     }
 
 
