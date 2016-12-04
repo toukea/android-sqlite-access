@@ -311,7 +311,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             Object obj = filter.get(tmp);
             if (obj != null) {
                 String value = obj.toString();
-                where(tmp).equal(value);
+                where(tmp).equalTo(value);
             }
         }
     }

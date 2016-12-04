@@ -324,6 +324,22 @@ public final class SQLite {
             return insert.insert(entity);
         }
 
+        //---------------------------------------------
+        public SQLiteMerge merge(Object entity) {
+            SQLiteMerge merge = new SQLiteMerge(this);
+            return merge.merge(entity);
+        }
+
+        public SQLiteMerge merge(Object... entity) {
+            SQLiteMerge merge = new SQLiteMerge(this);
+            return merge.merge(entity);
+        }
+
+        public <T> SQLiteMerge merge(List<T> entity) {
+            SQLiteMerge merge = new SQLiteMerge(this);
+            return merge.merge(entity);
+        }
+
 
         public void executeStatements(List<String> statements) {
             for (String ask : statements) {

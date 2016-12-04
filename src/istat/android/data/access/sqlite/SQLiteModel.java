@@ -221,18 +221,25 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     public final void fillFromPrimaryKey(String primaryKey, SQLiteDatabase db) {
-        onFillFromPrimaryKey(primaryKey, db);
+        String tb_name = getName();
+        String[] tb_projection = getProjections();
+        String primary_key = getPrimaryFieldName();
+        Cursor c = db.query(tb_name, tb_projection, primary_key + "=?",
+                new String[]{primaryKey}, null, null, null);
+        if (c.getCount() > 0) {
+            c.moveToNext();
+            fillFromCursor(c);
+        }
     }
 
     public long merge(SQLiteDatabase db) {
-
         long out = 0;
         if (exist(db)) {
             out = update(db);
+            fillFromPrimaryKey(getPrimaryKey(), db);
         } else {
             out = insert(db);
         }
-        fillFromPrimaryKey(getPrimaryKey(), db);
         return out;
     }
 
@@ -249,17 +256,6 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         entity.persist(db);
     }
 
-    protected void onFillFromPrimaryKey(String primaryKey, SQLiteDatabase db) {
-        String tb_name = getName();
-        String[] tb_projection = getProjections();
-        String primary_key = getPrimaryFieldName();
-        Cursor c = db.query(tb_name, tb_projection, primary_key + "=?",
-                new String[]{primaryKey}, null, null, null);
-        if (c.getCount() > 0) {
-            c.moveToNext();
-            fillFromCursor(c);
-        }
-    }
 
     public long insert(SQLiteDatabase db) {
         long out = 0;
@@ -328,7 +324,6 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     public int delete(SQLiteDatabase db) {
-
         return delete(db, getPrimaryFieldName() + "= ?",
                 new String[]{getPrimaryKey()});
     }
@@ -393,6 +388,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     @SuppressWarnings("unchecked")
     public static SQLiteModel fromObject(final Object obj) throws InstantiationException,
             IllegalAccessException {
+        final Class<?> cLass = obj.getClass();
         List<String> tmp = new ArrayList<String>();
         HashMap<String, Object> map = new HashMap<String, Object>();
         HashMap<String, Field> nameFieldPair = new HashMap<String, Field>();
@@ -401,7 +397,8 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         String primaryKey = null;
         String eligiblePrimaryName = null;
         try {
-            List<Field> fields = Toolkit.getAllFieldFields(obj.getClass(), true, false);
+
+            List<Field> fields = Toolkit.getAllFieldFields(cLass, true, false);
             for (int i = 0; i < fields.size(); i++) {
                 Field field = fields.get(i);
                 field.setAccessible(true);
@@ -413,7 +410,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                         eligiblePrimaryName = field.getName();
                     }
                     if (field.isAnnotationPresent(Column.class)) {
-                        Column column = obj.getClass().getAnnotation(Column.class);
+                        Column column = cLass.getAnnotation(Column.class);
                         columnName = column.name();
                         if (!hasColumnAnnotation) {
                             tmp.clear();
@@ -427,7 +424,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                         tmp.add(columnName);
                         map.put(columnName, field.get(obj));
                         nameFieldPair.put(columnName, field);
-                        if (field.isAnnotationPresent(NestedTable.class)) {
+                        if (isNestedTableProperty(cLass, field)) {
                             nestedTableField.put(columnName, field);
                         }
                     }
@@ -450,12 +447,12 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             @Override
             public String getName() {
                 String tableName = null;
-                if (obj.getClass().isAnnotationPresent(Table.class)) {
-                    Table table = obj.getClass().getAnnotation(Table.class);
+                if (cLass.isAnnotationPresent(Table.class)) {
+                    Table table = cLass.getAnnotation(Table.class);
                     tableName = table.name();
                 }
                 if (tableName == null) {
-                    tableName = obj.getClass().getSimpleName();
+                    tableName = cLass.getSimpleName();
                 }
                 return tableName;
             }
@@ -511,7 +508,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                     if (columnName != null && !projectionAdder.contains(columnName)) {
                         projectionAdder.add(columnName);
                         nameFieldPair.put(columnName, field);
-                        if (field.isAnnotationPresent(NestedTable.class)) {
+                        if (isNestedTableProperty(cLass, field)) {
                             nestedTableField.put(columnName, field);
                         }
                     }
@@ -707,9 +704,11 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return instance;
     }
 
-    private <T> boolean isNestedTableProperty(Class<T> clazz, Field field) {
-        boolean nested = field.isAnnotationPresent(NestedTable.class);
-        return nested;
+    private static <T> boolean isNestedTableProperty(Class<T> clazz, Field field) {
+        return field.isAnnotationPresent(OneToOne.class)
+                || field.isAnnotationPresent(OneToMany.class)
+                || field.isAnnotationPresent(ManyToMany.class)
+                || field.isAnnotationPresent(ManyToOne.class);
     }
 
     @Target(ElementType.TYPE)
@@ -747,18 +746,29 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     public @interface NotNull {
     }
 
+
     @Target(ElementType.FIELD)
     @Retention(RetentionPolicy.RUNTIME)
-    public @interface NestedTable {
-        public final static int MODE_ONE_TO_ONE = 0;
-        public final static int MODE_MANY_TO_ONE = 1;
-        public final static int MODE_ONE_TO_MANY = 2;
-        public final static int MODE_MANY_TO_MANY = 3;
-        public final static int MODE_BYTE_ARRAY = 4;
+    public @interface OneToOne {
+        String mappedBy();
+    }
 
-        int mode() default MODE_BYTE_ARRAY;
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface OneToMany {
+        String mappedBy();
+    }
 
-        String foreignKey() default "";
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface ManyToOne {
+        String mappedBy();
+    }
+
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface ManyToMany {
+        String mappedBy() default "";
     }
 
 

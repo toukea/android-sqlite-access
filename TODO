@@ -1,0 +1,15 @@
+-Bosser le theoreme de jointure d'hibernate
+
+-Gérer les jointure
+    *OneToOne
+    *OneToMany
+    *ManyToOne
+    *ManyToMany
+
+-SQLiteModel, create partiel projection model (fromClass(projection),fromObject(projection)
+
+-Query builder
+    *add IN clause
+    *add GroupBy
+    *add OrderBy
+    *add Having/havingCount
