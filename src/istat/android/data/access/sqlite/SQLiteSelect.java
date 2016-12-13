@@ -9,7 +9,7 @@ import android.text.TextUtils;
 
 public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     Class<?> clazz;
-    String join;
+
 
     SQLiteSelect(SQLite.SQL db, Class<?>... clazz) {
         super(clazz[0], db);
@@ -17,10 +17,24 @@ public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     }
 
     public SQLiteSelect join(Class<?> clazz, String on) {
-
+        String join;
         try {
             QueryAble entity = createQueryAble(clazz);
             join = entity.getName();
+            table += " INNER JOIN " + join;
+            if (!TextUtils.isEmpty(on)) {
+                table += " ON (" + on + ") ";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return this;
+    }
+
+    public SQLiteSelect join(String joinTable, String on) {
+        String join;
+        try {
+            join = joinTable;
             table += " INNER JOIN " + join;
             if (!TextUtils.isEmpty(on)) {
                 table += " ON (" + on + ") ";
