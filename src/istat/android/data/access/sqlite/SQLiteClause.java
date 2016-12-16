@@ -9,6 +9,7 @@ import org.json.JSONObject;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.text.TextUtils;
 
 abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     protected SQLite.SQL sql;
@@ -60,7 +61,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         }
         if (entity != null) {
             table = entity.getName();
-            projection = entity.getProjections();
+            projection = entity.getColumns();
         }
     }
 
@@ -317,7 +318,10 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     }
 
     protected String getSQL() {
-        String out = "SELECT * FROM " + table + " WHERE " + whereClause.trim();
+        String out = "SELECT * FROM " + table;
+        if (!TextUtils.isEmpty(whereClause)) {
+            out += " WHERE " + whereClause.trim();
+        }
         String[] splits = out.split("\\?");
         String sql = "";
         for (int i = 0; i < (!out.endsWith("?") ? splits.length - 1

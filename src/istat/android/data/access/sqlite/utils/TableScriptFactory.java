@@ -86,7 +86,7 @@ public class TableScriptFactory {
         SQLiteModel model = SQLiteModel.fromClass(cLass);
         String sql = "CREATE TABLE IF NOT EXISTS `" + model.getName() + "` (";
         int index = 0;
-        for (String columnName : model.getProjections()) {
+        for (String columnName : model.getColumns()) {
             Field field = model.getField(columnName);
             if (field != null) {
                 String line = createLine(model, columnName, field);

@@ -29,12 +29,12 @@ import android.util.Log;
 import com.google.gson.Gson;
 
 public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
-    HashMap<String, Object> FieldNameValuePair = new HashMap<String, Object>();
+    HashMap<String, Object> fieldNameValuePair = new HashMap<String, Object>();
     HashMap<String, Field> nameFieldPair = new HashMap<String, Field>();
-    HashMap<String, Field> nestedTableField = new HashMap<String, Field>();
+    HashMap<String, Field> nestedTableFieldPair = new HashMap<String, Field>();
     //    protected String tb_name, primary_key;
 //    protected String[] tb_projection;
-    public static String TAG_CLASS = "istat.data.access.DbEntity.class";
+    public static String TAG_CLASS = "istat.android.data.access.SQLiteModel.class";
     private Object instance;
     List<String> reflectionFieldNames = new ArrayList<String>();
 
@@ -51,7 +51,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     protected Object get(String name) {
-        return get(name, this);// FieldNameValuePair.get(name);
+        return get(name, this);// fieldNameValuePair.get(name);
     }
 
     protected String getString(String name) {
@@ -103,16 +103,16 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 field.setAccessible(true);
                 field.set(obj, value);
             } else {
-                obj.FieldNameValuePair.put(name, value);
+                obj.fieldNameValuePair.put(name, value);
             }
 
         } catch (NoSuchFieldException noe) {
-            obj.FieldNameValuePair.put(name, value);
+            obj.fieldNameValuePair.put(name, value);
             noe.printStackTrace();
         } catch (Exception e) {
             // Log.e("ERROR", name);
             e.printStackTrace();
-            obj.FieldNameValuePair.put(name, value);
+            obj.fieldNameValuePair.put(name, value);
 
         }
     }
@@ -124,17 +124,17 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 field.setAccessible(true);
                 return field.get(obj);
             } else {
-                return obj.FieldNameValuePair.get(name);
+                return obj.fieldNameValuePair.get(name);
             }
 
         } catch (NoSuchFieldException noe) {
             noe.printStackTrace();
-            return obj.FieldNameValuePair.get(name);
+            return obj.fieldNameValuePair.get(name);
 
         } catch (Exception e) {
             // Log.e("ERROR", name);
             e.printStackTrace();
-            return obj.FieldNameValuePair.get(name);
+            return obj.fieldNameValuePair.get(name);
 
         }
     }
@@ -147,7 +147,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     @Override
     public JSONObject toJson() {
-        JSONObject json = createJsonFromHashMap(FieldNameValuePair);
+        JSONObject json = createJsonFromHashMap(fieldNameValuePair);
         try {
             String className = instance.getClass() + "";
             className = className.substring(6, className.length()).trim();
@@ -176,12 +176,12 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     @Override
     public ContentValues toContentValues() {
         ContentValues pairs = new ContentValues();
-        String[] projections = getProjections();
-        for (String projection : projections) {
-            if (projection != null) {
-                if (get(projection) != null) {
-                    String values = getString(projection);
-                    pairs.put(projection, values);
+        String[] columns = getColumns();
+        for (String column : columns) {
+            if (column != null) {
+                if (get(column) != null) {
+                    String values = getString(column);
+                    pairs.put(column, values);
                 }
             }
         }
@@ -208,7 +208,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     @Override
     public final void fillFromCursor(Cursor c) {
-        for (String projection : getProjections()) {
+        for (String projection : getColumns()) {
             if (projection != null) {
                 int columnIndex = c.getColumnIndex(projection);
                 if (columnIndex >= 0) {
@@ -223,7 +223,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     public final void fillFromPrimaryKey(String primaryKey, SQLiteDatabase db) {
         String tb_name = getName();
-        String[] tb_projection = getProjections();
+        String[] tb_projection = getColumns();
         String primary_key = getPrimaryFieldName();
         Cursor c = db.query(tb_name, tb_projection, primary_key + "=?",
                 new String[]{primaryKey}, null, null, null);
@@ -233,11 +233,15 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         }
     }
 
+    public void refresh(SQLiteDatabase db) {
+        fillFromPrimaryKey(getPrimaryKey(), db);
+    }
+
     public long merge(SQLiteDatabase db) {
-        long out = 0;
+        long out;
         if (exist(db)) {
             out = update(db);
-            fillFromPrimaryKey(getPrimaryKey(), db);
+            refresh(db);
         } else {
             out = insert(db);
         }
@@ -290,21 +294,21 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     public void merge(SQLiteModel entity, boolean override, boolean mergeEmptyValue) {
-        HashMap<String, Object> bundle = entity.FieldNameValuePair;
+        HashMap<String, Object> bundle = entity.fieldNameValuePair;
         Iterator<String> keySet = bundle.keySet().iterator();
         while (keySet.hasNext()) {
             String tmp = keySet.next();
             Object obj = bundle.get(tmp);
             if (obj != null) {
-                if (FieldNameValuePair.containsValue(obj) && override) {
+                if (fieldNameValuePair.containsValue(obj) && override) {
                     if (!mergeEmptyValue && obj == null
                             || (TextUtils.isEmpty(obj.toString()))) {
 
                     } else {
-                        FieldNameValuePair.put(tmp, obj);
+                        fieldNameValuePair.put(tmp, obj);
                     }
                 } else {
-                    FieldNameValuePair.put(tmp, obj);
+                    fieldNameValuePair.put(tmp, obj);
                 }
 
             }
@@ -389,6 +393,14 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     @SuppressWarnings("unchecked")
     public static SQLiteModel fromObject(final Object obj) throws InstantiationException,
             IllegalAccessException {
+        try {
+            if (obj instanceof SQLiteModel) {
+                SQLiteModel model = (SQLiteModel) obj;
+                return (SQLiteModel) model.clone();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         final Class<?> cLass = obj.getClass();
         List<String> tmp = new ArrayList<String>();
         HashMap<String, Object> map = new HashMap<String, Object>();
@@ -459,7 +471,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             }
 
             @Override
-            public String[] getProjections() {
+            public String[] getColumns() {
 
                 return projections;
             }
@@ -469,9 +481,9 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 return primary;
             }
         };
-        model.FieldNameValuePair.putAll(map);
+        model.fieldNameValuePair.putAll(map);
         model.nameFieldPair.putAll(nameFieldPair);
-        model.nestedTableField.putAll(nestedTableField);
+        model.nestedTableFieldPair.putAll(nestedTableField);
         return model;
     }
 
@@ -542,7 +554,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             }
 
             @Override
-            public String[] getProjections() {
+            public String[] getColumns() {
                 return projections;
             }
 
@@ -552,16 +564,16 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             }
         };
         model.nameFieldPair.putAll(nameFieldPair);
-        model.nestedTableField.putAll(nestedTableField);
+        model.nestedTableFieldPair.putAll(nestedTableField);
         return model;
     }
 
     private void persistEmbeddedDbEntity(SQLiteDatabase db) {
         try {
-            Iterator<String> keySet = FieldNameValuePair.keySet().iterator();
+            Iterator<String> keySet = fieldNameValuePair.keySet().iterator();
             while (keySet.hasNext()) {
                 String tmp = keySet.next();
-                Object obj = FieldNameValuePair.get(tmp);
+                Object obj = fieldNameValuePair.get(tmp);
                 if (obj != null && obj instanceof QueryAble) {
                     onPersistEmbeddedDbEntity(db, ((QueryAble) obj));
                 }
@@ -651,7 +663,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     public Class<?> getFieldTypeClass(String fieldName) {
-        if (FieldNameValuePair.containsKey(fieldName)) {
+        if (fieldNameValuePair.containsKey(fieldName)) {
             Object obj = get(fieldName);
             if (obj != null) {
                 return obj.getClass();
@@ -774,12 +786,11 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
 
     private boolean hasPrimaryKey() {
-
         return !TextUtils.isEmpty(getPrimaryKey());
     }
 
     protected void clear() {
-        String[] projections = getProjections();
+        String[] projections = getColumns();
         for (String name : projections) {
             set(name, null);
         }
@@ -875,8 +886,8 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     String[] getNestedColumnNames() {
-        String[] out = new String[nestedTableField.size()];
-        Iterator<String> iterator = nestedTableField.keySet().iterator();
+        String[] out = new String[nestedTableFieldPair.size()];
+        Iterator<String> iterator = nestedTableFieldPair.keySet().iterator();
         int index = 0;
         while (iterator.hasNext()) {
             out[index] = iterator.next();
@@ -886,12 +897,12 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     Field[] getNestedFields() {
-        Field[] out = new Field[nestedTableField.size()];
-        Iterator<String> iterator = nestedTableField.keySet().iterator();
+        Field[] out = new Field[nestedTableFieldPair.size()];
+        Iterator<String> iterator = nestedTableFieldPair.keySet().iterator();
         int index = 0;
         while (iterator.hasNext()) {
             String name = iterator.next();
-            out[index] = nestedTableField.get(name);
+            out[index] = nestedTableFieldPair.get(name);
             index++;
         }
         return out;
@@ -910,7 +921,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             return this;
         }
 
-        public Builder addProjection(String... name) {
+        public Builder addColumn(String... name) {
             for (String n : name) {
                 this.projections.add(n);
             }
@@ -918,13 +929,13 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         }
 
 
-        public Builder setProjections(java.lang.String[] projections) {
+        public Builder setColumns(java.lang.String[] projections) {
             this.projections = new ArrayList<String>();
             Collections.addAll(this.projections, projections);
             return this;
         }
 
-        public void setProjections(List<String> projections) {
+        public void setColumns(List<String> projections) {
             this.projections = projections;
         }
 
@@ -951,7 +962,12 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 }
 
                 @Override
-                public String[] getProjections() {
+                public String[] getColumns() {
+                    String[] out = new String[projections.size()];
+                    String tableName = getName();
+                    for (int i = 0; i < projections.size(); i++) {
+                        out[i] = tableName + "." + projections.get(i);
+                    }
                     return projections.toArray(new String[projections.size()]);
                 }
 
@@ -960,9 +976,9 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                     return primaryFieldName;
                 }
             };
-            model.FieldNameValuePair = FieldNameValuePair;
+            model.fieldNameValuePair = FieldNameValuePair;
             model.nameFieldPair = nameFieldPair;
-            model.nestedTableField = nestedTableNameFieldPair;
+            model.nestedTableFieldPair = nestedTableNameFieldPair;
             return model;
         }
 
@@ -973,10 +989,20 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         HashMap<String, Field> nestedTableNameFieldPair = new HashMap<String, Field>();
     }
 
-    public final static SQLiteModel createFromManyToMany(Class<?> parentTableClass, Class<?> childTableClass) {
+    final static SQLiteModel createFromManyToMany(Class<?> parentTableClass, Class<?> childTableClass) throws InstantiationException, IllegalAccessException {
+        SQLiteModel parentModel = getSQLiteModel(parentTableClass);
+        SQLiteModel childModel = getSQLiteModel(childTableClass);
+        String parentTable = parentModel.getName();
+        String childTable = childModel.getName();
+        Builder builder = new Builder();
+        builder.setName(parentTable + "_" + childTable)
+                .addColumn("id_" + parentTable)
+                .addColumn("id_" + childTable);
+        return builder.create();
+    }
 
-
-        return null;
+    private static SQLiteModel getSQLiteModel(Class<?> childTableClass) throws IllegalAccessException, InstantiationException {
+        return SQLiteModel.fromClass(childTableClass);
     }
 
 }

@@ -17,7 +17,7 @@ public final class SQLiteUpdate {
         String tbName = entity.getClass().getName();
         try {
             SQLiteModel model = SQLiteModel.fromObject(entity);
-            updater.model.FieldNameValuePair.putAll(model.FieldNameValuePair);
+            updater.model.fieldNameValuePair.putAll(model.fieldNameValuePair);
             tbName = model.getName();
         } catch (Exception e) {
             e.printStackTrace();
