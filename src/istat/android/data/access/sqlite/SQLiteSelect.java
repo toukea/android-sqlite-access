@@ -9,11 +9,13 @@ import android.text.TextUtils;
 
 public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     Class<?> clazz;
+    String selection;
 
 
     SQLiteSelect(SQLite.SQL db, Class<?>... clazz) {
         super(clazz[0], db);
         this.clazz = clazz[0];
+        this.selection = this.table;
     }
 
     public SQLiteSelect join(Class<?> clazz, String on) {
@@ -21,9 +23,9 @@ public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         try {
             QueryAble entity = createQueryAble(clazz);
             join = entity.getName();
-            table += " INNER JOIN " + join;
+            selection += " INNER JOIN " + join;
             if (!TextUtils.isEmpty(on)) {
-                table += " ON (" + on + ") ";
+                selection += " ON (" + on + ") ";
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -35,9 +37,9 @@ public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         String join;
         try {
             join = joinTable;
-            table += " INNER JOIN " + join;
+            selection += " INNER JOIN " + join;
             if (!TextUtils.isEmpty(on)) {
-                table += " ON (" + on + ") ";
+                selection += " ON (" + on + ") ";
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -52,7 +54,12 @@ public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
 
     @Override
     protected Cursor onExecute(SQLiteDatabase db) {
-        return db.query(table, projection, getWhereClause(), getWhereParams(),
+        String[] smartColumns = new String[columns.length];
+        String tableName = table;
+        for (int i = 0; i < columns.length; i++) {
+            smartColumns[i] = tableName + "." + columns[i];
+        }
+        return db.query(selection, smartColumns, getWhereClause(), getWhereParams(),
                 null, null, getOrderBy());
 
     }
@@ -144,8 +151,9 @@ public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         return obj;
     }
 
+    //TODO check if 'selection' or 'table'
     public ClauseBuilder AND_SELECT(SQLiteSelect close) {
-        this.whereClause = "(SELECT * FROM " + table + " WHERE "
+        this.whereClause = "(SELECT * FROM " + selection + " WHERE "
                 + close.whereClause + ")";
         this.whereParams = close.whereParams;
         return new ClauseBuilder(TYPE_CLAUSE_AND);
@@ -159,7 +167,21 @@ public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
 
     @Override
     public final String getSQL() {
-        return super.getSQL();
+        String out = "SELECT * FROM " + selection;
+        if (!TextUtils.isEmpty(whereClause)) {
+            out += " WHERE " + whereClause.trim();
+        }
+        String[] splits = out.split("\\?");
+        String sql = "";
+        for (int i = 0; i < (!out.endsWith("?") ? splits.length - 1
+                : splits.length); i++) {
+            sql += splits[i];
+            sql += whereParams.get(i);
+        }
+        if (!out.endsWith("?")) {
+            sql += splits[splits.length - 1];
+        }
+        return sql;
     }
 
 }

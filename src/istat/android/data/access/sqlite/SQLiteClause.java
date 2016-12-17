@@ -19,7 +19,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     protected String orderBy = null;
     protected String groupBy = null;
     protected String having = null;
-    protected String[] projection;
+    protected String[] columns;
     protected String table;
     final static int TYPE_CLAUSE_WHERE = 0, TYPE_CLAUSE_AND = 1,
             TYPE_CLAUSE_OR = 2, TYPE_CLAUSE_LIKE = 3;
@@ -46,7 +46,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
 
     protected SQLiteClause(String table, String[] projection, SQLite.SQL sql) {
         this.table = table;
-        this.projection = projection;
+        this.columns = projection;
         this.sql = sql;
     }
 
@@ -61,16 +61,16 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         }
         if (entity != null) {
             table = entity.getName();
-            projection = entity.getColumns();
+            columns = entity.getColumns();
         }
     }
 
     @SuppressWarnings("unchecked")
     public Clause orderBy(String column, String value) {
         if (orderBy == null)
-            orderBy = this.table + "." + column + " " + value;
+            orderBy = buildWhereParam(column) + " " + value;
         else
-            orderBy += this.table + "." + column + " " + value;
+            orderBy += buildWhereParam(column) + " " + value;
         return (Clause) this;
     }
 
@@ -82,27 +82,34 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         return (Clause) this;
     }
 
+    private String buildWhereParam(String column) {
+        if (column.matches(".*\\..*")) {
+            return column;
+        }
+        return this.table + "." + column;
+    }
+
     public ClauseBuilder where(String column) {
         if (whereClause == null)
-            whereClause = this.table + "." + column;
+            whereClause = buildWhereParam(column);
         else
-            whereClause += " AND " + this.table + "." + column;
+            whereClause += " AND " + buildWhereParam(column);
         return new ClauseBuilder(TYPE_CLAUSE_AND);
     }
 
     public ClauseBuilder or(String column) {
         if (whereClause == null)
-            whereClause = this.table + "." + column;
+            whereClause = buildWhereParam(column);
         else
-            whereClause += " OR " + this.table + "." + column;
+            whereClause += " OR " + buildWhereParam(column);
         return new ClauseBuilder(TYPE_CLAUSE_OR);
     }
 
     public ClauseBuilder and(String column) {
         if (whereClause == null)
-            whereClause = this.table + "." + column;
+            whereClause = buildWhereParam(column);
         else
-            whereClause += " AND " + this.table + "." + column;
+            whereClause += " AND " + buildWhereParam(column);
         return new ClauseBuilder(TYPE_CLAUSE_AND);
     }
 
@@ -168,8 +175,8 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         if (obj != null) {
             try {
                 if (obj instanceof QueryAble) {
-                    QueryAble jsonentity = (QueryAble) obj;
-                    return jsonentity;
+                    QueryAble jsonEntity = (QueryAble) obj;
+                    return jsonEntity;
                 } else {
                     return null;
                 }
