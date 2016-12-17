@@ -7,7 +7,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
-public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
+public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     Class<?> clazz;
     String selection;
 
@@ -18,7 +18,7 @@ public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         this.selection = this.table;
     }
 
-    public SQLiteSelect join(Class<?> clazz, String on) {
+    public SQLiteJoinSelect joinOn(Class<?> clazz, String on) {
         String join;
         try {
             QueryAble entity = createQueryAble(clazz);
@@ -30,10 +30,10 @@ public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return this;
+        return new SQLiteJoinSelect(this.sql, this.clazz);
     }
 
-    public SQLiteSelect join(String joinTable, String on) {
+    public SQLiteJoinSelect joinOn(String joinTable, String on) {
         String join;
         try {
             join = joinTable;
@@ -44,7 +44,7 @@ public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return this;
+        return new SQLiteJoinSelect(this.sql, this.clazz);
     }
 
     private QueryAble createQueryAble(Class<?> clazz) throws IllegalAccessException, InstantiationException {
@@ -182,6 +182,141 @@ public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             sql += splits[splits.length - 1];
         }
         return sql;
+    }
+
+    public class ClauseJoinBuilder {
+        SQLiteJoinSelect joinSelect;
+
+        ClauseJoinBuilder(SQLiteJoinSelect selection) {
+            this.joinSelect = selection;
+        }
+
+        public ClauseSubJoinBuilder on(Class<?> clazz, String name) {
+            try {
+                SQLiteModel model = SQLiteModel.fromClass(clazz);
+                name = buildWhereParam(model.getName(), name);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return new ClauseSubJoinBuilder(joinSelect, name);
+        }
+
+    }
+
+    public class ClauseSubJoinBuilder {
+        SQLiteJoinSelect joinSelect;
+        String columnJoinName;
+
+        ClauseSubJoinBuilder(SQLiteJoinSelect joinSelect, String name) {
+            this.joinSelect = joinSelect;
+            this.columnJoinName = name;
+
+        }
+
+        public SQLiteJoinSelect equalTo(Class<?> clazz, String name) {
+            try {
+                SQLiteModel model = SQLiteModel.fromClass(clazz);
+                name = buildWhereParam(model.getName(), name);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            selection += " ON (" + columnJoinName + "=" + name + ") ";
+            this.joinSelect.selection = selection;
+            return joinSelect;
+        }
+    }
+
+    public final class SQLiteJoinSelect extends SQLiteSelect {
+
+        SQLiteJoinSelect(SQLite.SQL db, Class<?>... clazz) {
+            super(db, clazz);
+            this.whereClause = SQLiteSelect.this.whereClause;
+            this.whereParams = SQLiteSelect.this.whereParams;
+            this.selection = SQLiteSelect.this.selection;
+            this.table = SQLiteSelect.this.table;
+        }
+
+        public ClauseBuilder where(Class<?> clazz, String column) {
+            try {
+                SQLiteModel model = SQLiteModel.fromClass(clazz);
+                if (whereClause == null)
+                    whereClause = buildWhereParam(model.getName(), column);
+                else
+                    whereClause += " AND " + buildWhereParam(model.getName(), column);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return new ClauseBuilder(TYPE_CLAUSE_AND);
+        }
+
+        public ClauseBuilder or(Class<?> clazz, String column) {
+            try {
+                SQLiteModel model = SQLiteModel.fromClass(clazz);
+                if (whereClause == null)
+                    whereClause = buildWhereParam(model.getName(), column);
+                else
+                    whereClause += " OR " + buildWhereParam(model.getName(), column);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return new ClauseBuilder(TYPE_CLAUSE_OR);
+        }
+
+        public ClauseBuilder and(Class<?> clazz, String column) {
+            try {
+                SQLiteModel model = SQLiteModel.fromClass(clazz);
+                if (whereClause == null)
+                    whereClause = buildWhereParam(model.getName(), column);
+                else
+                    whereClause += " AND " + buildWhereParam(model.getName(), column);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return new ClauseBuilder(TYPE_CLAUSE_AND);
+        }
+
+        @Override
+        protected String buildWhereParam(String column) {
+            return column;
+        }
+    }
+
+    public final static String TYPE_JOIN_INNER = " INNER ", TYPE_JOIN_LEFT = " LEFT ", TYPE_JOIN_RIGHT = " RIGHT ", TYPE_JOIN_FULL = " FULL ";
+
+    public ClauseJoinBuilder join(Class<?> clazz) {
+        return join(clazz, TYPE_JOIN_INNER);
+    }
+
+    public ClauseJoinBuilder innerJoin(Class<?> clazz) {
+        return join(clazz, TYPE_JOIN_INNER);
+    }
+
+    public ClauseJoinBuilder leftJoin(Class<?> clazz) {
+        return join(clazz, TYPE_JOIN_LEFT);
+    }
+
+    public ClauseJoinBuilder rightJoin(Class<?> clazz) {
+        return join(clazz, TYPE_JOIN_RIGHT);
+    }
+
+    public ClauseJoinBuilder fullJoin(Class<?> clazz) {
+        return join(clazz, TYPE_JOIN_FULL);
+    }
+
+    public ClauseJoinBuilder join(Class<?> clazz, String joinType) {
+        String join;
+        try {
+            QueryAble entity = createQueryAble(clazz);
+            join = entity.getName();
+            selection += joinType + "JOIN " + join;
+//            if (!TextUtils.isEmpty(on)) {
+//                selection += " ON (" + on + ") ";
+//            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        SQLiteJoinSelect joinSelection = new SQLiteJoinSelect(this.sql, this.clazz);
+        return new ClauseJoinBuilder(joinSelection);
     }
 
 }

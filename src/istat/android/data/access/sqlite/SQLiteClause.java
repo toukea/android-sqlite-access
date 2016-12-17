@@ -82,11 +82,15 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         return (Clause) this;
     }
 
-    private String buildWhereParam(String column) {
+    protected static String buildWhereParam(String tableName, String column) {
         if (column.matches(".*\\..*")) {
             return column;
         }
-        return this.table + "." + column;
+        return tableName + "." + column;
+    }
+
+    protected String buildWhereParam(String column) {
+        return buildWhereParam(table, column);
     }
 
     public ClauseBuilder where(String column) {
@@ -114,7 +118,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     }
 
     @SuppressWarnings("unchecked")
-    public Clause WHERE(Clause close) {
+    public Clause WHERE(SQLiteSelect close) {
         this.whereClause = close.whereClause;
         this.whereParams = close.whereParams;
         return (Clause) this;
@@ -127,7 +131,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     }
 
     @SuppressWarnings("unchecked")
-    public Clause OR(Clause close) {
+    public Clause OR(SQLiteSelect close) {
         this.whereClause = "(" + this.whereClause + ") OR (" + close.whereClause
                 + ")";
         this.whereParams.addAll(close.whereParams);

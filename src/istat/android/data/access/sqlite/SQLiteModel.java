@@ -1008,4 +1008,9 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return SQLiteModel.fromClass(childTableClass);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        //TODO compare value as SQLite data.
+        return super.equals(o);
+    }
 }
