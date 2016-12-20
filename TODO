@@ -13,3 +13,7 @@
     *add GroupBy
     *add OrderBy
     *add Having/havingCount
+
+
+TableFactory
+    *Handle ALTER_TABLE

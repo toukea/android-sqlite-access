@@ -171,7 +171,57 @@ After SQL instance has been prepared successfully, you can use them to perform S
                    System.out.println(u.firstName);
                }
            }
-```    
+```   
+It is also possible to make multiple nested selections:
+```java
+           @Override
+           public void onSQLReady(SQLite.SQL sql) {
+           /*
+            this is my first SQLite Selection
+           */
+               SQLiteSelection selection1 = 
+                        sql.select(User.class)
+                       .where("firstname")
+                       .like("%Jephte%");
+                 
+           /*
+             this is my second SQLite Selection
+           */
+               SQLiteSelection selection2 = 
+                       sql.select(User.class)
+                      .where("firstname")
+                      .like("%Julie%");
+           
+           /*
+            this is my third SQLite Selection
+           */
+              SQLiteSelection selection3 = 
+                      sql.select(User.class)
+                     .where("firstname")
+                     .like("%Julie%");
+           
+           List<User> users = 
+                      sql.select(User.class)
+                     .WHERE(selection1)
+                     .AND(selection2)
+                     .OR(selection3)
+                     .execute();
+               for (User u : users) {
+                   System.out.println(u.firstName);
+               }
+           }
+```   
+# Using JOIN with SQL Selection 
+Make and SQL join using Library is "easily" possible.
+```java
+           List<User> users = 
+                      sql.select(Establishment.class)
+                        .innerJoin(Establishment.Type.class)
+                        .on(Establishment.class, "type_id")
+                        .equalTo(Establishment.Type.class, "id")
+                        .where(User.class,"firstname")
+                        .like("%Julie%");
+```
 Usage
 -----
 Just add the dependency to your `build.gradle`:

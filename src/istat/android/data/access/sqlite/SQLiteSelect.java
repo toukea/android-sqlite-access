@@ -186,8 +186,10 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
 
     public class ClauseJoinBuilder {
         SQLiteJoinSelect joinSelect;
+        Class<?> clazz;
 
-        ClauseJoinBuilder(SQLiteJoinSelect selection) {
+        ClauseJoinBuilder(Class<?> clazz, SQLiteJoinSelect selection) {
+            this.clazz = clazz;
             this.joinSelect = selection;
         }
 
@@ -200,6 +202,21 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             }
             return new ClauseSubJoinBuilder(joinSelect, name);
         }
+
+        public ClauseBuilder where(Class<?> clazz, String column) {
+
+            try {
+                SQLiteModel model = SQLiteModel.fromClass(clazz);
+                if (whereClause == null)
+                    whereClause = buildWhereParam(model.getName(), column);
+                else
+                    whereClause += " AND " + buildWhereParam(model.getName(), column);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return new ClauseBuilder(TYPE_CLAUSE_AND);
+        }
+
 
     }
 
@@ -316,7 +333,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             e.printStackTrace();
         }
         SQLiteJoinSelect joinSelection = new SQLiteJoinSelect(this.sql, this.clazz);
-        return new ClauseJoinBuilder(joinSelection);
+        return new ClauseJoinBuilder(clazz, joinSelection);
     }
 
 }
