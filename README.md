@@ -239,17 +239,17 @@ Let consider three classes defined by:
 ```
 You can perform join Query  like:
 ```java
-           List<House> houses = sql.select(House.class)
-                              .innerJoin(Type.class)
-                              .leftJoin(Location.class)
-                              .where(House.class, "id")
-                              .greatThan(2)
-                              .and(Location.class, "name")
-                              .equalTo("Abidjan")
-                              .and(Maison.class, "id")
-                              .in(1, 2, 3,4)
-                              .execute();
-```
+       List<House> houses = sql.select(House.class)
+                          .innerJoin(Type.class)
+                          .leftJoin(Location.class)
+                          .where(House.class, "id")
+                          .greatThan(2)
+                          .and(Location.class, "name")
+                          .equalTo("Abidjan")
+                          .and(House.class, "id")
+                          .in(1, 2, 3,4)
+                          .execute();
+    ```
 Usage
 -----
 Just add the dependency to your `build.gradle`:
