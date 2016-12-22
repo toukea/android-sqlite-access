@@ -215,7 +215,7 @@ It is also possible to make multiple nested selections:
 Make and SQL join using Library is "easily" possible.
 Let consider three classes defined by: 
 ```java
-     class Maison {
+     class House {
             int id;
             String name;
             String type_id;
@@ -239,12 +239,12 @@ Let consider three classes defined by:
 ```
 You can perform join Query  like:
 ```java
-           List<User> users = sql.select(Maison.class)
+           List<House> houses = sql.select(House.class)
                               .innerJoin(Type.class)
                               .leftJoin(Location.class)
-                              .where(Maison.class, "id")
-                              .equalTo("2")
-                              .where(Location.class, "name")
+                              .where(House.class, "id")
+                              .greatThan(2)
+                              .and(Location.class, "name")
                               .equalTo("Abidjan")
                               .and(Maison.class, "id")
                               .in(1, 2, 3,4)
