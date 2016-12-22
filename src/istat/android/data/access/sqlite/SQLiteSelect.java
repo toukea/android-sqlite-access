@@ -185,6 +185,89 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         return sql;
     }
 
+    public class ClauseJoinSelectBuilder {
+        int type = 0;
+        SQLiteJoinSelect selecClause;
+
+        public ClauseJoinSelectBuilder(int type, SQLiteJoinSelect selecClause) {
+            this.type = type;
+            this.selecClause = selecClause;
+        }
+
+        @SuppressWarnings("unchecked")
+        public SQLiteJoinSelect equalTo(Object value) {
+            prepare(value);
+            whereClause += " = ? ";
+            return selecClause;
+        }
+
+        public SQLiteJoinSelect in(Object... value) {
+            String valueIn = "";
+            for (int i = 0; i < value.length; i++) {
+                if (value[i] instanceof Number) {
+                    valueIn += value[i];
+                } else {
+                    valueIn += "'" + value[i] + "'";
+                }
+                if (i < value.length - 1) {
+                    valueIn += ", ";
+                }
+            }
+            prepare("(" + valueIn + ")");
+            whereClause += " = ? ";
+            return selecClause;
+        }
+
+        @Deprecated
+        public SQLiteJoinSelect equal(Object value) {
+            return equalTo(value);
+        }
+
+        public SQLiteJoinSelect greatThan(Object value) {
+            return greatThan(value, false);
+        }
+
+        public SQLiteJoinSelect lessThan(Object value) {
+            return lessThan(value, false);
+        }
+
+        @SuppressWarnings("unchecked")
+        public SQLiteJoinSelect greatThan(Object value, boolean acceptEqual) {
+            prepare(value);
+            whereClause += " >" + (acceptEqual ? "=" : "") + " ? ";
+            return selecClause;
+        }
+
+        @SuppressWarnings("unchecked")
+        public SQLiteJoinSelect lessThan(Object value, boolean acceptEqual) {
+            prepare(value);
+            whereClause += " <" + (acceptEqual ? "=" : "") + " ? ";
+            return selecClause;
+        }
+
+        private void prepare(Object value) {
+            whereParams.add(value + "");
+            switch (type) {
+                case TYPE_CLAUSE_AND:
+
+                    break;
+                case TYPE_CLAUSE_OR:
+
+                    break;
+                default:
+                    break;
+
+            }
+        }
+
+        @SuppressWarnings("unchecked")
+        public SQLiteJoinSelect like(Object value) {
+            prepare(value);
+            whereClause += " like ? ";
+            return (SQLiteJoinSelect) selecClause;
+        }
+    }
+
     public class ClauseJoinBuilder {
         SQLiteJoinSelect joinSelect;
         Class<?> clazz;
@@ -204,28 +287,31 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             return new ClauseSubJoinBuilder(joinSelect, name);
         }
 
-
-        public ClauseBuilder where(Class<?> clazz, String column) {
-            try {
-                Class<?> selectionClass = joinSelect.clazz;
-                Class<?> joinClass = this.clazz;
-                SQLiteModel selectionModel = SQLiteModel.fromClass(selectionClass);
-                SQLiteModel joinModel = SQLiteModel.fromClass(selectionClass);
-                Field[] fields = selectionModel.getNestedTableFields();
-                String nestedPrimaryKey = joinModel.getPrimaryFieldName();
-                String foreignKey = "";
-                for (Field field : fields) {
-                    if (field.getType().isAssignableFrom(joinClass)) {
-                        foreignKey = selectionModel.getFieldNestedMappingName(field);
-                    }
+        private SQLiteJoinSelect buildSubJoin() throws IllegalAccessException, InstantiationException {
+            Class<?> selectionClass = joinSelect.clazz;
+            Class<?> joinClass = this.clazz;
+            SQLiteModel selectionModel = SQLiteModel.fromClass(selectionClass);
+            SQLiteModel joinModel = SQLiteModel.fromClass(selectionClass);
+            Field[] fields = selectionModel.getNestedTableFields();
+            String nestedPrimaryKey = joinModel.getPrimaryFieldName();
+            String foreignKey = selectionModel.getPrimaryFieldName();
+            for (Field field : fields) {
+                if (field.getType().isAssignableFrom(joinClass)) {
+                    foreignKey = selectionModel.getFieldNestedMappingName(field);
                 }
-                return on(selectionClass, foreignKey).equalTo(joinClass, nestedPrimaryKey).where(clazz, column);
+            }
+            return on(selectionClass, foreignKey).equalTo(joinClass, nestedPrimaryKey);
+        }
+
+        public ClauseJoinSelectBuilder where(Class<?> clazz, String column) {
+            try {
+                return buildSubJoin().where(clazz, column);
             } catch (Exception e) {
                 return defaultWhere(clazz, column);
             }
         }
 
-        private ClauseBuilder defaultWhere(Class<?> clazz, String column) {
+        private ClauseJoinSelectBuilder defaultWhere(Class<?> clazz, String column) {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(clazz);
                 if (whereClause == null)
@@ -235,23 +321,51 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            return new ClauseBuilder(TYPE_CLAUSE_AND);
+            return new ClauseJoinSelectBuilder(TYPE_CLAUSE_AND, joinSelect);
         }
 
         public ClauseJoinBuilder innerJoin(Class<?> clazz) {
-            return join(clazz, TYPE_JOIN_INNER);
+            try {
+                return buildSubJoin().innerJoin(clazz);//join(clazz, TYPE_JOIN_INNER);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            }
+            return null;
         }
 
         public ClauseJoinBuilder leftJoin(Class<?> clazz) {
-            return join(clazz, TYPE_JOIN_LEFT);
+            try {
+                return buildSubJoin().leftJoin(clazz);//join(clazz, TYPE_JOIN_INNER);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            }
+            return null;
         }
 
         public ClauseJoinBuilder rightJoin(Class<?> clazz) {
-            return join(clazz, TYPE_JOIN_RIGHT);
+            try {
+                return buildSubJoin().rightJoin(clazz);//join(clazz, TYPE_JOIN_INNER);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            }
+            return null;
         }
 
         public ClauseJoinBuilder fullJoin(Class<?> clazz) {
-            return join(clazz, TYPE_JOIN_FULL);
+            try {
+                return buildSubJoin().fullJoin(clazz);//join(clazz, TYPE_JOIN_INNER);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            }
+            return null;
         }
 
     }
@@ -289,7 +403,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             this.table = SQLiteSelect.this.table;
         }
 
-        public ClauseBuilder where(Class<?> clazz, String column) {
+        public ClauseJoinSelectBuilder where(Class<?> clazz, String column) {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(clazz);
                 if (whereClause == null)
@@ -299,10 +413,10 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            return new ClauseBuilder(TYPE_CLAUSE_AND);
+            return new ClauseJoinSelectBuilder(TYPE_CLAUSE_AND, this);
         }
 
-        public ClauseBuilder or(Class<?> clazz, String column) {
+        public ClauseJoinSelectBuilder or(Class<?> clazz, String column) {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(clazz);
                 if (whereClause == null)
@@ -312,10 +426,10 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            return new ClauseBuilder(TYPE_CLAUSE_OR);
+            return new ClauseJoinSelectBuilder(TYPE_CLAUSE_AND, this);
         }
 
-        public ClauseBuilder and(Class<?> clazz, String column) {
+        public ClauseJoinSelectBuilder and(Class<?> clazz, String column) {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(clazz);
                 if (whereClause == null)
@@ -325,7 +439,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            return new ClauseBuilder(TYPE_CLAUSE_AND);
+            return new ClauseJoinSelectBuilder(TYPE_CLAUSE_AND, this);
         }
 
         @Override

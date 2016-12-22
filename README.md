@@ -213,15 +213,42 @@ It is also possible to make multiple nested selections:
 ```   
 # Using JOIN with SQL Selection 
 Make and SQL join using Library is "easily" possible.
+Let consider three classes defined by: 
 ```java
-           List<User> users = 
-                      sql.select(Establishment.class)
-                        .innerJoin(Establishment.Type.class)
-                        .on(Establishment.class, "type_id")
-                        .equalTo(Establishment.Type.class, "id")
-                        .where(User.class,"firstname")
-                        .like("%Julie%")
-                        .execute();
+     class Maison {
+            int id;
+            String name;
+            String type_id;
+            String location_id;
+            @SQLiteModel.OneToOne(mappedBy = "type_id")
+            Type type;
+            @SQLiteModel.OneToOne(mappedBy = "location_id")
+            Location location;
+        }
+    
+        class Location {
+            int id;
+            String description;
+            String name;
+        }
+    
+        class Type {
+            int id;
+            String libelle;
+        }
+```
+You can perform join Query  like:
+```java
+           List<User> users = sql.select(Maison.class)
+                              .innerJoin(Type.class)
+                              .leftJoin(Location.class)
+                              .where(Maison.class, "id")
+                              .equalTo("2")
+                              .where(Location.class, "name")
+                              .equalTo("Abidjan")
+                              .and(Maison.class, "id")
+                              .in(1, 2, 3,4)
+                              .execute();
 ```
 Usage
 -----

@@ -206,6 +206,23 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             return (Clause) SQLiteClause.this;
         }
 
+        public Clause in(Object... value) {
+            String valueIn = "";
+            for (int i = 0; i < value.length; i++) {
+                if (value[i] instanceof Number) {
+                    valueIn += value[i];
+                } else {
+                    valueIn += "'" + value[i] + "'";
+                }
+                if (i < value.length - 1) {
+                    valueIn += ", ";
+                }
+            }
+            prepare("(" + valueIn + ")");
+            whereClause += " = ? ";
+            return (Clause) SQLiteClause.this;
+        }
+
         @Deprecated
         public Clause equal(Object value) {
             return equalTo(value);
