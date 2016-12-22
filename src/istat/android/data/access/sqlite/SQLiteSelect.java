@@ -1,5 +1,6 @@
 package istat.android.data.access.sqlite;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -166,7 +167,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     }
 
     @Override
-    public final String getSQL() {
+    public final String getStatement() {
         String out = "SELECT * FROM " + selection;
         if (!TextUtils.isEmpty(whereClause)) {
             out += " WHERE " + whereClause.trim();
@@ -203,8 +204,28 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             return new ClauseSubJoinBuilder(joinSelect, name);
         }
 
-        public ClauseBuilder where(Class<?> clazz, String column) {
 
+        public ClauseBuilder where(Class<?> clazz, String column) {
+            try {
+                Class<?> selectionClass = joinSelect.clazz;
+                Class<?> joinClass = this.clazz;
+                SQLiteModel selectionModel = SQLiteModel.fromClass(selectionClass);
+                SQLiteModel joinModel = SQLiteModel.fromClass(selectionClass);
+                Field[] fields = selectionModel.getNestedTableFields();
+                String nestedPrimaryKey = joinModel.getPrimaryFieldName();
+                String foreignKey = "";
+                for (Field field : fields) {
+                    if (field.getType().isAssignableFrom(joinClass)) {
+                        foreignKey = selectionModel.getFieldNestedMappingName(field);
+                    }
+                }
+                return on(selectionClass, foreignKey).equalTo(joinClass, nestedPrimaryKey).where(clazz, column);
+            } catch (Exception e) {
+                return defaultWhere(clazz, column);
+            }
+        }
+
+        private ClauseBuilder defaultWhere(Class<?> clazz, String column) {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(clazz);
                 if (whereClause == null)
@@ -217,6 +238,21 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             return new ClauseBuilder(TYPE_CLAUSE_AND);
         }
 
+        public ClauseJoinBuilder innerJoin(Class<?> clazz) {
+            return join(clazz, TYPE_JOIN_INNER);
+        }
+
+        public ClauseJoinBuilder leftJoin(Class<?> clazz) {
+            return join(clazz, TYPE_JOIN_LEFT);
+        }
+
+        public ClauseJoinBuilder rightJoin(Class<?> clazz) {
+            return join(clazz, TYPE_JOIN_RIGHT);
+        }
+
+        public ClauseJoinBuilder fullJoin(Class<?> clazz) {
+            return join(clazz, TYPE_JOIN_FULL);
+        }
 
     }
 

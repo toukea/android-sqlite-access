@@ -425,7 +425,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                         eligiblePrimaryName = field.getName();
                     }
                     if (field.isAnnotationPresent(Column.class)) {
-                        Column column = cLass.getAnnotation(Column.class);
+                        Column column = field.getAnnotation(Column.class);
                         columnName = column.name();
                         if (!hasColumnAnnotation) {
                             tmp.clear();
@@ -439,7 +439,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                         tmp.add(columnName);
                         map.put(columnName, field.get(obj));
                         nameFieldPair.put(columnName, field);
-                        if (isNestedTableProperty(cLass, field)) {
+                        if (isNestedTableProperty(field)) {
                             nestedTableField.put(columnName, field);
                         }
                     }
@@ -528,7 +528,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                         eligiblePrimaryName = field.getName();
                     }
                     if (field.isAnnotationPresent(Column.class)) {
-                        Annotation columnAnnotation = cLass.getAnnotation(Column.class);
+                        Annotation columnAnnotation = field.getAnnotation(Column.class);
                         Column column = (Column) columnAnnotation;
                         columnName = column.name();
                         if (!hasColumnAnnotation) {
@@ -542,7 +542,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                     if (columnName != null && !projectionAdder.contains(columnName)) {
                         projectionAdder.add(columnName);
                         nameFieldPair.put(columnName, field);
-                        if (isNestedTableProperty(cLass, field)) {
+                        if (isNestedTableProperty(field)) {
                             nestedTableField.put(columnName, field);
                         }
                     }
@@ -725,11 +725,45 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return instance;
     }
 
-    private static <T> boolean isNestedTableProperty(Class<T> clazz, Field field) {
+    private static <T> boolean isNestedTableProperty(Field field) {
         return field.isAnnotationPresent(OneToOne.class)
                 || field.isAnnotationPresent(OneToMany.class)
                 || field.isAnnotationPresent(ManyToMany.class)
                 || field.isAnnotationPresent(ManyToOne.class);
+    }
+
+    public static <T> String getFieldColumnName(Field field) {
+        if (field.isAnnotationPresent(Column.class)) {
+            Annotation columnAnnotation = field.getAnnotation(Column.class);
+            Column column = (Column) columnAnnotation;
+            return column.name();
+        }
+        return null;
+    }
+
+    public static String getFieldNestedMappingName(Field field) {
+        String mappedBy = null;
+        if (field.isAnnotationPresent(OneToOne.class)) {
+            Annotation columnAnnotation = field.getAnnotation(OneToOne.class);
+            OneToOne column = (OneToOne) columnAnnotation;
+            mappedBy = column.mappedBy();
+        } else if (field.isAnnotationPresent(OneToMany.class)) {
+            Annotation columnAnnotation = field.getAnnotation(OneToMany.class);
+            OneToMany column = (OneToMany) columnAnnotation;
+            mappedBy = column.mappedBy();
+        } else if (field.isAnnotationPresent(ManyToMany.class)) {
+            Annotation columnAnnotation = field.getAnnotation(ManyToMany.class);
+            ManyToMany column = (ManyToMany) columnAnnotation;
+            mappedBy = column.mappedBy();
+        } else if (field.isAnnotationPresent(ManyToOne.class)) {
+            Annotation columnAnnotation = field.getAnnotation(ManyToOne.class);
+            ManyToOne column = (ManyToOne) columnAnnotation;
+            mappedBy = column.mappedBy();
+        }
+        if (TextUtils.isEmpty(mappedBy)) {
+            mappedBy = field.getType().getSimpleName() + "_id";
+        }
+        return mappedBy;
     }
 
     @Target(ElementType.TYPE)
@@ -893,7 +927,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return 0;
     }
 
-    String[] getNestedColumnNames() {
+    String[] getNestedTableColumnNames() {
         String[] out = new String[nestedTableFieldPair.size()];
         Iterator<String> iterator = nestedTableFieldPair.keySet().iterator();
         int index = 0;
@@ -904,7 +938,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return out;
     }
 
-    Field[] getNestedFields() {
+    Field[] getNestedTableFields() {
         Field[] out = new Field[nestedTableFieldPair.size()];
         Iterator<String> iterator = nestedTableFieldPair.keySet().iterator();
         int index = 0;

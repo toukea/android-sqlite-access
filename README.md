@@ -220,7 +220,8 @@ Make and SQL join using Library is "easily" possible.
                         .on(Establishment.class, "type_id")
                         .equalTo(Establishment.Type.class, "id")
                         .where(User.class,"firstname")
-                        .like("%Julie%");
+                        .like("%Julie%")
+                        .execute();
 ```
 Usage
 -----
@@ -228,7 +229,7 @@ Just add the dependency to your `build.gradle`:
 
 ```groovy
 dependencies {
-   compile 'istat.android.data.access.sqlite:istat-access-sqlite:1.0.0'
+   compile 'istat.android.data.access.sqlite:istat-access-sqlite:1.1.0'
 }
 ```
 

@@ -72,8 +72,8 @@ public final class SQLiteUpdate {
         }
 
         @Override
-        public final String getSQL() {
-            return super.getSQL();
+        public final String getStatement() {
+            return super.getStatement();
         }
     }
 }

@@ -328,17 +328,17 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         }
     }
 
-    protected String getSQL() {
+    protected String getStatement() {
         String out = "SELECT * FROM " + table;
         if (!TextUtils.isEmpty(whereClause)) {
-            out += " WHERE " + whereClause.trim();
+            out += " WHERE '" + whereClause.trim() + "'";
         }
         String[] splits = out.split("\\?");
         String sql = "";
         for (int i = 0; i < (!out.endsWith("?") ? splits.length - 1
                 : splits.length); i++) {
             sql += splits[i];
-            sql += whereParams.get(i);
+            sql += "'" + whereParams.get(i) + "'";
         }
         if (!out.endsWith("?")) {
             sql += splits[splits.length - 1];
