@@ -249,7 +249,7 @@ You can perform join Query  like:
                           .and(House.class, "id")
                           .in(1, 2, 3,4)
                           .execute();
-    ```
+ ```
 Usage
 -----
 Just add the dependency to your `build.gradle`:
