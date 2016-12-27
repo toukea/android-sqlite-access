@@ -73,7 +73,8 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     protected float getFloat(String name) {
         try {
-            return Float.valueOf(getString(name));
+            String value = getString(name);
+            return Float.valueOf(value);
         } catch (Exception e) {
             return 0;
         }
@@ -693,17 +694,17 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             if (!field.isAnnotationPresent(Ignore.class)) {
                 try {
                     field.setAccessible(true);
-                    if (field.getType().isAssignableFrom(String.class)) {
+                    if (field.getType().isAssignableFrom(CharSequence.class) || field.getType().isAssignableFrom(String.class)) {
                         field.set(instance, getString(field.getName()));
-                    } else if (field.getType().isAssignableFrom(Double.class)) {
+                    } else if (field.getType().isAssignableFrom(Double.class) || field.getType().isAssignableFrom(double.class)) {
                         field.set(instance, getDouble(field.getName()));
-                    } else if (field.getType().isAssignableFrom(Float.class)) {
+                    } else if (field.getType().isAssignableFrom(Float.class) || field.getType().isAssignableFrom(float.class)) {
                         field.set(instance, getFloat(field.getName()));
-                    } else if (field.getType().isAssignableFrom(Long.class)) {
+                    } else if (field.getType().isAssignableFrom(Long.class) || field.getType().isAssignableFrom(long.class)) {
                         field.set(instance, getLong(field.getName()));
-                    } else if (field.getType().isAssignableFrom(Boolean.class)) {
+                    } else if (field.getType().isAssignableFrom(Boolean.class) || field.getType().isAssignableFrom(boolean.class)) {
                         field.set(instance, getBoolean(field.getName()));
-                    } else if (field.getType().isAssignableFrom(Integer.class)) {
+                    } else if (field.getType().isAssignableFrom(Integer.class) || field.getType().isAssignableFrom(int.class)) {
                         field.set(instance, getInteger(field.getName()));
                     } else {
                         Gson gson = new Gson();
