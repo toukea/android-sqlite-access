@@ -247,7 +247,7 @@ You can perform join Query  like:
                           .and(Location.class, "name")
                           .equalTo("Abidjan")
                           .and(House.class, "id")
-                          .in(1, 2, 3,4)
+                          .in(1, 2, 3, 4)
                           .execute();
  ```
 Usage
