@@ -708,7 +708,13 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                         field.set(instance, getInteger(field.getName()));
                     } else {
                         Gson gson = new Gson();
-                        Type type = field.getType();
+                        Type type;
+                        try {
+                            type = field.getGenericType();
+                            Log.d("asClass", "onTRY=" + type);
+                        } catch (Exception e) {
+                            type = field.getType();
+                        }
                         String retrievedEntity = getString(field.getName());
                         if (Toolkit.isJson(retrievedEntity)) {
                             Log.d("asClass", "stringularProperty=" + retrievedEntity);
