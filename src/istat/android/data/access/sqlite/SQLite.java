@@ -358,19 +358,23 @@ public final class SQLite {
             for (String ask : statements) {
                 db.execSQL(ask);
             }
+            if (autoClose) {
+                db.close();
+            }
         }
 
         public void executeStatements(String... statements) {
             for (String ask : statements) {
                 db.execSQL(ask);
             }
+            if (autoClose) {
+                db.close();
+            }
         }
 
         public void executeSQLScript(InputStream sqlFileInputStream) throws IOException {
             List<String> statements = SQLiteParser.parseSqlFile(sqlFileInputStream);
-            for (String statement : statements) {
-                db.execSQL(statement);
-            }
+            executeStatements(statements);
         }
 
         public boolean isTableExist(Class<?> cLass) {
