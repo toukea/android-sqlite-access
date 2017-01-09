@@ -239,16 +239,25 @@ Let consider three classes defined by:
 ```
 You can perform join Query  like:
 ```java
-       List<House> houses = sql.select(House.class)
-                          .innerJoin(Type.class)
-                          .leftJoin(Location.class)
-                          .where(House.class, "id")
-                          .greatThan(2)
-                          .and(Location.class, "name")
-                          .equalTo("Abidjan")
-                          .and(House.class, "id")
-                          .in(1, 2, 3, 4)
-                          .execute();
+   List<House> houses = sql.select(House.class)
+                      .innerJoin(Type.class)
+                      .leftJoin(Location.class)
+                      .where(House.class, "id")
+                      .greatThan(2)
+                      .and(Location.class, "name")
+                      .equalTo("Abidjan")
+                      .and(House.class, "id")
+                      .in(1, 2, 3, 4)
+                      .execute();
+ ```
+ It is also possible to make custom Join definition.
+ ```java
+    List<House> houses = sql.select(House.class)
+                 .innerJoin(Type.class).on(Type.class, "id").equalTo(House.class, "type_id")
+                 .leftJoin(Location.class).on(Location.class, "id").equalTo(House.class, "location_id")
+                 .where(House.class, "id")
+                 .in(1, 2, 3, 4)
+                 .execute();
  ```
 Usage
 -----
