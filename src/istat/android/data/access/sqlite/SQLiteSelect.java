@@ -116,6 +116,10 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
 
     }
 
+    public <T> T executeForFirst() {
+        return null;
+    }
+
     @SuppressWarnings("unchecked")
     public <T> void execute(List<T> list) {
         if (list == null) {
