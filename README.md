@@ -39,7 +39,10 @@ NB: it is strongly recommended  to make it on the onCreate of your <extends> and
         public void onCreateDb(SQLiteDatabase db) {
         //here you can execute script to create your database from de SQLiteDataBase param instance
             try {
-                SQLite.executeSQLScript(db, appContext.getResources().openRawResource(R.raw.test));//here, i am executing a script from my R.raw resource
+            /*
+             here, i am executing a script from my R.raw resource
+            */
+                SQLite.executeSQLScript(db, appContext.getResources().openRawResource(R.raw.test));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -48,7 +51,10 @@ NB: it is strongly recommended  to make it on the onCreate of your <extends> and
         public void onUpgradeDb(SQLiteDatabase db, int oldVersion, int newVersion) {
         //here you can execute SQL script to update your database from de SQLiteDataBase param instance
             try {
-                SQLite.executeSQLScript(db, appContext.getResources().openRawResource(R.raw.test));//here, i am executing a script from my R.raw resource
+            /*
+             here, i am executing a script from my R.raw resource
+            */
+                SQLite.executeSQLScript(db, appContext.getResources().openRawResource(R.raw.test));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -253,8 +259,10 @@ You can perform join Query  like:
  It is also possible to make custom Join definition.
  ```java
     List<House> houses = sql.select(House.class)
-                 .innerJoin(Type.class).on(Type.class, "id").equalTo(House.class, "type_id")
-                 .leftJoin(Location.class).on(Location.class, "id").equalTo(House.class, "location_id")
+                 .innerJoin(Type.class)
+                 .on(Type.class, "id").equalTo(House.class, "type_id")
+                 .leftJoin(Location.class)
+                 .on(Location.class, "id").equalTo(House.class, "location_id")
                  .where(House.class, "id")
                  .in(1, 2, 3, 4)
                  .execute();
