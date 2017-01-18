@@ -1,6 +1,9 @@
 package istat.android.data.access.sqlite.utils;
 
 import android.app.Application;
+import android.database.sqlite.SQLiteDatabase;
+
+import java.util.List;
 
 import istat.android.data.access.sqlite.SQLite;
 
@@ -19,4 +22,9 @@ public abstract class SQLiteAccessApplication extends Application implements SQL
 
     protected abstract int getDbVersion();
 
+    protected final static void executeScripts(SQLiteDatabase db, List<String> scripts) {
+        for (String script : scripts) {
+            db.execSQL(script);
+        }
+    }
 }

@@ -1,6 +1,7 @@
 package istat.android.data.access.sqlite.utils;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,12 +25,49 @@ public class Toolkit {
         }
     }
 
-    public static List<Field> getAllFieldIncludingPrivateAndSuper(Class<?> klass) {
+    public static List<Field> getAllFieldFields(Class<?> klass, boolean includingPrivateAndSuper, boolean acceptStatic) {
+        if (includingPrivateAndSuper) {
+            return getAllFieldIncludingPrivateAndSuper(klass, acceptStatic);
+        } else {
+            List<Field> fields = new ArrayList<Field>();
+            Field[] tmp = klass.getDeclaredFields();
+            for (Field f : tmp) {
+                if (f != null && (f.toString().contains("static") && !acceptStatic)) {
+                    continue;
+                }
+                fields.add(f);
+            }
+            return fields;
+        }
+    }
+
+    public static List<Field> getAllFieldIncludingPrivateAndSuper(Class<?> klassc) {
+        return getAllFieldIncludingPrivateAndSuper(klassc, false);
+    }
+
+    public static List<Field> getAllFieldIncludingPrivateAndSuper(Class<?> klass, boolean acceptStatic) {
         List<Field> fields = new ArrayList<Field>();
         while (!klass.equals(Object.class)) {
-            Collections.addAll(fields, klass.getDeclaredFields());
+            for (Field field : klass.getDeclaredFields()) {
+                if (field != null && (field.toString().contains("static") && !acceptStatic)) {
+                    continue;
+                }
+                fields.add(field);
+            }
             klass = klass.getSuperclass();
         }
         return fields;
+    }
+
+    public static boolean isJson(String json) {
+        return json.matches("(^\\{.*\\}$)|(^\\[.*\\]$)");
+    }
+
+    public static boolean isJArray(String json) {
+        return json.matches("(^\\[.*\\]$)");
+    }
+
+    public static boolean isJsonObject(String json) {
+        return json.matches("(^\\{.*\\}$)");
     }
 }

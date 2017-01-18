@@ -53,6 +53,27 @@ public final class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
 
     }
 
+    public <T> T findLast() {
+        return findAtIndex(0);
+    }
+
+    public <T> T findFirst() {
+        return findAtIndex(0);
+    }
+
+    public <T> T findAtIndex(int index) {
+        return null;
+    }
+
+    public <T> List<T> execute(int limit) {
+
+        return null;
+    }
+
+    public <T> void execute(List<T> list, int limit) {
+
+    }
+
     @SuppressWarnings("unchecked")
     public <T> List<T> execute() {
         List<T> list = new ArrayList<T>();

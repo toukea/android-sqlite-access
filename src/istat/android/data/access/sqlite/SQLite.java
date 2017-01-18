@@ -32,14 +32,17 @@ public final class SQLite {
     }
 
     public static SQL fromConnection(String dbName) throws Exception {
-        SQLiteDataAccess access = findOrCreateConnectionAccess(dbName);
-        return SQLite.from(access.open());
+        return fromConnection(dbName, false);
     }
 
-    public static SQL fromConnection(String dbName, boolean autoClose) throws Exception {
+    public static SQL fromOneShotConnection(String dbName) throws Exception {
+        return fromConnection(dbName, true);
+    }
+
+    public static SQL fromConnection(String dbName, boolean closeDataBaseOnExecute) throws Exception {
         SQLiteDataAccess access = findOrCreateConnectionAccess(dbName);
         SQL sql = SQLite.from(access.open());
-        sql.autoClose = autoClose;
+        sql.setAutoClose(closeDataBaseOnExecute);
         return sql;
     }
 
@@ -86,8 +89,8 @@ public final class SQLite {
         return contain;
     }
 
-    public static boolean removeConnection(SQLiteConnection boot) {
-        return removeConnection(boot.dbName);
+    public static boolean removeConnection(SQLiteConnection connection) {
+        return removeConnection(connection.dbName);
     }
 
     public static void prepareSQL(String dbName, PrepareHandler handler) {
@@ -100,19 +103,21 @@ public final class SQLite {
 
     private static SQLiteDataAccess findOrCreateConnectionAccess(String dbName) throws IllegalAccessException {
         SQLiteDataAccess access = dbNameAccessPair.get(dbName);
-        boolean hasLauncher = dbNameConnectionPair.containsKey(dbName);
-        if (access == null && hasLauncher) {
-            access = connect(dbNameConnectionPair.get(dbName));
-            dbNameConnectionPair.remove(dbName);
-        } else {
-            throw new IllegalAccessException("Oups, no launcher is currently added dor Data base with name: " + dbName);
-        }
-        if (access.isOpened()) {
+        if (access != null && access.isOpened()) {
             try {
                 access = access.cloneAccess();
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+        boolean hasLauncher = dbNameConnectionPair.containsKey(dbName);
+        if (access != null) {
+            return access;
+        } else if (access == null && hasLauncher) {
+            access = connect(dbNameConnectionPair.get(dbName));
+            dbNameConnectionPair.remove(dbName);
+        } else {
+            throw new IllegalAccessException("Oups, no launcher is currently added dor Data base with name: " + dbName);
         }
         return access;
     }
@@ -123,6 +128,9 @@ public final class SQLite {
             SQLiteDataAccess access = findOrCreateConnectionAccess(dbName);
 
             db = access.open();
+            if (transactional) {
+                db.beginTransaction();
+            }
             SQL sql = SQLite.from(db);
             handler.onSQLReady(sql);
             if (transactional) {
@@ -150,10 +158,10 @@ public final class SQLite {
         prepareSQL(connection, true, handler);
     }
 
-    public static void prepareSQL(SQLiteConnection boot, boolean transactional, PrepareHandler handler) {
+    public static void prepareSQL(SQLiteConnection connection, boolean transactional, PrepareHandler handler) {
         SQLiteDatabase db = null;
         try {
-            SQLiteDataAccess access = connect(boot);
+            SQLiteDataAccess access = connect(connection);
             db = access.open();
             if (transactional) {
                 db.beginTransaction();
@@ -212,8 +220,8 @@ public final class SQLite {
 //    }
 //
 //    @Deprecated
-//    public static SQL from(Context context, SQLiteConnection boot) {
-//        SQLiteDatabase db = connect(boot).open();
+//    public static SQL from(Context context, SQLiteConnection connection) {
+//        SQLiteDatabase db = connect(connection).open();
 //        return from(db);
 //    }
 
@@ -233,8 +241,8 @@ public final class SQLite {
         return from(db);
     }
 
-    public static SQLiteDataAccess connect(SQLiteConnection boot) {
-        return connect(boot.context, boot.dbName, boot.dbVersion, boot);
+    public static SQLiteDataAccess connect(SQLiteConnection connection) {
+        return connect(connection.context, connection.dbName, connection.dbVersion, connection);
     }
 
     public static void close(String dbName) {
@@ -277,6 +285,10 @@ public final class SQLite {
         SQLiteDatabase db;
         boolean autoClose = false;
 
+        public void setAutoClose(boolean autoClose) {
+            this.autoClose = autoClose;
+        }
+
         SQL(SQLiteDatabase db) {
             this.db = db;
         }
@@ -310,6 +322,22 @@ public final class SQLite {
         public <T> SQLiteInsert insert(List<T> entity) {
             SQLiteInsert insert = new SQLiteInsert(this);
             return insert.insert(entity);
+        }
+
+        //---------------------------------------------
+        public SQLiteMerge merge(Object entity) {
+            SQLiteMerge merge = new SQLiteMerge(this);
+            return merge.merge(entity);
+        }
+
+        public SQLiteMerge merge(Object... entity) {
+            SQLiteMerge merge = new SQLiteMerge(this);
+            return merge.merge(entity);
+        }
+
+        public <T> SQLiteMerge merge(List<T> entity) {
+            SQLiteMerge merge = new SQLiteMerge(this);
+            return merge.merge(entity);
         }
 
 
@@ -358,6 +386,9 @@ public final class SQLite {
         }
 
 
+        public boolean isReady() {
+            return db != null && db.isOpen();
+        }
     }
 
     public static abstract class SQLiteConnection implements BootDescription {
@@ -369,6 +400,12 @@ public final class SQLite {
             this.dbName = dbName;
             this.dbVersion = dbVersion;
             this.context = context;
+        }
+
+        public final static void executeScripts(SQLiteDatabase db, List<String> scripts) {
+            for (String script : scripts) {
+                db.execSQL(script);
+            }
         }
     }
 

@@ -9,7 +9,6 @@ import org.json.JSONObject;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-
 abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     protected SQLite.SQL sql;
     // protected SQLiteDatabase db;
@@ -43,13 +42,13 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         return tmp;
     }
 
-    protected SQLiteClause(String table, String[] projection, SQLite.SQL sql) {
+    SQLiteClause(String table, String[] projection, SQLite.SQL sql) {
         this.table = table;
         this.projection = projection;
         this.sql = sql;
     }
 
-    protected SQLiteClause(Class<?> clazz, SQLite.SQL sql) {
+    SQLiteClause(Class<?> clazz, SQLite.SQL sql) {
         //this.db = sql.db;
         this.sql = sql;
         QueryAble entity = null;//null;//createModelFromClass(clazz);
@@ -188,10 +187,15 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         }
 
         @SuppressWarnings("unchecked")
-        public Clause equal(Object value) {
+        public Clause equalTo(Object value) {
             prepare(value);
             whereClause += " = ? ";
             return (Clause) SQLiteClause.this;
+        }
+
+        @Deprecated
+        public Clause equal(Object value) {
+            return equalTo(value);
         }
 
         public Clause greatThan(Object value) {
@@ -306,7 +310,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             Object obj = filter.get(tmp);
             if (obj != null) {
                 String value = obj.toString();
-                where(tmp).equal(value);
+                where(tmp).equalTo(value);
             }
         }
     }

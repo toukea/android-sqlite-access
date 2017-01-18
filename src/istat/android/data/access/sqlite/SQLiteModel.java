@@ -23,11 +23,14 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.google.gson.Gson;
 
 public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     HashMap<String, Object> map = new HashMap<String, Object>();
+    HashMap<String, Field> nameFieldPair = new HashMap<String, Field>();
+    HashMap<String, Field> nestedTableField = new HashMap<String, Field>();
     //    protected String tb_name, primary_key;
 //    protected String[] tb_projection;
     public static String TAG_CLASS = "istat.data.access.DbEntity.class";
@@ -168,6 +171,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return toJson().toString();
     }
 
+
     @Override
     public ContentValues toContentValues() {
         ContentValues pairs = new ContentValues();
@@ -184,60 +188,6 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     public final void fillFromJson(JSONObject json) {
-
-        onFillFromJson(json);
-
-    }
-
-    @Override
-    public final void fillFromCursor(Cursor c) {
-
-        onFillFromCursor(c);
-
-    }
-
-    public final void fillFromPrimaryKey(String primaryKey, SQLiteDatabase db) {
-        onFillFromPrimaryKey(primaryKey, db);
-    }
-
-    public long merge(SQLiteDatabase db) {
-
-        long out = 0;
-        if (exist(db)) {
-            out = update(db);
-        } else {
-            out = insert(db);
-        }
-        fillFromPrimaryKey(getPrimaryKey(), db);
-        return out;
-    }
-
-    @Override
-    public long persist(SQLiteDatabase db) {
-        if (exist(db)) {
-            return update(db);
-        } else {
-            return insert(db);
-        }
-    }
-
-    protected void onPersistEmbeddedDbEntity(SQLiteDatabase db, QueryAble entity) {
-        entity.persist(db);
-    }
-
-    protected void onFillFromPrimaryKey(String primaryKey, SQLiteDatabase db) {
-        String tb_name = getName();
-        String[] tb_projection = getProjections();
-        String primary_key = getPrimaryFieldName();
-        Cursor c = db.query(tb_name, tb_projection, primary_key + "=?",
-                new String[]{primaryKey}, null, null, null);
-        if (c.getCount() > 0) {
-            c.moveToNext();
-            fillFromCursor(c);
-        }
-    }
-
-    protected void onFillFromJson(JSONObject json) {
         try {
             List<String> keySet = JSONArrayToStringList(json.names());
             if (keySet.size() > 0) {
@@ -255,7 +205,8 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         }
     }
 
-    protected void onFillFromCursor(Cursor c) {
+    @Override
+    public final void fillFromCursor(Cursor c) {
         for (String projection : getProjections()) {
             if (projection != null) {
                 int columnIndex = c.getColumnIndex(projection);
@@ -269,35 +220,65 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         }
     }
 
+    public final void fillFromPrimaryKey(String primaryKey, SQLiteDatabase db) {
+        String tb_name = getName();
+        String[] tb_projection = getProjections();
+        String primary_key = getPrimaryFieldName();
+        Cursor c = db.query(tb_name, tb_projection, primary_key + "=?",
+                new String[]{primaryKey}, null, null, null);
+        if (c.getCount() > 0) {
+            c.moveToNext();
+            fillFromCursor(c);
+        }
+    }
+
+    public long merge(SQLiteDatabase db) {
+        long out = 0;
+        if (exist(db)) {
+            out = update(db);
+            fillFromPrimaryKey(getPrimaryKey(), db);
+        } else {
+            out = insert(db);
+        }
+        return out;
+    }
+
+    @Override
+    public long persist(SQLiteDatabase db) {
+        if (exist(db)) {
+            return update(db);
+        } else {
+            return insert(db);
+        }
+    }
+
+    protected void onPersistEmbeddedDbEntity(SQLiteDatabase db, QueryAble entity) {
+        entity.persist(db);
+    }
+
+
     public long insert(SQLiteDatabase db) {
         long out = 0;
-        // db.beginTransaction();
         try {
             out = db.insert(getName(), null, toContentValues());
             persistEmbeddedDbEntity(db);
-            // db.setTransactionSuccessful();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            // db.endTransaction();
         }
 
         return out;
     }
 
     public int update(SQLiteDatabase db) {
-
         int out = 0;
-        // db.beginTransaction();
         try {
             out = update(db, getPrimaryFieldName() + "= ?",
                     new String[]{getPrimaryKey()});
             persistEmbeddedDbEntity(db);
-            // db.setTransactionSuccessful();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            // db.endTransaction();
         }
 
         return out;
@@ -343,7 +324,6 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     public int delete(SQLiteDatabase db) {
-
         return delete(db, getPrimaryFieldName() + "= ?",
                 new String[]{getPrimaryKey()});
     }
@@ -408,39 +388,54 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     @SuppressWarnings("unchecked")
     public static SQLiteModel fromObject(final Object obj) throws InstantiationException,
             IllegalAccessException {
+        final Class<?> cLass = obj.getClass();
         List<String> tmp = new ArrayList<String>();
         HashMap<String, Object> map = new HashMap<String, Object>();
+        HashMap<String, Field> nameFieldPair = new HashMap<String, Field>();
+        HashMap<String, Field> nestedTableField = new HashMap<String, Field>();
         boolean hasColumnAnnotation = false;
         String primaryKey = null;
+        String eligiblePrimaryName = null;
         try {
-            List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(obj.getClass());
+
+            List<Field> fields = Toolkit.getAllFieldFields(cLass, true, false);
             for (int i = 0; i < fields.size(); i++) {
                 Field field = fields.get(i);
+                field.setAccessible(true);
                 if (!field.isAnnotationPresent(Ignore.class)) {
                     String columnName = null;
+                    if (field.isAnnotationPresent(PrimaryKey.class) && primaryKey == null) {
+                        primaryKey = field.getName();
+                    } else if (field.getName().equalsIgnoreCase("id")) {
+                        eligiblePrimaryName = field.getName();
+                    }
                     if (field.isAnnotationPresent(Column.class)) {
-                        Column column = obj.getClass().getAnnotation(Column.class);
+                        Column column = cLass.getAnnotation(Column.class);
                         columnName = column.name();
                         if (!hasColumnAnnotation) {
                             tmp.clear();
-                        }
-                        if (field.isAnnotationPresent(PrimaryKey.class)) {
-                            primaryKey = column.name();
                         }
                         hasColumnAnnotation = true;
                     }
                     if (columnName == null && !hasColumnAnnotation) {
                         columnName = field.getName();
                     }
-                    if (columnName != null) {
+                    if (columnName != null && !tmp.contains(columnName)) {
                         tmp.add(columnName);
                         map.put(columnName, field.get(obj));
+                        nameFieldPair.put(columnName, field);
+                        if (isNestedTableProperty(cLass, field)) {
+                            nestedTableField.put(columnName, field);
+                        }
                     }
                 }
             }
 
         } catch (Exception e) {
             e.printStackTrace();
+        }
+        if (primaryKey == null) {
+            primaryKey = eligiblePrimaryName;
         }
         if (!tmp.contains(primaryKey) && primaryKey != null) {
             tmp.add(primaryKey);
@@ -452,12 +447,12 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             @Override
             public String getName() {
                 String tableName = null;
-                if (obj.getClass().isAnnotationPresent(Table.class)) {
-                    Table table = obj.getClass().getAnnotation(Table.class);
+                if (cLass.isAnnotationPresent(Table.class)) {
+                    Table table = cLass.getAnnotation(Table.class);
                     tableName = table.name();
                 }
                 if (tableName == null) {
-                    tableName = obj.getClass().getSimpleName();
+                    tableName = cLass.getSimpleName();
                 }
                 return tableName;
             }
@@ -474,20 +469,30 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             }
         };
         model.map.putAll(map);
+        model.nameFieldPair.putAll(nameFieldPair);
+        model.nestedTableField.putAll(nestedTableField);
         return model;
     }
 
     public static SQLiteModel fromClass(final Class cLass) throws InstantiationException,
             IllegalAccessException {
         List<String> projectionAdder = new ArrayList<String>();
+        HashMap<String, Field> nameFieldPair = new HashMap<String, Field>();
+        HashMap<String, Field> nestedTableField = new HashMap<String, Field>();
         boolean hasColumnAnnotation = false;
         String primaryKey = null;
+        String eligiblePrimaryName = null;
         try {
-            List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(cLass);
+            List<Field> fields = Toolkit.getAllFieldFields(cLass, true, false);
             for (int i = 0; i < fields.size(); i++) {
                 Field field = fields.get(i);
                 if (!field.isAnnotationPresent(Ignore.class)) {
                     String columnName = null;
+                    if (field.isAnnotationPresent(PrimaryKey.class) && primaryKey == null) {
+                        primaryKey = field.getName();
+                    } else if (field.getName().equalsIgnoreCase("id")) {
+                        eligiblePrimaryName = field.getName();
+                    }
                     if (field.isAnnotationPresent(Column.class)) {
                         Annotation columnAnnotation = cLass.getAnnotation(Column.class);
                         Column column = (Column) columnAnnotation;
@@ -495,21 +500,25 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                         if (!hasColumnAnnotation) {
                             projectionAdder.clear();
                         }
-                        if (field.isAnnotationPresent(PrimaryKey.class)) {
-                            primaryKey = column.name();
-                        }
                         hasColumnAnnotation = true;
                     }
                     if (columnName == null && !hasColumnAnnotation) {
                         columnName = field.getName();
                     }
-                    if (columnName != null) {
+                    if (columnName != null && !projectionAdder.contains(columnName)) {
                         projectionAdder.add(columnName);
+                        nameFieldPair.put(columnName, field);
+                        if (isNestedTableProperty(cLass, field)) {
+                            nestedTableField.put(columnName, field);
+                        }
                     }
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+        if (primaryKey == null) {
+            primaryKey = eligiblePrimaryName;
         }
         if (!projectionAdder.contains(primaryKey) && primaryKey != null) {
             projectionAdder.add(primaryKey);
@@ -522,8 +531,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             public String getName() {
                 String tableName = null;
                 if (cLass.isAnnotationPresent(Table.class)) {
-                    Annotation tableAnnotation = cLass.getAnnotation(Table.class);
-                    Table table = (Table) tableAnnotation;
+                    Table table = (Table) cLass.getAnnotation(Table.class);
                     tableName = table.name();
                 }
                 if (tableName == null) {
@@ -542,6 +550,8 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 return primary;
             }
         };
+        model.nameFieldPair.putAll(nameFieldPair);
+        model.nestedTableField.putAll(nestedTableField);
         return model;
     }
 
@@ -600,7 +610,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             JSONObject json = new JSONObject(objToString);
             String clazz = json.optString(TAG_CLASS);
             if (TextUtils.isEmpty(clazz)) {
-                clazz = getFieldType(name);
+                clazz = getFieldTypeClass(name).getCanonicalName();
             }
             if (TextUtils.isEmpty(clazz)) {
                 return objToString;
@@ -631,39 +641,33 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         }
     }
 
-    public Class<?> getFieldTypeClass(String field) {
-        if (map.containsKey(field)) {
-            Object obj = get(field);
+    public Field getField(String field) {
+        if (nameFieldPair.containsKey(field)) {
+            return nameFieldPair.get(field);
+        } else {
+            return null;
+        }
+    }
+
+    public Class<?> getFieldTypeClass(String fieldName) {
+        if (map.containsKey(fieldName)) {
+            Object obj = get(fieldName);
             if (obj != null) {
                 return obj.getClass();
+            }
+        } else {
+            Field field = getField(fieldName);
+            if (field != null) {
+                return field.getType();
             }
         }
         return Object.class;
     }
 
-    private String getFieldType(String name) {
-        try {
-            if (this.reflectionFieldNames.contains(name)) {
-                Field field = this.getClass().getDeclaredField(name);
-                String className = field.getType() + "";
-                className = className.substring(6, className.length()).trim();
-                return className;
-            }
-
-        } catch (NoSuchFieldException noe) {
-
-            noe.printStackTrace();
-        } catch (Exception e) {
-            // Log.e("ERROR", name);
-            e.printStackTrace();
-
-        }
-        return null;
-    }
 
     public <T> T asClass(Class<T> clazz) throws IllegalAccessException, InstantiationException {
         T instance = clazz.newInstance();
-        List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(clazz);
+        List<Field> fields = Toolkit.getAllFieldFields(clazz, true, false);
         for (Field field : fields) {
             if (!field.isAnnotationPresent(Ignore.class)) {
                 try {
@@ -680,14 +684,17 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                         field.set(instance, getBoolean(field.getName()));
                     } else if (field.getType().isAssignableFrom(Integer.class)) {
                         field.set(instance, getInteger(field.getName()));
-                    } else if (isNestedTableProperty(clazz, field)) {
-
                     } else {
                         Gson gson = new Gson();
                         Type type = field.getType();
                         String retrievedEntity = getString(field.getName());
-                        Object obj = gson.fromJson(retrievedEntity, type);
-                        field.set(instance, obj);
+                        if (Toolkit.isJson(retrievedEntity)) {
+                            Log.d("asClass", "stringularProperty=" + retrievedEntity);
+                            if (!TextUtils.isEmpty(retrievedEntity)) {
+                                Object obj = gson.fromJson(retrievedEntity, type);
+                                field.set(instance, obj);
+                            }
+                        }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -697,8 +704,11 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return instance;
     }
 
-    private <T> boolean isNestedTableProperty(Class<T> clazz, Field field) {
-        return false;
+    private static <T> boolean isNestedTableProperty(Class<T> clazz, Field field) {
+        return field.isAnnotationPresent(OneToOne.class)
+                || field.isAnnotationPresent(OneToMany.class)
+                || field.isAnnotationPresent(ManyToMany.class)
+                || field.isAnnotationPresent(ManyToOne.class);
     }
 
     @Target(ElementType.TYPE)
@@ -718,7 +728,11 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     @Target(ElementType.FIELD)
     @Retention(RetentionPolicy.RUNTIME)
     public @interface PrimaryKey {
+        public final static int POLICY_AUTOGENERATE = 2;
+        public final static int POLICY_AUTOINCREMENT = 1;
+        public final static int POLICY_NONE = 0;
 
+        int policy() default 0;
     }
 
     @Target(ElementType.FIELD)
@@ -732,10 +746,31 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     public @interface NotNull {
     }
 
+
     @Target(ElementType.FIELD)
     @Retention(RetentionPolicy.RUNTIME)
-    public @interface NestedTable {
+    public @interface OneToOne {
+        String mappedBy();
     }
+
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface OneToMany {
+        String mappedBy();
+    }
+
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface ManyToOne {
+        String mappedBy();
+    }
+
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface ManyToMany {
+        String mappedBy() default "";
+    }
+
 
     private boolean hasPrimaryKey() {
 
@@ -826,6 +861,38 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         List<String> out = new ArrayList<String>();
         for (int i = 0; i < array.length(); i++)
             out.add(array.getString(i));
+        return out;
+    }
+
+    public int getPrimaryKeyPolicy() {
+        Field field = getField(getPrimaryFieldName());
+        if (field != null && field.isAnnotationPresent(PrimaryKey.class)) {
+            PrimaryKey primary = field.getAnnotation(PrimaryKey.class);
+            return primary.policy();
+        }
+        return 0;
+    }
+
+    String[] getNestedColumnNames() {
+        String[] out = new String[nestedTableField.size()];
+        Iterator<String> iterator = nestedTableField.keySet().iterator();
+        int index = 0;
+        while (iterator.hasNext()) {
+            out[index] = iterator.next();
+            index++;
+        }
+        return out;
+    }
+
+    Field[] getNestedFields() {
+        Field[] out = new Field[nestedTableField.size()];
+        Iterator<String> iterator = nestedTableField.keySet().iterator();
+        int index = 0;
+        while (iterator.hasNext()) {
+            String name = iterator.next();
+            out[index] = nestedTableField.get(name);
+            index++;
+        }
         return out;
     }
 

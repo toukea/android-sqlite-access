@@ -38,7 +38,7 @@ import android.util.Log;
 /**
  * @author Toukea Tatsi (Istat)
  */
-public abstract class SQLiteDataAccess implements Closeable, SQLite.BootDescription {
+public abstract class SQLiteDataAccess implements Closeable, SQLite.BootDescription, Cloneable {
 
     /*
      * protected static final int BASE_VERSION = 1; protected static final
@@ -88,9 +88,11 @@ public abstract class SQLiteDataAccess implements Closeable, SQLite.BootDescript
                             "BDD can't be close because it is not already Open");
                 }
 
-            } else
+            } else {
                 Log.i("openhelper",
                         "BDD can't be close because it is not already Open");
+            }
+        this.db = null;
 
     }
 
