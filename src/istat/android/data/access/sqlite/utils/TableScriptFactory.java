@@ -86,10 +86,10 @@ public class TableScriptFactory {
         SQLiteModel model = SQLiteModel.fromClass(cLass);
         String sql = "CREATE TABLE IF NOT EXISTS `" + model.getName() + "` (";
         int index = 0;
-        for (String columnName : model.getProjections()) {
+        for (String columnName : model.getColumns()) {
             Field field = model.getField(columnName);
             if (field != null) {
-                String line = createLine(model, columnName, field);
+                String line = createStatementLine(model, columnName, field);
                 if (!TextUtils.isEmpty(line)) {
                     if (index > 0) {
                         line = "," + line;
@@ -148,7 +148,7 @@ public class TableScriptFactory {
         }
     };
 
-    private String createLine(SQLiteModel model, String columnName, Field field) {
+    private String createStatementLine(SQLiteModel model, String columnName, Field field) {
         String out;
         Type type = field.getType();
         FieldAdapter adapter = adapterQueue.get(type);
@@ -182,4 +182,6 @@ public class TableScriptFactory {
             return onCreateLine(columnName, field);
         }
     }
+
+
 }

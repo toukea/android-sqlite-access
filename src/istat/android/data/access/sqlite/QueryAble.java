@@ -18,7 +18,7 @@ abstract interface QueryAble {
 
     abstract String getName();
 
-    abstract String[] getProjections();
+    abstract String[] getColumns();
 
     abstract String getPrimaryFieldName();
 

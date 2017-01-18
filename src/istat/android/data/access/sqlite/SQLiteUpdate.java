@@ -17,7 +17,7 @@ public final class SQLiteUpdate {
         String tbName = entity.getClass().getName();
         try {
             SQLiteModel model = SQLiteModel.fromObject(entity);
-            updater.model.map.putAll(model.map);
+            updater.model.fieldNameValuePair.putAll(model.fieldNameValuePair);
             tbName = model.getName();
         } catch (Exception e) {
             e.printStackTrace();
@@ -74,8 +74,8 @@ public final class SQLiteUpdate {
         }
 
         @Override
-        public final String getSQL() {
-            return super.getSQL();
+        public final String getStatement() {
+            return super.getStatement();
         }
     }
 }

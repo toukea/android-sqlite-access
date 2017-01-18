@@ -21,8 +21,8 @@ public final class SQLiteMerge {
         return this;
     }
 
-    public SQLiteMerge merge(List<?> merge) {
-        for (Object obj : merge) {
+    public SQLiteMerge merge(List<?> entities) {
+        for (Object obj : entities) {
             try {
                 SQLiteModel model = SQLiteModel.fromObject(obj);
                 merges.add(model);
@@ -46,7 +46,7 @@ public final class SQLiteMerge {
     }
 
     public long[] execute() {
-        if (merges == null || merges.size() == 0)
+        if (merges == null || merges.isEmpty())
             return new long[]{0};
         long[] out = new long[merges.size()];
         int index = 0;

@@ -12,6 +12,10 @@ import java.util.List;
  */
 
 public class Toolkit {
+    public static boolean isEmpty(Object obj) {
+        return obj == null || obj.toString().length() == 0;
+    }
+
     public static final Class<?> getGenericTypeClass(Class<?> baseClass, int genericIndex) {
         try {
             String className = ((ParameterizedType) baseClass

@@ -9,6 +9,9 @@ import org.json.JSONObject;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+
+import android.text.TextUtils;
+
 abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     protected SQLite.SQL sql;
     // protected SQLiteDatabase db;
@@ -17,7 +20,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     protected String orderBy = null;
     protected String groupBy = null;
     protected String having = null;
-    protected String[] projection;
+    protected String[] columns;
     protected String table;
     final static int TYPE_CLAUSE_WHERE = 0, TYPE_CLAUSE_AND = 1,
             TYPE_CLAUSE_OR = 2, TYPE_CLAUSE_LIKE = 3;
@@ -44,7 +47,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
 
     SQLiteClause(String table, String[] projection, SQLite.SQL sql) {
         this.table = table;
-        this.projection = projection;
+        this.columns = projection;
         this.sql = sql;
     }
 
@@ -59,16 +62,16 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         }
         if (entity != null) {
             table = entity.getName();
-            projection = entity.getProjections();
+            columns = entity.getColumns();
         }
     }
 
     @SuppressWarnings("unchecked")
     public Clause orderBy(String column, String value) {
         if (orderBy == null)
-            orderBy = this.table + "." + column + " " + value;
+            orderBy = buildWhereParam(column) + " " + value;
         else
-            orderBy += this.table + "." + column + " " + value;
+            orderBy += buildWhereParam(column) + " " + value;
         return (Clause) this;
     }
 
@@ -80,32 +83,43 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         return (Clause) this;
     }
 
+    protected static String buildWhereParam(String tableName, String column) {
+        if (column.matches(".*\\..*")) {
+            return column;
+        }
+        return tableName + "." + column;
+    }
+
+    protected String buildWhereParam(String column) {
+        return buildWhereParam(table, column);
+    }
+
     public ClauseBuilder where(String column) {
         if (whereClause == null)
-            whereClause = this.table + "." + column;
+            whereClause = buildWhereParam(column);
         else
-            whereClause += " AND " + this.table + "." + column;
+            whereClause += " AND " + buildWhereParam(column);
         return new ClauseBuilder(TYPE_CLAUSE_AND);
     }
 
     public ClauseBuilder or(String column) {
         if (whereClause == null)
-            whereClause = this.table + "." + column;
+            whereClause = buildWhereParam(column);
         else
-            whereClause += " OR " + this.table + "." + column;
+            whereClause += " OR " + buildWhereParam(column);
         return new ClauseBuilder(TYPE_CLAUSE_OR);
     }
 
     public ClauseBuilder and(String column) {
         if (whereClause == null)
-            whereClause = this.table + "." + column;
+            whereClause = buildWhereParam(column);
         else
-            whereClause += " AND " + this.table + "." + column;
+            whereClause += " AND " + buildWhereParam(column);
         return new ClauseBuilder(TYPE_CLAUSE_AND);
     }
 
     @SuppressWarnings("unchecked")
-    public Clause WHERE(Clause close) {
+    public Clause WHERE(SQLiteSelect close) {
         this.whereClause = close.whereClause;
         this.whereParams = close.whereParams;
         return (Clause) this;
@@ -118,7 +132,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     }
 
     @SuppressWarnings("unchecked")
-    public Clause OR(Clause close) {
+    public Clause OR(SQLiteSelect close) {
         this.whereClause = "(" + this.whereClause + ") OR (" + close.whereClause
                 + ")";
         this.whereParams.addAll(close.whereParams);
@@ -166,8 +180,8 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         if (obj != null) {
             try {
                 if (obj instanceof QueryAble) {
-                    QueryAble jsonentity = (QueryAble) obj;
-                    return jsonentity;
+                    QueryAble jsonEntity = (QueryAble) obj;
+                    return jsonEntity;
                 } else {
                     return null;
                 }
@@ -189,6 +203,23 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         @SuppressWarnings("unchecked")
         public Clause equalTo(Object value) {
             prepare(value);
+            whereClause += " = ? ";
+            return (Clause) SQLiteClause.this;
+        }
+
+        public Clause in(Object... value) {
+            String valueIn = "";
+            for (int i = 0; i < value.length; i++) {
+                if (value[i] instanceof Number) {
+                    valueIn += value[i];
+                } else {
+                    valueIn += "'" + value[i] + "'";
+                }
+                if (i < value.length - 1) {
+                    valueIn += ", ";
+                }
+            }
+            prepare("(" + valueIn + ")");
             whereClause += " = ? ";
             return (Clause) SQLiteClause.this;
         }
@@ -315,14 +346,17 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         }
     }
 
-    protected String getSQL() {
-        String out = "SELECT * FROM " + table + " WHERE " + whereClause.trim();
+    protected String getStatement() {
+        String out = "SELECT * FROM " + table;
+        if (!TextUtils.isEmpty(whereClause)) {
+            out += " WHERE '" + whereClause.trim() + "'";
+        }
         String[] splits = out.split("\\?");
         String sql = "";
         for (int i = 0; i < (!out.endsWith("?") ? splits.length - 1
                 : splits.length); i++) {
             sql += splits[i];
-            sql += whereParams.get(i);
+            sql += "'" + whereParams.get(i) + "'";
         }
         if (!out.endsWith("?")) {
             sql += splits[splits.length - 1];

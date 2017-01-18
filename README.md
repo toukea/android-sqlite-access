@@ -39,7 +39,10 @@ NB: it is strongly recommended  to make it on the onCreate of your <extends> and
         public void onCreateDb(SQLiteDatabase db) {
         //here you can execute script to create your database from de SQLiteDataBase param instance
             try {
-                SQLite.executeSQLScript(db, appContext.getResources().openRawResource(R.raw.test));//here, i am executing a script from my R.raw resource
+            /*
+             here, i am executing a script from my R.raw resource
+            */
+                SQLite.executeSQLScript(db, appContext.getResources().openRawResource(R.raw.test));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -48,7 +51,10 @@ NB: it is strongly recommended  to make it on the onCreate of your <extends> and
         public void onUpgradeDb(SQLiteDatabase db, int oldVersion, int newVersion) {
         //here you can execute SQL script to update your database from de SQLiteDataBase param instance
             try {
-                SQLite.executeSQLScript(db, appContext.getResources().openRawResource(R.raw.test));//here, i am executing a script from my R.raw resource
+            /*
+             here, i am executing a script from my R.raw resource
+            */
+                SQLite.executeSQLScript(db, appContext.getResources().openRawResource(R.raw.test));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -171,14 +177,103 @@ After SQL instance has been prepared successfully, you can use them to perform S
                    System.out.println(u.firstName);
                }
            }
-```    
+```   
+It is also possible to make multiple nested selections:
+```java
+           @Override
+           public void onSQLReady(SQLite.SQL sql) {
+           /*
+            this is my first SQLite Selection
+           */
+               SQLiteSelection selection1 = 
+                        sql.select(User.class)
+                       .where("firstname")
+                       .like("%Jephte%");
+                 
+           /*
+             this is my second SQLite Selection
+           */
+               SQLiteSelection selection2 = 
+                       sql.select(User.class)
+                      .where("firstname")
+                      .like("%Julie%");
+           
+           /*
+            this is my third SQLite Selection
+           */
+              SQLiteSelection selection3 = 
+                      sql.select(User.class)
+                     .where("firstname")
+                     .like("%Julie%");
+           
+           List<User> users = 
+                      sql.select(User.class)
+                     .WHERE(selection1)
+                     .AND(selection2)
+                     .OR(selection3)
+                     .execute();
+               for (User u : users) {
+                   System.out.println(u.firstName);
+               }
+           }
+```   
+# Using JOIN with SQL Selection 
+Make and SQL join using Library is "easily" possible.
+Let consider three classes defined by: 
+```java
+     class House {
+            int id;
+            String name;
+            String type_id;
+            String location_id;
+            @SQLiteModel.OneToOne(mappedBy = "type_id")
+            Type type;
+            @SQLiteModel.OneToOne(mappedBy = "location_id")
+            Location location;
+        }
+    
+        class Location {
+            int id;
+            String description;
+            String name;
+        }
+    
+        class Type {
+            int id;
+            String libelle;
+        }
+```
+You can perform join Query  like:
+```java
+   List<House> houses = sql.select(House.class)
+                      .innerJoin(Type.class)
+                      .leftJoin(Location.class)
+                      .where(House.class, "id")
+                      .greatThan(2)
+                      .and(Location.class, "name")
+                      .equalTo("Abidjan")
+                      .and(House.class, "id")
+                      .in(1, 2, 3, 4)
+                      .execute();
+ ```
+ It is also possible to make custom Join definition.
+ ```java
+    List<House> houses = sql.select(House.class)
+                 .innerJoin(Type.class)
+                 .on(Type.class, "id").equalTo(House.class, "type_id")
+                 .leftJoin(Location.class)
+                 .on(Location.class, "id").equalTo(House.class, "location_id")
+                 .where(House.class, "id")
+                 .in(1, 2, 3, 4)
+                 .execute();
+ ```
 Usage
 -----
 Just add the dependency to your `build.gradle`:
 
 ```groovy
 dependencies {
-   compile 'istat.android.data.access.sqlite:istat-access-sqlite:1.0.0'
+   compile 'istat.android.data.access.sqlite:istat-access-sqlite:1.1.0'
 }
 ```
 

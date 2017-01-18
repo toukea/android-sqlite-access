@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import istat.android.data.access.sqlite.utils.SQLiteParser;
+import istat.android.data.access.sqlite.utils.Toolkit;
 
 public final class SQLite {
     static SQLiteDatabase
@@ -324,6 +325,18 @@ public final class SQLite {
             return insert.insert(entity);
         }
 
+        public <T> void replaces(List<T> entity) {
+            try {
+                if (entity != null && !entity.isEmpty()) {
+                    delete(entity.get(0).getClass()).execute();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            SQLiteInsert insert = new SQLiteInsert(this);
+            insert.insert(entity).execute();
+        }
+
         //---------------------------------------------
         public SQLiteMerge merge(Object entity) {
             SQLiteMerge merge = new SQLiteMerge(this);
@@ -345,19 +358,23 @@ public final class SQLite {
             for (String ask : statements) {
                 db.execSQL(ask);
             }
+            if (autoClose) {
+                db.close();
+            }
         }
 
         public void executeStatements(String... statements) {
             for (String ask : statements) {
                 db.execSQL(ask);
             }
+            if (autoClose) {
+                db.close();
+            }
         }
 
         public void executeSQLScript(InputStream sqlFileInputStream) throws IOException {
             List<String> statements = SQLiteParser.parseSqlFile(sqlFileInputStream);
-            for (String statement : statements) {
-                db.execSQL(statement);
-            }
+            executeStatements(statements);
         }
 
         public boolean isTableExist(Class<?> cLass) {
