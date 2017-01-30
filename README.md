@@ -272,7 +272,7 @@ After least one data base connection successfully, it is also possible to execut
 without call explicitly a prepare (prepareSQL or prepareTransactionalSQL).
 Of course, it is possible to get an SQLite.SQL instance directly from connection Name.
 
-Get SQLite.SQL instance from dc connection Name
+Get SQLite.SQL instance from connection Name
 ```java
     /*
     obtain an SQLite.SQL instance.
