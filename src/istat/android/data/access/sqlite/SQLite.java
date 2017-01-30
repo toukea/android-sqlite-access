@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import istat.android.data.access.sqlite.utils.SQLiteParser;
-import istat.android.data.access.sqlite.utils.Toolkit;
 
 public final class SQLite {
     static SQLiteDatabase
@@ -227,17 +226,17 @@ public final class SQLite {
 //    }
 
 
-    public static SQL fromDbPath(Context context, String dbPath) {
+    public static SQL fromPath(Context context, String dbPath) {
+        File file = new File(dbPath);
+        return fromFile(context, file);
+    }
+
+    public static SQL fromFile(Context context, File dbFile) {
         SQLiteDatabase db = null;
         return from(db);
     }
 
-    public static SQL fromDbFile(Context context, File dbFile) {
-        SQLiteDatabase db = null;
-        return from(db);
-    }
-
-    public static SQL fromDbUri(Context context, Uri dbUri) {
+    public static SQL fromUri(Context context, Uri dbUri) {
         SQLiteDatabase db = null;
         return from(db);
     }
@@ -325,6 +324,21 @@ public final class SQLite {
             return insert.insert(entity);
         }
 
+        public SQLitePersist persist(Object entity) {
+            SQLitePersist persist = new SQLitePersist(this);
+            return persist.persist(entity);
+        }
+
+        public SQLitePersist persist(Object... entity) {
+            SQLitePersist persist = new SQLitePersist(this);
+            return persist.persist(entity);
+        }
+
+        public <T> SQLitePersist persist(List<T> entity) {
+            SQLitePersist persist = new SQLitePersist(this);
+            return persist.persist(entity);
+        }
+
         public <T> void replaces(List<T> entity) {
             try {
                 if (entity != null && !entity.isEmpty()) {
@@ -333,8 +347,8 @@ public final class SQLite {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            SQLiteInsert insert = new SQLiteInsert(this);
-            insert.insert(entity).execute();
+            SQLitePersist insert = new SQLitePersist(this);
+            insert.persist(entity).execute();
         }
 
         //---------------------------------------------
@@ -373,7 +387,7 @@ public final class SQLite {
         }
 
         public void executeSQLScript(InputStream sqlFileInputStream) throws IOException {
-            List<String> statements = SQLiteParser.parseSqlFile(sqlFileInputStream);
+            List<String> statements = SQLiteParser.parseSqlStream(sqlFileInputStream);
             executeStatements(statements);
         }
 
@@ -386,6 +400,14 @@ public final class SQLite {
             }
         }
 
+        public final void close() {
+            db.close();
+        }
+
+        /**
+         * deprecated use {@link #close()} instead.
+         */
+        @Deprecated
         public final void closeDb() {
             db.close();
         }
@@ -435,7 +457,7 @@ public final class SQLite {
 
     public static void executeSQLScript(SQLiteDatabase db,
                                         InputStream sqlFileInputStream) throws IOException {
-        List<String> statements = SQLiteParser.parseSqlFile(sqlFileInputStream);
+        List<String> statements = SQLiteParser.parseSqlStream(sqlFileInputStream);
         for (String statement : statements)
             db.execSQL(statement);
     }

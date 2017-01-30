@@ -25,146 +25,143 @@ import android.content.res.AssetManager;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /**
- * 
  * @author Toukea Tatsi (Istat)
- * 
  */
 public class SQLiteParser {
 
-	public static List<String> parseSqlFile(String sqlFile,
-			AssetManager assetManager) throws IOException {
-		List<String> sqlIns = null;
-		InputStream is = assetManager.open(sqlFile);
-		try {
-			sqlIns = parseSqlFile(is);
-		} finally {
-			is.close();
-		}
-		return sqlIns;
-	}
+    public static List<String> parseSqlAssetFile(String sqlFile,
+                                                 AssetManager assetManager) throws IOException {
+        List<String> sqlIns = null;
+        InputStream is = assetManager.open(sqlFile);
+        try {
+            sqlIns = parseSqlStream(is);
+        } finally {
+            is.close();
+        }
+        return sqlIns;
+    }
 
-	public static List<String> parseSqlFile(Context context, int resSqlFile)
-			throws IOException {
-		List<String> sqlIns = null;
-		InputStream is = context.getResources().openRawResource(resSqlFile);
-		try {
-			sqlIns = parseSqlFile(is);
-		} finally {
-			is.close();
-		}
-		return sqlIns;
-	}
+    public static List<String> parseSqlResourceFile(Context context, int resSqlFile)
+            throws IOException {
+        List<String> sqlIns = null;
+        InputStream is = context.getResources().openRawResource(resSqlFile);
+        try {
+            sqlIns = parseSqlStream(is);
+        } finally {
+            is.close();
+        }
+        return sqlIns;
+    }
 
-	public static List<String> parseSqlFile(InputStream is) throws IOException {
-		String script = removeComments(is);
-		return verifyStatements(splitSqlScript(script));
-		//return splitSqlScript(script);
-	}
+    public static List<String> parseSqlStream(InputStream is) throws IOException {
+        String script = removeComments(is);
+        return verifyStatements(splitSqlScript(script));
+        //return splitSqlScript(script);
+    }
 
-	private static String removeComments(InputStream is) throws IOException {
+    private static String removeComments(InputStream is) throws IOException {
 
-		StringBuilder sql = new StringBuilder();
+        StringBuilder sql = new StringBuilder();
 
-		InputStreamReader isReader = new InputStreamReader(is,"UTF-8");
-		try {
-			BufferedReader buffReader = new BufferedReader(isReader);
-			try {
-				String line;
-				String multiLineComment = null;
-				while ((line = buffReader.readLine()) != null) {
-					line = line.trim();
+        InputStreamReader isReader = new InputStreamReader(is, "UTF-8");
+        try {
+            BufferedReader buffReader = new BufferedReader(isReader);
+            try {
+                String line;
+                String multiLineComment = null;
+                while ((line = buffReader.readLine()) != null) {
+                    line = line.trim();
 
-					if (multiLineComment == null) {
-						if (line.startsWith("/*")) {
-							if (!line.endsWith("}")) {
-								multiLineComment = "/*";
-							}
-						} else if (line.startsWith("{")) {
-							if (!line.endsWith("}")) {
-								multiLineComment = "{";
-							}
-						} else if (!line.startsWith("--") && !line.equals("")) {
-							sql.append(line);
-						}
-					} else if (multiLineComment.equals("/*")) {
-						if (line.endsWith("*/")) {
-							multiLineComment = null;
-						}
-					} else if (multiLineComment.equals("{")) {
-						if (line.endsWith("}")) {
-							multiLineComment = null;
-						}
-					}
+                    if (multiLineComment == null) {
+                        if (line.startsWith("/*")) {
+                            if (!line.endsWith("}")) {
+                                multiLineComment = "/*";
+                            }
+                        } else if (line.startsWith("{")) {
+                            if (!line.endsWith("}")) {
+                                multiLineComment = "{";
+                            }
+                        } else if (!line.startsWith("--") && !line.equals("")) {
+                            sql.append(line);
+                        }
+                    } else if (multiLineComment.equals("/*")) {
+                        if (line.endsWith("*/")) {
+                            multiLineComment = null;
+                        }
+                    } else if (multiLineComment.equals("{")) {
+                        if (line.endsWith("}")) {
+                            multiLineComment = null;
+                        }
+                    }
 
-				}
-			} finally {
-				buffReader.close();
-			}
+                }
+            } finally {
+                buffReader.close();
+            }
 
-		} finally {
-			isReader.close();
-		}
+        } finally {
+            isReader.close();
+        }
 
-		return sql.toString();
-	}
+        return sql.toString();
+    }
 
-	private static List<String> splitInsertion(String statement) {
-		List<String> out = new ArrayList<String>();
-		String INSERT = statement.substring(statement.indexOf("VALUES") + 6);
-		int index = 0;
+    private static List<String> splitInsertion(String statement) {
+        List<String> out = new ArrayList<String>();
+        String INSERT = statement.substring(statement.indexOf("VALUES") + 6);
+        int index = 0;
 
-		while (true) {
-			int lastIndex = index;
-			index = INSERT.indexOf(",(", lastIndex);
-			try {
-				out.add(INSERT.substring(lastIndex, index));
-				index++;
-			} catch (Exception e) {
-				break;
-			}
-		}
+        while (true) {
+            int lastIndex = index;
+            index = INSERT.indexOf(",(", lastIndex);
+            try {
+                out.add(INSERT.substring(lastIndex, index));
+                index++;
+            } catch (Exception e) {
+                break;
+            }
+        }
 
-		return out;
-	}
+        return out;
+    }
 
-	private static List<String> makeInsertBundle(String header,
-			List<String> insertions, int size) {
-		List<String> out = new ArrayList<String>();
-		for (String insert : insertions)
-			out.add(header + insert);
-		return out;
-	}
+    private static List<String> makeInsertBundle(String header,
+                                                 List<String> insertions, int size) {
+        List<String> out = new ArrayList<String>();
+        for (String insert : insertions)
+            out.add(header + insert);
+        return out;
+    }
 
-	private static List<String> verifyStatements(List<String> statements) {
-		List<String> out = new ArrayList<String>();
-		for (String statement : statements) {// INSERT
-			if (statement.length() > 7) {
-				String beginStatement = statement.substring(0, 6)
-						.toLowerCase();
-				if (beginStatement.equals("insert")) {
-					String insertHeader = statement.substring(0,
-							statement.indexOf("VALUES") + 6);
+    private static List<String> verifyStatements(List<String> statements) {
+        List<String> out = new ArrayList<String>();
+        for (String statement : statements) {// INSERT
+            if (statement.length() > 7) {
+                String beginStatement = statement.substring(0, 6)
+                        .toLowerCase();
+                if (beginStatement.equals("persist")) {
+                    String insertHeader = statement.substring(0,
+                            statement.indexOf("VALUES") + 6);
 
-					out.addAll(makeInsertBundle(insertHeader,
-							splitInsertion(statement), 0));
+                    out.addAll(makeInsertBundle(insertHeader,
+                            splitInsertion(statement), 0));
 
-				} else {
-					out.add(statement);
-				}
+                } else {
+                    out.add(statement);
+                }
+            }
+        }
+        return out;
+    }
 
-			}
-		}
-
-		return out;
-	}
-
-	private static List<String> splitSqlScript(String script) {
-		List<String> statements = new ArrayList<String>();
-		String[] statementsTable = script.split(";");
-		for (String tmp : statementsTable)
-			statements.add(tmp.trim()+";");
-		return statements;
-	}
+    private static List<String> splitSqlScript(String script) {
+        List<String> statements = new ArrayList<String>();
+        String[] statementsTable = script.split(";");
+        for (String tmp : statementsTable)
+            statements.add(tmp.trim() + ";");
+        return statements;
+    }
 
 }

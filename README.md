@@ -267,6 +267,47 @@ You can perform join Query  like:
                  .in(1, 2, 3, 4)
                  .execute();
  ```
+# SQL clause using existing connection without prepare.
+After least one data base connection successfully, it is also possible to execute SQLite clause
+without call explicitly a prepare (prepareSQL or prepareTransactionalSQL).
+Of course, it is possible to get an SQLite.SQL instance directly from connection Name.
+
+Get SQLite.SQL instance from dc connection Name
+```java
+    /*
+    obtain an SQLite.SQL instance.
+     */
+    SQLite.SQL sql= SQLite.fromConnection(DbName);
+
+    /*
+    Make a selection using SQL instance.
+     */
+    List<User> users = sql.select(User.class)
+                           .where("firstname")
+                           .like("%Jephte%")
+                           .execute();
+
+    sql.close();
+```
+
+It is also possible to specify if you want an auto closable connection. (Auto closable SQL instance, is an SQL which would be auto close after any execution)
+```java
+    /*
+     here i want an auto clauseAble SQL from my connection.
+     */
+    boolean autoClause=true;
+    /*
+    obtain an SQLite.SQL instance.
+     */
+    SQLite.SQL sql= SQLite.fromConnection(DbName, autoClause);
+
+    List<User> users = sql.select(User.class)
+                               .where("firstname")
+                               .like("%Jephte%")
+                               .execute();
+    //SQL instance has been auto closed after execution.
+```
+
 Usage
 -----
 Just add the dependency to your `build.gradle`:

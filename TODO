@@ -13,6 +13,8 @@
     *add OrderBy
     *add Having/havingCount
 
+-Support
+    Advanced SQL: look for doc oka drive
 
 TableFactory
     *Handle ALTER_TABLE

@@ -3,15 +3,15 @@ package istat.android.data.access.sqlite;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class SQLiteInsert {
+public final class SQLitePersist {
     List<QueryAble> insertions = new ArrayList<QueryAble>();
     SQLite.SQL sql;
 
-    SQLiteInsert(SQLite.SQL sql) {
+    SQLitePersist(SQLite.SQL sql) {
         this.sql = sql;
     }
 
-    public SQLiteInsert insert(Object insert) {
+    public SQLitePersist persist(Object insert) {
         try {
             QueryAble model = SQLiteModel.fromObject(insert);
             insertions.add(model);
@@ -21,7 +21,7 @@ public final class SQLiteInsert {
         return this;
     }
 
-    public SQLiteInsert insert(List<?> insert) {
+    public SQLitePersist persist(List<?> insert) {
         for (Object obj : insert) {
             try {
                 QueryAble model = SQLiteModel.fromObject(obj);
@@ -33,7 +33,7 @@ public final class SQLiteInsert {
         return this;
     }
 
-    public SQLiteInsert insert(Object... insert) {
+    public SQLitePersist persist(Object... insert) {
         for (Object obj : insert) {
             try {
                 QueryAble model = SQLiteModel.fromObject(obj);
@@ -45,41 +45,12 @@ public final class SQLiteInsert {
         return this;
     }
 
-    public long[] execute(boolean ignoreDuplicate) {
-        List<Long> tmp = new ArrayList<Long>();
-        try {
-            if (insertions == null || insertions.size() == 0)
-                return new long[]{0};
-            for (QueryAble insertion : insertions) {
-                if (insertion.exist(sql.db)) {
-                    throw new IllegalAccessException("entity :0" + insertion + " already exist inside table " + insertion.getName());
-                }
-                tmp.add(insertion.persist(sql.db));
-            }
-            insertions.clear();
-            notifyExecuted();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-            if (!ignoreDuplicate) {
-                throw new RuntimeException(e);
-            }
-        }
-        long[] out = new long[tmp.size()];
-        for (int i = 0; i < tmp.size(); i++) {
-            out[i] = tmp.get(i);
-        }
-        return out;
-    }
-
-    public long[] execute() throws IllegalAccessException {
+    public long[] execute() {
         if (insertions == null || insertions.size() == 0)
             return new long[]{0};
         long[] out = new long[insertions.size()];
         int index = 0;
         for (QueryAble insertion : insertions) {
-            if (insertion.exist(sql.db)) {
-                throw new IllegalAccessException("entity :0" + insertion + " already exist inside table " + insertion.getName());
-            }
             out[index] = insertion.persist(sql.db);
         }
         insertions.clear();

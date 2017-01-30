@@ -60,7 +60,7 @@ public final class SQLiteMerge {
 
     private void notifyExecuted() {
         if (sql.autoClose) {
-            sql.closeDb();
+            sql.close();
         }
     }
 }

@@ -366,7 +366,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
 
     protected void notifyExecuted() {
         if (sql.autoClose) {
-            sql.closeDb();
+            sql.close();
         }
     }
 }
