@@ -286,7 +286,11 @@ Get SQLite.SQL instance from connection Name
                            .where("firstname")
                            .like("%Jephte%")
                            .execute();
-
+    //more code...
+    
+    /*
+    Clause SQL when not needed anymore
+    */
     sql.close();
 ```
 
