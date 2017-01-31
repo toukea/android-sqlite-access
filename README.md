@@ -294,7 +294,7 @@ Get SQLite.SQL instance from connection Name
     sql.close();
 ```
 
-It is also possible to specify if you want an auto closable connection. (Auto closable SQL instance, is an SQL which would be auto close after any execution)
+It is also possible to specify if you want to use an auto closable connection. (Auto closable SQL instance, is an SQL which would be auto close after any execution)
 ```java
     /*
      here i want an auto clauseAble SQL from my connection.
