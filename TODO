@@ -18,3 +18,6 @@
 
 TableFactory
     *Handle ALTER_TABLE
+
+
+-Create ObjectFactory like CursorFactory, to spécify a way to convert cursor to Object.

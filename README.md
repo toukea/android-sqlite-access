@@ -206,12 +206,13 @@ It is also possible to make multiple nested selections:
                      .where("firstname")
                      .like("%Julie%");
            
-           List<User> users = 
-                      sql.select(User.class)
-                     .WHERE(selection1)
-                     .AND(selection2)
-                     .OR(selection3)
-                     .execute();
+               List<User> users =
+                          sql.select(User.class)
+                         .WHERE(selection1)
+                         .AND(selection2)
+                         .OR(selection3)
+                         .execute();
+
                for (User u : users) {
                    System.out.println(u.firstName);
                }

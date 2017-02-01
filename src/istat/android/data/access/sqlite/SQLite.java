@@ -213,7 +213,7 @@ public final class SQLite {
         }
     }
 
-//    public static SQL from(String dbName) throws IllegalAccessException {
+    //    public static SQL from(String dbName) throws IllegalAccessException {
 //        SQLiteDataAccess access = findOrCreateConnectionAccess(dbName);
 //        SQLiteDatabase db = access.open();
 //        return from(db);
@@ -224,29 +224,56 @@ public final class SQLite {
 //        SQLiteDatabase db = connect(connection).open();
 //        return from(db);
 //    }
-
-
-    public static SQL fromPath(Context context, String dbPath) {
-        File file = new File(dbPath);
-        return fromFile(context, file);
+    public static void addConnection(Context context, File file, boolean connectInstantly) {
+        SQLiteConnection connection = SQLiteConnection.create(context, file, -1, null);
+        if (connectInstantly) {
+            connect(connection);
+        } else {
+            dbNameConnectionPair.put(connection.dbName, connection);
+        }
     }
 
-    public static SQL fromFile(Context context, File dbFile) {
-        SQLiteDatabase db = null;
-        return from(db);
+    public static SQL fromFile(File dbFile) throws Exception {
+        return fromFile(dbFile, false);
     }
 
-    public static SQL fromUri(Context context, Uri dbUri) {
-        SQLiteDatabase db = null;
-        return from(db);
+    public static SQL fromFile(File dbFile, boolean autoCloseAble) throws Exception {
+        SQLiteDatabase db = SQLiteDatabase.openOrCreateDatabase(dbFile, null);
+        SQL sql = new SQL(db);
+        sql.setAutoClose(autoCloseAble);
+        return sql;
+    }
+
+    public static SQL fromUri(Uri dbUri) throws Exception {
+        return fromUri(dbUri, false);
+    }
+
+    public static SQL fromUri(Uri dbUri, boolean autoCloseAble) throws Exception {
+        File file = new File(dbUri.getPath());
+        return fromFile(file, autoCloseAble);
+    }
+
+    public static void addConnection(Context context, File... file) {
+        for (File f : file) {
+            addConnection(context, f, false);
+        }
+    }
+
+    public static SQLiteDataAccess connect(Context context, File file) {
+        return connect(context, file, -1, null);
+    }
+
+    public static SQLiteDataAccess connect(Context context, File file, int version, BootDescription bootDescription) {
+        SQLiteConnection connection = SQLiteConnection.create(context, file, version, bootDescription);
+        return connect(connection);
     }
 
     public static SQLiteDataAccess connect(SQLiteConnection connection) {
         return connect(connection.context, connection.dbName, connection.dbVersion, connection);
     }
 
-    public static void close(String dbName) {
-        SQLiteDataAccess access = dbNameAccessPair.get(dbName);
+    public static void close(String connectionName) {
+        SQLiteDataAccess access = dbNameAccessPair.get(connectionName);
         if (access != null) {
             access.close();
         }
@@ -434,6 +461,38 @@ public final class SQLite {
         String dbName;
         int dbVersion = 1;
         Context context;
+
+        public static SQLiteConnection create(Context context, File file) {
+            return create(context, file, -1, null);
+        }
+
+        public static SQLiteConnection create(Context context, File file, int version, final BootDescription description) {
+            if (version < 0) {
+                SQLiteDatabase db = SQLiteDatabase.openOrCreateDatabase(file, null);
+                db.getVersion();
+                db.close();
+            }
+            return create(context, file.getAbsolutePath(), version, description);
+        }
+
+        public static SQLiteConnection create(Context context, String dbName, int dbVersion, final BootDescription description) {
+            SQLiteConnection connection = new SQLiteConnection(context, dbName, dbVersion) {
+                @Override
+                public void onCreateDb(SQLiteDatabase db) {
+                    if (description != null) {
+                        description.onCreateDb(db);
+                    }
+                }
+
+                @Override
+                public void onUpgradeDb(SQLiteDatabase db, int oldVersion, int newVersion) {
+                    if (description != null) {
+                        description.onUpgradeDb(db, oldVersion, newVersion);
+                    }
+                }
+            };
+            return connection;
+        }
 
         public SQLiteConnection(Context context, String dbName, int dbVersion) {
             this.dbName = dbName;
