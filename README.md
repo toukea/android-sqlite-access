@@ -273,7 +273,7 @@ After least one data base connection successfully, it is also possible to execut
 without call explicitly a prepare (prepareSQL or prepareTransactionalSQL).
 Of course, it is possible to get an SQLite.SQL instance directly from connection Name.
 
-Get SQLite.SQL instance from dc connection Name
+Get SQLite.SQL instance from connection Name
 ```java
     /*
     obtain an SQLite.SQL instance.
@@ -287,11 +287,15 @@ Get SQLite.SQL instance from dc connection Name
                            .where("firstname")
                            .like("%Jephte%")
                            .execute();
-
+    //more code...
+    
+    /*
+    Clause SQL when not needed anymore
+    */
     sql.close();
 ```
 
-It is also possible to specify if you want an auto closable connection. (Auto closable SQL instance, is an SQL which would be auto close after any execution)
+It is also possible to specify if you want to use an auto closable connection. (Auto closable SQL instance, is an SQL which would be auto close after any execution)
 ```java
     /*
      here i want an auto clauseAble SQL from my connection.
