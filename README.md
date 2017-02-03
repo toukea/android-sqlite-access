@@ -6,7 +6,11 @@ android Library to help SQLite db query and Management using a easy and sweet qu
 @SQLiteModel.Table(name = "User") //if not set, default is class.getSimpleName()
 public class User {
 
-    @Column(name="userName")//specify this field as Column and give it a name. if not set, default is the property label
+    /*
+    specify this field as Column and give it a name.
+    If not set, default is the property label
+     */
+    @Column(name="userName")
     public String userName;
     
     public String firstName; //schould be persisted with label 'firstName'
@@ -15,7 +19,8 @@ public class User {
     
     /**
     make this field as table primary key.
-    ome thing to know is that, if your class doesn't has explicit primary key declaration but contain a
+    ome thing to know is that:
+    If your class doesn't has explicit primary key declaration but contain a
     property named 'id' (case not sensitive) it will be implicitelly considered as your primaryKey
     */
     @PrimaryKey 
@@ -37,7 +42,10 @@ NB: it is strongly recommended  to make it on the onCreate of your <extends> and
     SQLite.addConnection(new SQLite.SQLiteConnection(appContext, DbName, 1) {
         @Override
         public void onCreateDb(SQLiteDatabase db) {
-        //here you can execute script to create your database from de SQLiteDataBase param instance
+        /*
+        here you can execute script to create your database from
+         de SQLiteDataBase param instance
+         */
             try {
             /*
              here, i am executing a script from my R.raw resource
@@ -49,7 +57,10 @@ NB: it is strongly recommended  to make it on the onCreate of your <extends> and
         }
         @Override
         public void onUpgradeDb(SQLiteDatabase db, int oldVersion, int newVersion) {
-        //here you can execute SQL script to update your database from de SQLiteDataBase param instance
+        /*
+        here you can execute SQL script to update your database
+         from de SQLiteDataBase param instance
+         */
             try {
             /*
              here, i am executing a script from my R.raw resource

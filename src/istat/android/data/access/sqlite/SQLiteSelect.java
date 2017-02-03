@@ -186,23 +186,29 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         if (!out.endsWith("?")) {
             sql += splits[splits.length - 1];
         }
+        if (!TextUtils.isEmpty(orderBy)) {
+            sql += " " + orderBy;
+        }
+        if (!TextUtils.isEmpty(groupBy)) {
+            sql += " " + groupBy;
+        }
         return sql;
     }
 
     public class ClauseJoinSelectBuilder {
         int type = 0;
-        SQLiteJoinSelect selecClause;
+        SQLiteJoinSelect selectClause;
 
         public ClauseJoinSelectBuilder(int type, SQLiteJoinSelect selecClause) {
             this.type = type;
-            this.selecClause = selecClause;
+            this.selectClause = selecClause;
         }
 
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect equalTo(Object value) {
             prepare(value);
             whereClause += " = ? ";
-            return selecClause;
+            return selectClause;
         }
 
         public SQLiteJoinSelect in(Object... value) {
@@ -219,7 +225,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             }
             prepare("(" + valueIn + ")");
             whereClause += " = ? ";
-            return selecClause;
+            return selectClause;
         }
 
         @Deprecated
@@ -239,14 +245,14 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         public SQLiteJoinSelect greatThan(Object value, boolean acceptEqual) {
             prepare(value);
             whereClause += " >" + (acceptEqual ? "=" : "") + " ? ";
-            return selecClause;
+            return selectClause;
         }
 
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect lessThan(Object value, boolean acceptEqual) {
             prepare(value);
             whereClause += " <" + (acceptEqual ? "=" : "") + " ? ";
-            return selecClause;
+            return selectClause;
         }
 
         private void prepare(Object value) {
@@ -268,7 +274,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         public SQLiteJoinSelect like(Object value) {
             prepare(value);
             whereClause += " like ? ";
-            return (SQLiteJoinSelect) selecClause;
+            return (SQLiteJoinSelect) selectClause;
         }
     }
 

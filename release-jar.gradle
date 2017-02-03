@@ -18,6 +18,7 @@ android.libraryVariants.all { variant ->
 }
 
 task androidJavadocs(type: Javadoc) {
+    failOnError = false
     source = android.sourceSets.main.java.srcDirs
     ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
     classpath += files(ext.androidJar)
@@ -38,7 +39,6 @@ uploadArchives {
         pom.groupId = groupId
         pom.artifactId = artifactId
         pom.version = version
-        
         // Add other pom properties here if you want (developer details / licenses)
         repository(url: "file://${localReleaseDest}")
     }

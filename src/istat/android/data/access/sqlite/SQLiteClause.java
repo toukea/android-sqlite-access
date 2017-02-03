@@ -68,7 +68,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
 
     @SuppressWarnings("unchecked")
     public Clause orderBy(String column, String value) {
-        if (orderBy == null)
+        if (TextUtils.isEmpty(orderBy))
             orderBy = buildWhereParam(column) + " " + value;
         else
             orderBy += buildWhereParam(column) + " " + value;
@@ -78,7 +78,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     public Clause orderBy(String... columns) {
         for (String column : columns) {
             boolean endWithDescOrAsc = column.toLowerCase().matches(".+\\s(desc|asc)$");
-            orderBy(column, endWithDescOrAsc ? "" : "DESC");
+            orderBy(column, endWithDescOrAsc ? "" : "ASC");
         }
         return (Clause) this;
     }

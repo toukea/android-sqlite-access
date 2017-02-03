@@ -15,11 +15,13 @@ task androidJavadocs(type: Javadoc) {
 }
 
 task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+    failOnError = false
     classifier = 'javadoc'
     from androidJavadocs.destinationDir
 }
 
 task androidSourcesJar(type: Jar) {
+    failOnError = false
     classifier = 'sources'
     from android.sourceSets.main.java.srcDirs
 }
