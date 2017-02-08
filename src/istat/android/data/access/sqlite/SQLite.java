@@ -324,6 +324,16 @@ public final class SQLite {
             return new SQLiteSelect(this, clazz);
         }
 
+        public SQLiteSelect select(boolean distinct, Class<?> clazz) {
+            SQLiteSelect select = new SQLiteSelect(this, clazz);
+            return select.distinct(distinct);
+        }
+
+        public SQLiteSelect select(boolean distinct, Class<?>... clazz) {
+            SQLiteSelect select = new SQLiteSelect(this, clazz);
+            return select.distinct(distinct);
+        }
+
         public SQLiteSelect select(Class<?>... clazz) {
             return new SQLiteSelect(this, clazz);
         }

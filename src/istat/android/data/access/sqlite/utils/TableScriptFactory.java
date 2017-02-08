@@ -44,6 +44,11 @@ public class TableScriptFactory {
         return create(null, cLassS);
     }
 
+    //TODO implement method.
+    public static List<String> alter(Class<?>... cLassS) throws InstantiationException, IllegalAccessException {
+        return create(null, cLassS);
+    }
+
 
     public static List<String> create(HashMap<Class, FieldAdapter> classAdapterPair, Class<?>... cLassS) throws InstantiationException, IllegalAccessException {
 

@@ -9,8 +9,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
 public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
+    public final static int TYPE = 0;
     Class<?> clazz;
     String selection;
+    boolean distinct = false;
 
 
     SQLiteSelect(SQLite.SQL db, Class<?>... clazz) {
@@ -48,6 +50,15 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         return new SQLiteJoinSelect(this.sql, this.clazz);
     }
 
+//    protected SQLiteSelect distinct() {
+//        return distinct(true);
+//    }
+
+    protected SQLiteSelect distinct(boolean enable) {
+        distinct = enable;
+        return this;
+    }
+
     private QueryAble createQueryAble(Class<?> clazz) throws IllegalAccessException, InstantiationException {
         //TODO make it better
         return SQLiteModel.fromClass(clazz);
@@ -60,9 +71,10 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         for (int i = 0; i < columns.length; i++) {
             smartColumns[i] = tableName + "." + columns[i];
         }
+//        return db.query(selection, smartColumns, getWhereClause(), getWhereParams(),
+//                getGroupBy(), getHaving(), getOrderBy());
         return db.query(selection, smartColumns, getWhereClause(), getWhereParams(),
-                null, null, getOrderBy());
-
+                getGroupBy(), getHaving(), getOrderBy(), getLimit());
     }
 
 
@@ -88,32 +100,20 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     }
 
     public <T> List<T> execute(int limit) {
-
-        return null;
+        this.limit = limit;
+        return execute();
     }
 
     public <T> void execute(List<T> list, int limit) {
-
+        this.limit = limit;
+        execute(list);
     }
 
     @SuppressWarnings("unchecked")
     public <T> List<T> execute() {
         List<T> list = new ArrayList<T>();
-        try {
-            Cursor c = onExecute(sql.db);
-            if (c.getCount() > 0) {
-                while (c.moveToNext()) {
-                    T model = (T) createObjectFromCursor(clazz, c);
-                    list.add(model);
-                }
-            }
-            c.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        notifyExecuted();
+        execute(list);
         return list;
-
     }
 
     public <T> T executeForFirst() {
@@ -134,8 +134,10 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
                 }
             }
             c.close();
+            notifyExecutionSucced(TYPE, this, list);
         } catch (Exception e) {
             e.printStackTrace();
+            notifyExecutionFail(e);
         }
         notifyExecuted();
     }
@@ -157,16 +159,16 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     }
 
     //TODO check if 'selection' or 'table'
-    public ClauseBuilder AND_SELECT(SQLiteSelect close) {
+    public ClauseBuilder AND_SELECT(SQLiteSelect clause) {
         this.whereClause = "(SELECT * FROM " + selection + " WHERE "
-                + close.whereClause + ")";
-        this.whereParams = close.whereParams;
+                + clause.whereClause + ")";
+        this.whereParams = clause.whereParams;
         return new ClauseBuilder(TYPE_CLAUSE_AND);
     }
 
-    public ClauseBuilder OR_SELECT(SQLiteSelect close) {
-        this.whereClause = close.whereClause;
-        this.whereParams = close.whereParams;
+    public ClauseBuilder OR_SELECT(SQLiteSelect clause) {
+        this.whereClause = clause.whereClause;
+        this.whereParams = clause.whereParams;
         return new ClauseBuilder(TYPE_CLAUSE_AND);
     }
 

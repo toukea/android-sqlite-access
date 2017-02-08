@@ -20,6 +20,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     protected String orderBy = null;
     protected String groupBy = null;
     protected String having = null;
+    protected int limit = -1;
     protected String[] columns;
     protected String table;
     final static int TYPE_CLAUSE_WHERE = 0, TYPE_CLAUSE_AND = 1,
@@ -31,6 +32,21 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
 
     protected String getOrderBy() {
         return orderBy;
+    }
+
+    protected String getHaving() {
+        return having;
+    }
+
+    protected String getLimit() {
+        if (limit < 0) {
+            return null;
+        }
+        return limit + "";
+    }
+
+    protected String getGroupBy() {
+        return groupBy;
     }
 
     protected String[] getWhereParams() {
@@ -72,6 +88,28 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             orderBy = buildWhereParam(column) + " " + value;
         else
             orderBy += buildWhereParam(column) + " " + value;
+        return (Clause) this;
+    }
+
+    public Clause groupBy(String... column) {
+        for (String cl : column) {
+            groupBy(cl);
+        }
+        return (Clause) this;
+    }
+
+    //TODO implements this method
+    public Clause having() {
+
+
+        return (Clause) this;
+    }
+
+    public Clause groupBy(String column) {
+        if (TextUtils.isEmpty(orderBy))
+            orderBy = buildWhereParam(column);
+        else
+            orderBy += ", " + buildWhereParam(column);
         return (Clause) this;
     }
 
@@ -275,19 +313,19 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     }
 
     //TODO build end of query. GroupBy orderBy, Having with execute
-    public class ClauseSubBuilder {
+    public class HavingBuilder {
         int type = 0;
 
-        public ClauseSubBuilder(int type) {
+        public HavingBuilder(int type) {
             this.type = type;
         }
 
-        @SuppressWarnings("unchecked")
-        public Clause groupBy(String... column) {
-            prepare(column);
-            whereClause += " = ? ";
-            return (Clause) SQLiteClause.this;
-        }
+//        @SuppressWarnings("unchecked")
+//        public Clause groupBy(String... column) {
+//            prepare(column);
+//            whereClause += " = ? ";
+//            return (Clause) SQLiteClause.this;
+//        }
 
         public Clause greatThan(Object value) {
             return greatThan(value, false);
@@ -362,6 +400,14 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             sql += splits[splits.length - 1];
         }
         return sql;
+    }
+
+    protected void notifyExecutionSucced(int type, Object clause, Object result) {
+
+    }
+
+    protected void notifyExecutionFail(Exception e) {
+
     }
 
     protected void notifyExecuted() {
