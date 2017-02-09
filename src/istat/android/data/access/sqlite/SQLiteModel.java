@@ -29,6 +29,7 @@ import android.util.Log;
 import com.google.gson.Gson;
 
 public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
+    Class<?> modelClass = Object.class;
     HashMap<String, Object> fieldNameValuePair = new HashMap<String, Object>();
     HashMap<String, Field> nameFieldPair = new HashMap<String, Field>();
     HashMap<String, Field> nestedTableFieldPair = new HashMap<String, Field>();
@@ -48,6 +49,10 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     public String getPrimaryKey() {
         return getString(getPrimaryFieldName());
+    }
+
+    public Class<?> getModelClass() {
+        return modelClass;
     }
 
     protected Object get(String name) {
@@ -467,44 +472,13 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         if (tableName == null) {
             tableName = cLass.getSimpleName();
         }
-
-
-//        SQLiteModel model = new SQLiteModel() {
-//
-//            @Override
-//            public String getName() {
-//                String tableName = null;
-//                if (cLass.isAnnotationPresent(Table.class)) {
-//                    Table table = cLass.getAnnotation(Table.class);
-//                    tableName = table.name();
-//                }
-//                if (tableName == null) {
-//                    tableName = cLass.getSimpleName();
-//                }
-//                return tableName;
-//            }
-//
-//            @Override
-//            public String[] getColumns() {
-//
-//                return projections;
-//            }
-//
-//            @Override
-//            public String getPrimaryFieldName() {
-//                return primary;
-//            }
-//        };
-//        model.fieldNameValuePair.putAll(map);
-//        model.nameFieldPair.putAll(nameFieldPair);
-//        model.nestedTableFieldPair.putAll(nestedTableField);
-//        return model;
         builder.setName(tableName)
                 .setColumns(projections)
                 .setPrimaryFieldName(primary)
                 .setFieldNameValuePair(map)
                 .setNameFieldPair(nameFieldPair)
-                .setNestedTableNameFieldPair(nestedTableField);
+                .setNestedTableNameFieldPair(nestedTableField)
+                .setModelClass(cLass);
         return builder.create();
     }
 
@@ -573,7 +547,8 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 .setColumns(projections)
                 .setPrimaryFieldName(primary)
                 .setNameFieldPair(nameFieldPair)
-                .setNestedTableNameFieldPair(nestedTableField);
+                .setNestedTableNameFieldPair(nestedTableField)
+                .setModelClass(cLass);
         return builder.create();
     }
 
@@ -998,6 +973,11 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             return this;
         }
 
+        public Builder setModelClass(Class<?> cLass) {
+            this.modelClass = cLass;
+            return this;
+        }
+
         public Builder setNestedTableNameFieldPair(HashMap<String, Field> nestedTableNameFieldPair) {
             this.nestedTableNameFieldPair = nestedTableNameFieldPair;
             return this;
@@ -1020,12 +1000,14 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                     return primaryFieldName;
                 }
             };
-            model.fieldNameValuePair = FieldNameValuePair;
-            model.nameFieldPair = nameFieldPair;
-            model.nestedTableFieldPair = nestedTableNameFieldPair;
+            model.fieldNameValuePair = this.FieldNameValuePair;
+            model.nameFieldPair = this.nameFieldPair;
+            model.nestedTableFieldPair = this.nestedTableNameFieldPair;
+            model.modelClass = this.modelClass;
             return model;
         }
 
+        Class<?> modelClass = Object.class;
         String name, primaryFieldName;
         List<String> projections = new ArrayList<String>();
         HashMap<String, Object> FieldNameValuePair = new HashMap<String, Object>();

@@ -9,6 +9,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
 public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
+    public final static String ORDER_BY_DESC = "DESC", ORDER_BY_ASC = "ASC";
     public final static int TYPE = 0;
     Class<?> clazz;
     String selection;
@@ -71,9 +72,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         for (int i = 0; i < columns.length; i++) {
             smartColumns[i] = tableName + "." + columns[i];
         }
-//        return db.query(selection, smartColumns, getWhereClause(), getWhereParams(),
-//                getGroupBy(), getHaving(), getOrderBy());
-        return db.query(selection, smartColumns, getWhereClause(), getWhereParams(),
+        return db.query(distinct, selection, smartColumns, getWhereClause(), getWhereParams(),
                 getGroupBy(), getHaving(), getOrderBy(), getLimit());
     }
 

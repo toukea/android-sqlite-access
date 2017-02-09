@@ -346,6 +346,49 @@ public final class SQLite {
             return new SQLiteDelete(clazz, this);
         }
 
+
+        public int delete(Object... object) {
+            int count = 0;
+            for (Object obj : object) {
+                if (delete(obj)) {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        public boolean delete(Object object) {
+            try {
+                Class<?> cLass = object.getClass();
+                SQLiteModel model = SQLiteModel.fromClass(cLass);
+                return delete(cLass).where(model.getPrimaryFieldName()).equalTo(model.getPrimaryKey()).execute() > 0;
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+            return false;
+        }
+
+//        public <T> SQLiteDelete delete(T... object) {
+//            SQLiteDelete delete = null;
+//            if (object != null && object.length > 0) {
+//                try {
+//                    for (T obj : object) {
+//                        SQLiteModel model = SQLiteModel.fromObject(obj);
+//                        if (delete == null) {
+//                            delete = delete(model.getModelClass());
+//                        }
+//                        delete.where(model.getPrimaryFieldName()).equalTo(model.getPrimaryKey());
+//                    }
+//                    return delete;
+//                } catch (Exception e) {
+//
+//                }
+//            }
+//            return null;
+//        }
+        //------------------------------------------
         public SQLiteInsert insert(Object entity) {
             SQLiteInsert insert = new SQLiteInsert(this);
             return insert.insert(entity);
@@ -403,7 +446,7 @@ public final class SQLite {
             SQLiteMerge merge = new SQLiteMerge(this);
             return merge.merge(entity);
         }
-
+        //---------------------------------------------
 
         public void executeStatements(List<String> statements) {
             for (String ask : statements) {
