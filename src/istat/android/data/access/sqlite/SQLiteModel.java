@@ -64,6 +64,21 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return value == null ? "" : value.toString();
     }
 
+    protected String getSerializedValue(String name) {
+        Object value = get(name);
+        if (value == null) {
+            return null;
+        }
+        Gson gson = new Gson();
+        Type type = value.getClass().getGenericSuperclass();
+        if (type.equals(Object.class)) {
+            return gson.toJson(value);
+        } else {
+            Type listOfTestObject = value.getClass().getGenericSuperclass();
+            return gson.toJson(value, listOfTestObject);
+        }
+    }
+
     protected boolean getBoolean(String name) {
         return Boolean.valueOf(getString(name));
     }
@@ -186,7 +201,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         for (String column : columns) {
             if (column != null) {
                 if (get(column) != null) {
-                    String values = getString(column);
+                    String values = getSerializedValue(column);
                     pairs.put(column, values);
                 }
             }
@@ -689,14 +704,13 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                             Log.d("asClass", "onTRY=" + type);
                         } catch (Exception e) {
                             type = field.getType();
+                            Log.d("asClass", "onCatch=" + type);
                         }
                         String retrievedEntity = getString(field.getName());
                         if (Toolkit.isJson(retrievedEntity)) {
                             Log.d("asClass", "stringularProperty=" + retrievedEntity);
-                            if (!TextUtils.isEmpty(retrievedEntity)) {
-                                Object obj = gson.fromJson(retrievedEntity, type);
-                                field.set(instance, obj);
-                            }
+                            Object obj = gson.fromJson(retrievedEntity, type);
+                            field.set(instance, obj);
                         }
                     }
                 } catch (Exception e) {
