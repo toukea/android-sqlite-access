@@ -34,9 +34,9 @@ public class User {
 #Add SQLite Connexion 
 you can add one or many 'SQLiteConnexion' to your SQLite context. 
 in this part, we will add connection to the Database defined by:
-DbName="testDB"
+DbName="testDB",
 DBVersion=1;
-NB: it is strongly recommended  to make it on the onCreate of your <extends> android.app.Application class.
+**`NB: it is strongly recommended  to make it on the onCreate of your <extends> android.app.Application class.`**
 ```java
     String DbName = "TestDB";
     SQLite.addConnection(new SQLite.SQLiteConnection(appContext, DbName, 1) {
