@@ -69,14 +69,20 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         if (value == null) {
             return null;
         }
+        String out;
         Gson gson = new Gson();
         Type type = value.getClass().getGenericSuperclass();
         if (type.equals(Object.class)) {
-            return gson.toJson(value);
+            out = gson.toJson(value);
+            if (out.matches("^\".*\"$")) {
+                out = out.replaceAll("^\"", "")
+                        .replaceAll("\"$", "");
+            }
         } else {
             Type listOfTestObject = value.getClass().getGenericSuperclass();
-            return gson.toJson(value, listOfTestObject);
+            out = gson.toJson(value, listOfTestObject);
         }
+        return out;
     }
 
     protected boolean getBoolean(String name) {
