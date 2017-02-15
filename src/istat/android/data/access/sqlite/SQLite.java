@@ -7,6 +7,8 @@ import android.net.Uri;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -284,7 +286,19 @@ public final class SQLite {
         if (access != null) {
             access.close();
             dbNameAccessPair.remove(dbName);
+            dbNameConnectionPair.remove(dbName);
         }
+    }
+
+    public static void release() {
+        Iterator<String> iterator = dbNameAccessPair.keySet().iterator();
+        while (iterator.hasNext()) {
+            String accessName = iterator.next();
+            SQLiteDataAccess access = dbNameAccessPair.get(accessName);
+            access.close();
+        }
+        dbNameAccessPair.clear();
+        dbNameConnectionPair.clear();
     }
 
     public static SQLiteDataAccess connect(Context context, String dbName, int dbVersion, final BootDescription description) {
@@ -370,24 +384,49 @@ public final class SQLite {
             return false;
         }
 
-//        public <T> SQLiteDelete delete(T... object) {
-//            SQLiteDelete delete = null;
-//            if (object != null && object.length > 0) {
-//                try {
-//                    for (T obj : object) {
-//                        SQLiteModel model = SQLiteModel.fromObject(obj);
-//                        if (delete == null) {
-//                            delete = delete(model.getModelClass());
-//                        }
-//                        delete.where(model.getPrimaryFieldName()).equalTo(model.getPrimaryKey());
-//                    }
-//                    return delete;
-//                } catch (Exception e) {
-//
-//                }
-//            }
-//            return null;
-//        }
+        public boolean deleteById(Class<?> cLass, Object id) {
+            try {
+                SQLiteModel model = SQLiteModel.fromClass(cLass);
+                return delete(cLass)
+                        .where(model.getPrimaryFieldName())
+                        .equalTo(id)
+                        .execute() > 0;
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+            return false;
+        }
+
+        public <T> T findById(Class<T> cLass, Object id) {
+            try {
+                SQLiteModel model = SQLiteModel.fromClass(cLass);
+                return select(cLass)
+                        .where(model.getPrimaryFieldName())
+                        .equalTo(id)
+                        .executeLimitOne();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        public <T> List<T> findAll(Class<T> table, boolean distinct, String[] columns, String whereClause, String[] whereParams, String groupBy, String having, String orderBy, int limit) {
+            SQLiteSelect select = select(distinct, table);
+            select.columns = columns;
+            select.distinct = distinct;
+            select.whereClause = whereClause;
+            select.whereParams = whereParams != null ? Arrays.asList(whereParams) : null;
+            select.limit = limit;
+            select.orderBy = orderBy;
+            select.groupBy = groupBy;
+            select.having = having;
+            return select.execute();
+        }
+
         //------------------------------------------
         public SQLiteInsert insert(Object entity) {
             SQLiteInsert insert = new SQLiteInsert(this);
@@ -572,6 +611,18 @@ public final class SQLite {
         List<String> statements = SQLiteParser.parseSqlStream(sqlFileInputStream);
         for (String statement : statements)
             db.execSQL(statement);
+    }
+
+    public static void executeStatements(SQLiteDatabase db, List<String> statements) {
+        for (String ask : statements) {
+            db.execSQL(ask);
+        }
+    }
+
+    public static void executeStatements(SQLiteDatabase db, String... statements) {
+        for (String ask : statements) {
+            db.execSQL(ask);
+        }
     }
 
     public interface PrepareHandler {

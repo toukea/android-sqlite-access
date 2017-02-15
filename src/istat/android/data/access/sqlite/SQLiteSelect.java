@@ -86,18 +86,6 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
 
     }
 
-    public <T> T findLast() {
-        return findAtIndex(0);
-    }
-
-    public <T> T findFirst() {
-        return findAtIndex(0);
-    }
-
-    public <T> T findAtIndex(int index) {
-        return null;
-    }
-
     public <T> List<T> execute(int limit) {
         this.limit = limit;
         return execute();
@@ -115,8 +103,9 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         return list;
     }
 
-    public <T> T executeForFirst() {
-        return null;
+    public <T> T executeLimitOne() {
+        List<T> results = execute(1);
+        return results.isEmpty() ? null : results.get(0);
     }
 
     @SuppressWarnings("unchecked")
