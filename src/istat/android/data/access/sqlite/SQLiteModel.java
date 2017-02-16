@@ -29,6 +29,7 @@ import android.util.Log;
 import com.google.gson.Gson;
 
 public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
+
     Class<?> modelClass = Object.class;
     HashMap<String, Object> fieldNameValuePair = new HashMap<String, Object>();
     HashMap<String, Field> nameFieldPair = new HashMap<String, Field>();
@@ -69,20 +70,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         if (value == null) {
             return null;
         }
-        String out;
-        Gson gson = new Gson();
-        Type type = value.getClass().getGenericSuperclass();
-        if (type.equals(Object.class)) {
-            out = gson.toJson(value);
-            if (out.matches("^\".*\"$")) {
-                out = out.replaceAll("^\"", "")
-                        .replaceAll("\"$", "");
-            }
-        } else {
-            Type listOfTestObject = value.getClass().getGenericSuperclass();
-            out = gson.toJson(value, listOfTestObject);
-        }
-        return out;
+        return serializer.onSerialize(value, name);
     }
 
     protected boolean getBoolean(String name) {
@@ -418,8 +406,13 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public static SQLiteModel fromObject(final Object obj) throws InstantiationException,
+            IllegalAccessException {
+        return fromObject(obj, SQLiteModel.DEFAULT_SERIALIZER);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static SQLiteModel fromObject(final Object obj, Serializer serializer) throws InstantiationException,
             IllegalAccessException {
         try {
             if (obj instanceof SQLiteModel) {
@@ -499,11 +492,17 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 .setFieldNameValuePair(map)
                 .setNameFieldPair(nameFieldPair)
                 .setNestedTableNameFieldPair(nestedTableField)
-                .setModelClass(cLass);
+                .setModelClass(cLass)
+                .useSerialier(serializer);
         return builder.create();
     }
 
     public static SQLiteModel fromClass(final Class cLass) throws InstantiationException,
+            IllegalAccessException {
+        return fromClass(cLass, SQLiteModel.DEFAULT_SERIALIZER);
+    }
+
+    public static SQLiteModel fromClass(final Class cLass, Serializer serializer) throws InstantiationException,
             IllegalAccessException {
         Builder builder = new Builder();
         List<String> projectionAdder = new ArrayList<String>();
@@ -569,7 +568,8 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 .setPrimaryFieldName(primary)
                 .setNameFieldPair(nameFieldPair)
                 .setNestedTableNameFieldPair(nestedTableField)
-                .setModelClass(cLass);
+                .setModelClass(cLass)
+                .useSerialier(serializer);
         return builder.create();
     }
 
@@ -682,44 +682,29 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return Object.class;
     }
 
-
     public <T> T asClass(Class<T> clazz) throws IllegalAccessException, InstantiationException {
+        return asClass(clazz, this.serializer);
+    }
+
+    public <T> T asClass(Class<T> clazz, Serializer serializer) throws IllegalAccessException, InstantiationException {
         T instance = clazz.newInstance();
         List<Field> fields = Toolkit.getAllFieldFields(clazz, true, false);
         for (Field field : fields) {
             if (!field.isAnnotationPresent(Ignore.class)) {
                 try {
                     field.setAccessible(true);
-                    String fieldName = field.getName();
-                    Object value = get(fieldName);
-                    if (value == null) {
-                        continue;
-                    } else if (field.getType().isAssignableFrom(value.getClass())) {
-                        field.set(instance, value);
-                    } else {
-                        Gson gson = new Gson();
-                        Type type;
-                        try {
-                            type = field.getGenericType();
-                            Log.d("asClass", "onTRY=" + type);
-                        } catch (Exception e) {
-                            type = field.getType();
-                            Log.d("asClass", "onCatch=" + type);
-                        }
-                        String retrievedEntity = getString(field.getName());
-                        Log.d("asClass", "stringularProperty=" + retrievedEntity);
-                        Object obj = gson.fromJson(retrievedEntity, type);
-                        field.set(instance, obj);
-                    }
+                    Object obj = serializer.onDeSerialize(getString(field.getName()), field);
+                    field.set(instance, obj);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }
+
         return instance;
     }
 
-    private static <T> boolean isNestedTableProperty(Field field) {
+    private static boolean isNestedTableProperty(Field field) {
         return field.isAnnotationPresent(OneToOne.class)
                 || field.isAnnotationPresent(OneToMany.class)
                 || field.isAnnotationPresent(ManyToMany.class)
@@ -945,7 +930,12 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     public final static class Builder {
+        Serializer serializer = SQLiteModel.DEFAULT_SERIALIZER;
 
+        public Builder useSerialier(Serializer serializer) {
+            this.serializer = serializer;
+            return this;
+        }
 
         public Builder setPrimaryFieldName(String name) {
             this.primaryFieldName = name;
@@ -1016,6 +1006,9 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             model.nameFieldPair = this.nameFieldPair;
             model.nestedTableFieldPair = this.nestedTableNameFieldPair;
             model.modelClass = this.modelClass;
+            if (serializer != null) {
+                model.serializer = serializer;
+            }
             return model;
         }
 
@@ -1047,5 +1040,76 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     public boolean equals(Object o) {
         //TODO compare value as SQLite data.
         return super.equals(o);
+    }
+
+    Serializer serializer = DEFAULT_SERIALIZER;
+    private static final Serializer DEFAULT_SERIALIZER = new Serializer() {
+        @Override
+        public String onSerialize(Object value, String fieldName) {
+            if (value.getClass().isAssignableFrom(CharSequence.class) || value.getClass().isAssignableFrom(String.class)
+                    || value.getClass().isAssignableFrom(Double.class) || value.getClass().isAssignableFrom(double.class)
+                    || value.getClass().isAssignableFrom(Float.class) || value.getClass().isAssignableFrom(float.class)
+                    || value.getClass().isAssignableFrom(Long.class) || value.getClass().isAssignableFrom(long.class)
+                    || value.getClass().isAssignableFrom(Boolean.class) || value.getClass().isAssignableFrom(boolean.class)
+                    || value.getClass().isAssignableFrom(Integer.class) || value.getClass().isAssignableFrom(int.class)) {
+                return value.toString();
+            }
+            String out;
+            Gson gson = new Gson();
+            Type type = value.getClass().getGenericSuperclass();
+            if (type.equals(Object.class)) {
+                out = gson.toJson(value);
+                if (out.matches("^\".*\"$")) {
+                    out = out.replaceAll("^\"", "")
+                            .replaceAll("\"$", "");
+                }
+            } else {
+                Type listOfTestObject = value.getClass().getGenericSuperclass();
+                out = gson.toJson(value, listOfTestObject);
+            }
+            return out;
+        }
+
+        @Override
+        public Object onDeSerialize(String serialized, Field field) {
+            try {
+                if (field.getType().isAssignableFrom(CharSequence.class) || field.getType().isAssignableFrom(String.class)) {
+                    return serialized;
+                } else if (field.getType().isAssignableFrom(Double.class) || field.getType().isAssignableFrom(double.class)) {
+                    return Double.valueOf(serialized);
+                } else if (field.getType().isAssignableFrom(Float.class) || field.getType().isAssignableFrom(float.class)) {
+                    return Float.valueOf(serialized);
+                } else if (field.getType().isAssignableFrom(Long.class) || field.getType().isAssignableFrom(long.class)) {
+                    Long.valueOf(serialized);
+                } else if (field.getType().isAssignableFrom(Boolean.class) || field.getType().isAssignableFrom(boolean.class)) {
+                    Boolean.valueOf(serialized);
+                } else if (field.getType().isAssignableFrom(Integer.class) || field.getType().isAssignableFrom(int.class)) {
+                    Integer.valueOf(serialized);
+                } else {
+                    Gson gson = new Gson();
+                    Type type;
+                    try {
+                        type = field.getGenericType();
+                        Log.d("asClass", "onTRY=" + type);
+                    } catch (Exception e) {
+                        type = field.getType();
+                        Log.d("asClass", "onCatch=" + type);
+                    }
+
+                    Log.d("asClass", "stringularProperty=" + serialized);
+                    Object obj = gson.fromJson(serialized, type);
+                    return obj;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    };
+
+    public static interface Serializer {
+        public String onSerialize(Object obj, String fieldName);
+
+        public Object onDeSerialize(String serialized, Field field);
     }
 }
