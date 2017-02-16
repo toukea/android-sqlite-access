@@ -414,16 +414,16 @@ public final class SQLite {
             return null;
         }
 
-        public <T> List<T> findAll(Class<T> table) {
-            return findAll(table, false);
+        public <T> List<T> findAll(Class<T> classTable) {
+            return findAll(classTable, false);
         }
 
-        public <T> List<T> findAll(Class<T> table, boolean distinct) {
-            return findAll(table, distinct, null, null, null, null, null, null);
+        public <T> List<T> findAll(Class<T> classTable, boolean distinct) {
+            return findAll(classTable, distinct, null, null, null, null, null, null);
         }
 
-        public <T> List<T> findAll(Class<T> table, boolean distinct, String whereClause, String[] whereParams, String groupBy, String having, String orderBy, String limit) {
-            SQLiteSelect select = select(distinct, table);
+        public <T> List<T> findAll(Class<T> classTable, boolean distinct, String whereClause, String[] whereParams, String groupBy, String having, String orderBy, String limit) {
+            SQLiteSelect select = select(distinct, classTable);
             select.distinct = distinct;
             select.whereClause = whereClause;
             select.whereParams = whereParams != null ? Arrays.asList(whereParams) : null;
@@ -432,6 +432,15 @@ public final class SQLite {
             select.groupBy = groupBy;
             select.having = having;
             return select.execute();
+        }
+
+        public <T> int update(Class<T> classTable, String whereClause, String[] whereParams, String having, String limit) {
+            SQLiteUpdate.Updater update = update(classTable).updater;
+            update.whereClause = whereClause;
+            update.whereParams = whereParams != null ? Arrays.asList(whereParams) : null;
+            update.limit = limit;
+            update.having = having;
+            return update.execute();
         }
 
         //------------------------------------------

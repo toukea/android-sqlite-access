@@ -24,3 +24,9 @@ TableExecutor
 
 
 -Create ObjectFactory like CursorFactory, to spécify a way to convert cursor to Object.
+
+-Serializers as HashMap<Class,Serialize>
+
+-sql.useSerializer()
+
+-sql.useExecutor()

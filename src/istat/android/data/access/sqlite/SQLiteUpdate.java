@@ -2,6 +2,8 @@ package istat.android.data.access.sqlite;
 
 import android.database.sqlite.SQLiteDatabase;
 
+import java.util.List;
+
 public final class SQLiteUpdate {
     Updater updater;
 
@@ -72,6 +74,29 @@ public final class SQLiteUpdate {
             notifyExecuted();
             return out;
         }
+
+        public int execute(int offset, int limit) {
+            String limitS;
+            if (limit < 0) {
+                limitS = null;
+            } else {
+                if (offset < 0) {
+                    offset = 0;
+                }
+                limitS = offset + ", " + limit;
+            }
+            return execute(limitS);
+        }
+
+        public int execute(String limit) {
+            this.limit = limit;
+            return execute();
+        }
+
+        public int execute(int limit) {
+            return execute(limit > 0 ? "" + limit : null);
+        }
+
 
         @Override
         public final String getStatement() {

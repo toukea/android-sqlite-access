@@ -44,8 +44,54 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         instance = this;
     }
 
-    protected void set(String name, Object value) {
+    public final void set(String name, Object value) {
         set(name, this, value);
+    }
+
+    public final Object get(String name) {
+        return get(name, this);// fieldNameValuePair.get(name);
+    }
+
+    public final String getString(String name) {
+        Object value = get(name);
+        return value == null ? "" : value.toString();
+    }
+
+    public final boolean getBoolean(String name) {
+        return Boolean.valueOf(getString(name));
+    }
+
+    public final double getDouble(String name) {
+        try {
+            return Double.valueOf(getString(name));
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    public final float getFloat(String name) {
+        try {
+            String value = getString(name);
+            return Float.valueOf(value);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    public final long getLong(String name) {
+        try {
+            return Long.valueOf(getString(name));
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    public final int getInteger(String name) {
+        try {
+            return Integer.valueOf(getString(name));
+        } catch (Exception e) {
+            return 0;
+        }
     }
 
     public String getPrimaryKey() {
@@ -56,14 +102,6 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return modelClass;
     }
 
-    protected Object get(String name) {
-        return get(name, this);// fieldNameValuePair.get(name);
-    }
-
-    protected String getString(String name) {
-        Object value = get(name);
-        return value == null ? "" : value.toString();
-    }
 
     protected String getSerializedValue(String name) {
         Object value = get(name);
@@ -73,42 +111,6 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return serializer.onSerialize(value, name);
     }
 
-    protected boolean getBoolean(String name) {
-        return Boolean.valueOf(getString(name));
-    }
-
-    protected double getDouble(String name) {
-        try {
-            return Double.valueOf(getString(name));
-        } catch (Exception e) {
-            return 0;
-        }
-    }
-
-    protected float getFloat(String name) {
-        try {
-            String value = getString(name);
-            return Float.valueOf(value);
-        } catch (Exception e) {
-            return 0;
-        }
-    }
-
-    protected long getLong(String name) {
-        try {
-            return Long.valueOf(getString(name));
-        } catch (Exception e) {
-            return 0;
-        }
-    }
-
-    protected int getInteger(String name) {
-        try {
-            return Integer.valueOf(getString(name));
-        } catch (Exception e) {
-            return 0;
-        }
-    }
 
     protected static <T extends SQLiteModel> void set(String name, T obj,
                                                       Object value) {
@@ -349,63 +351,6 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 new String[]{getPrimaryKey()});
     }
 
-    public static <T extends SQLiteModel> T fromJson(String json)
-            throws InstantiationException, IllegalAccessException,
-            JSONException {
-        return fromJson(new JSONObject(json), null);
-    }
-
-    public static <T extends SQLiteModel> T fromJson(String json, Class<T> clazz)
-            throws InstantiationException, IllegalAccessException,
-            JSONException {
-        return fromJson(new JSONObject(json), clazz);
-    }
-
-    public static <T extends SQLiteModel> T fromQueryable(JSONable q)
-            throws InstantiationException, IllegalAccessException {
-        return fromJson(q.toJson(), q.getClass());
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <T extends SQLiteModel> T fromJson(JSONObject json,
-                                                     Class<?> cLass) throws InstantiationException,
-            IllegalAccessException {
-        if (json == null)
-            return null;
-        try {
-            String clazz = json.optString(TAG_CLASS);
-            if (!TextUtils.isEmpty(clazz)) {
-                cLass = Class.forName(clazz);
-            } else if (cLass == null) {
-                return null;
-            }
-            try {
-                Object obj = cLass.getConstructor(JSONObject.class)
-                        .newInstance(json);
-                if (obj instanceof SQLiteModel)
-                    return (T) obj;
-                else
-                    return null;
-            } catch (Exception e) {
-                Object obj = Class.forName(clazz).newInstance();
-                if (obj instanceof SQLiteModel) {
-                    JSONable jsonModel = (SQLiteModel) obj;
-                    jsonModel.fillFromJson(json);
-                    if (obj instanceof SQLiteModel)
-                        return (T) jsonModel;
-                    else
-                        return null;
-                } else {
-                    return null;
-                }
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
     public static SQLiteModel fromObject(final Object obj) throws InstantiationException,
             IllegalAccessException {
         return fromObject(obj, SQLiteModel.DEFAULT_SERIALIZER);
@@ -493,7 +438,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 .setNameFieldPair(nameFieldPair)
                 .setNestedTableNameFieldPair(nestedTableField)
                 .setModelClass(cLass)
-                .useSerialier(serializer);
+                .setSerializer(serializer);
         return builder.create();
     }
 
@@ -569,7 +514,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 .setNameFieldPair(nameFieldPair)
                 .setNestedTableNameFieldPair(nestedTableField)
                 .setModelClass(cLass)
-                .useSerialier(serializer);
+                .setSerializer(serializer);
         return builder.create();
     }
 
@@ -711,7 +656,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 || field.isAnnotationPresent(ManyToOne.class);
     }
 
-    public static <T> String getFieldColumnName(Field field) {
+    public static  String getFieldColumnName(Field field) {
         if (field.isAnnotationPresent(Column.class)) {
             Annotation columnAnnotation = field.getAnnotation(Column.class);
             Column column = (Column) columnAnnotation;
@@ -932,7 +877,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     public final static class Builder {
         Serializer serializer = SQLiteModel.DEFAULT_SERIALIZER;
 
-        public Builder useSerialier(Serializer serializer) {
+        public Builder setSerializer(Serializer serializer) {
             this.serializer = serializer;
             return this;
         }
