@@ -690,18 +690,12 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             if (!field.isAnnotationPresent(Ignore.class)) {
                 try {
                     field.setAccessible(true);
-                    if (field.getType().isAssignableFrom(CharSequence.class) || field.getType().isAssignableFrom(String.class)) {
-                        field.set(instance, getString(field.getName()));
-                    } else if (field.getType().isAssignableFrom(Double.class) || field.getType().isAssignableFrom(double.class)) {
-                        field.set(instance, getDouble(field.getName()));
-                    } else if (field.getType().isAssignableFrom(Float.class) || field.getType().isAssignableFrom(float.class)) {
-                        field.set(instance, getFloat(field.getName()));
-                    } else if (field.getType().isAssignableFrom(Long.class) || field.getType().isAssignableFrom(long.class)) {
-                        field.set(instance, getLong(field.getName()));
-                    } else if (field.getType().isAssignableFrom(Boolean.class) || field.getType().isAssignableFrom(boolean.class)) {
-                        field.set(instance, getBoolean(field.getName()));
-                    } else if (field.getType().isAssignableFrom(Integer.class) || field.getType().isAssignableFrom(int.class)) {
-                        field.set(instance, getInteger(field.getName()));
+                    String fieldName = field.getName();
+                    Object value = get(fieldName);
+                    if (value == null) {
+                        continue;
+                    } else if (field.getType().isAssignableFrom(value.getClass())) {
+                        field.set(instance, value);
                     } else {
                         Gson gson = new Gson();
                         Type type;
@@ -713,11 +707,9 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                             Log.d("asClass", "onCatch=" + type);
                         }
                         String retrievedEntity = getString(field.getName());
-                        if (Toolkit.isJson(retrievedEntity)) {
-                            Log.d("asClass", "stringularProperty=" + retrievedEntity);
-                            Object obj = gson.fromJson(retrievedEntity, type);
-                            field.set(instance, obj);
-                        }
+                        Log.d("asClass", "stringularProperty=" + retrievedEntity);
+                        Object obj = gson.fromJson(retrievedEntity, type);
+                        field.set(instance, obj);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -785,8 +777,8 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     @Target(ElementType.FIELD)
     @Retention(RetentionPolicy.RUNTIME)
     public @interface PrimaryKey {
-        public final static int POLICY_AUTOGENERATE = 2;
-        public final static int POLICY_AUTOINCREMENT = 1;
+        public final static int POLICY_AUTO_GENERATE = 2;
+        public final static int POLICY_AUTO_INCREMENT = 1;
         public final static int POLICY_NONE = 0;
 
         int policy() default 0;

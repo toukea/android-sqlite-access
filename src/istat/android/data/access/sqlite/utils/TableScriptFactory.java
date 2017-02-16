@@ -165,13 +165,13 @@ public class TableScriptFactory {
         if (columnName.equals(model.getPrimaryFieldName())) {
             int policy = model.getPrimaryKeyPolicy();
             out += " PRIMARY KEY ";
-            if (policy == SQLiteModel.PrimaryKey.POLICY_AUTOINCREMENT) {
+            if (policy == SQLiteModel.PrimaryKey.POLICY_AUTO_INCREMENT) {
                 if (field.getType().isAssignableFrom(Integer.class)) {
                     out += " AUTOINCREMENT ";
                 } else {
                     throw new RuntimeException(field.getName() + " is not eligible to be autoincrement. Only integer colum can be AutoIncrement.");
                 }
-            } else if (policy == SQLiteModel.PrimaryKey.POLICY_AUTOGENERATE) {
+            } else if (policy == SQLiteModel.PrimaryKey.POLICY_AUTO_GENERATE) {
 
             } else {
 

@@ -414,9 +414,16 @@ public final class SQLite {
             return null;
         }
 
-        public <T> List<T> findAll(Class<T> table, boolean distinct, String[] columns, String whereClause, String[] whereParams, String groupBy, String having, String orderBy, int limit) {
+        public <T> List<T> findAll(Class<T> table) {
+            return findAll(table, false);
+        }
+
+        public <T> List<T> findAll(Class<T> table, boolean distinct) {
+            return findAll(table, distinct, null, null, null, null, null, null);
+        }
+
+        public <T> List<T> findAll(Class<T> table, boolean distinct, String whereClause, String[] whereParams, String groupBy, String having, String orderBy, String limit) {
             SQLiteSelect select = select(distinct, table);
-            select.columns = columns;
             select.distinct = distinct;
             select.whereClause = whereClause;
             select.whereParams = whereParams != null ? Arrays.asList(whereParams) : null;

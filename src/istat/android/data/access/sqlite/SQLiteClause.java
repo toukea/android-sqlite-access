@@ -20,7 +20,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     protected String orderBy = null;
     protected String groupBy = null;
     protected String having = null;
-    protected int limit = -1;
+    protected String limit = null;
     protected String[] columns;
     protected String table;
     final static int TYPE_CLAUSE_WHERE = 0, TYPE_CLAUSE_AND = 1,
@@ -39,10 +39,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     }
 
     protected String getLimit() {
-        if (limit < 0) {
-            return null;
-        }
-        return limit + "";
+        return limit;
     }
 
     protected String getGroupBy() {

@@ -86,12 +86,46 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
 
     }
 
+    public <T> List<T> execute(int offset, int limit) {
+        String limitS;
+        if (limit < 0) {
+            limitS = null;
+        } else {
+            if (offset < 0) {
+                offset = 0;
+            }
+            limitS = offset + ", " + limit;
+        }
+        return execute(limitS);
+    }
+
+    public <T> void execute(List<T> list, int offset, int limit) {
+        String limitS;
+        if (limit < 0) {
+            limitS = null;
+        } else {
+            if (offset < 0) {
+                offset = 0;
+            }
+            limitS = offset + ", " + limit;
+        }
+        execute(list, limitS);
+    }
+
     public <T> List<T> execute(int limit) {
+        return execute(limit > 0 ? "" + limit : null);
+    }
+
+    public <T> void execute(List<T> list, int limit) {
+        execute(list, limit > 0 ? "" + limit : null);
+    }
+
+    public <T> List<T> execute(String limit) {
         this.limit = limit;
         return execute();
     }
 
-    public <T> void execute(List<T> list, int limit) {
+    public <T> void execute(List<T> list, String limit) {
         this.limit = limit;
         execute(list);
     }
@@ -111,7 +145,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     @SuppressWarnings("unchecked")
     public <T> void execute(List<T> list) {
         if (list == null) {
-            list = new ArrayList<T>();
+            return;
         }
         try {
             Cursor c = onExecute(sql.db);
