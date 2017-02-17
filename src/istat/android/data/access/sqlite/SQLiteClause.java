@@ -235,6 +235,16 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             this.type = type;
         }
 
+        public Clause isNULL() {
+            whereClause += " IS NULL ";
+            return (Clause) SQLiteClause.this;
+        }
+
+        public Clause isNOTNULL() {
+            whereClause += " IS NOT NULL ";
+            return (Clause) SQLiteClause.this;
+        }
+
         @SuppressWarnings("unchecked")
         public Clause equalTo(Object value) {
             prepare(value);
@@ -297,7 +307,6 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
                     break;
                 default:
                     break;
-
             }
         }
 

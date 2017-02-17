@@ -1,5 +1,6 @@
 package istat.android.data.access.sqlite;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -434,8 +435,9 @@ public final class SQLite {
             return select.execute();
         }
 
-        public <T> int update(Class<T> classTable, String whereClause, String[] whereParams, String having, String limit) {
+        public <T> int update(Class<T> classTable, ContentValues contentValues, String whereClause, String[] whereParams, String having, String limit) {
             SQLiteUpdate.Updater update = update(classTable).updater;
+            update.model.fillFromContentValues(contentValues);
             update.whereClause = whereClause;
             update.whereParams = whereParams != null ? Arrays.asList(whereParams) : null;
             update.limit = limit;

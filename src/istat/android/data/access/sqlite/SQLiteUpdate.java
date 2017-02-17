@@ -1,5 +1,6 @@
 package istat.android.data.access.sqlite;
 
+import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 
 import java.util.List;

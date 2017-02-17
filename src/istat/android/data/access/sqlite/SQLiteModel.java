@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import istat.android.data.access.sqlite.interfaces.JSONable;
 import istat.android.data.access.sqlite.utils.Toolkit;
@@ -656,7 +657,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 || field.isAnnotationPresent(ManyToOne.class);
     }
 
-    public static  String getFieldColumnName(Field field) {
+    public static String getFieldColumnName(Field field) {
         if (field.isAnnotationPresent(Column.class)) {
             Annotation columnAnnotation = field.getAnnotation(Column.class);
             Column column = (Column) columnAnnotation;
@@ -688,6 +689,14 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             mappedBy = field.getType().getSimpleName() + "_id";
         }
         return mappedBy;
+    }
+
+    public void fillFromContentValues(ContentValues contentValue) {
+        Iterator<Map.Entry<String, Object>> iterator = contentValue.valueSet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, Object> name = iterator.next();
+            set(name.getKey(), name.getValue());
+        }
     }
 
     @Target(ElementType.TYPE)
@@ -781,22 +790,6 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 // field.setAccessible(true);
                 // Log.d("filed::" + field.getName(), field.get(instance) +
                 // "");
-            }
-        }
-    }
-
-    public void fillMap(Class<?> clazz, HashMap<String, Object> map)
-            throws IllegalAccessException, IllegalArgumentException,
-            JSONException {
-        List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(clazz);
-        for (Field field : fields) {
-            if (field.isAnnotationPresent(PrimaryKey.class)
-                    || field.isAnnotationPresent(Column.class)) {
-                field.setAccessible(true);
-                Object obj = field.get(instance);
-                if (obj != null && !TextUtils.isEmpty(obj + "")) {
-                    map.put(field.getName(), obj);
-                }
             }
         }
     }
@@ -1002,16 +995,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             String out;
             Gson gson = new Gson();
             Type type = value.getClass().getGenericSuperclass();
-            if (type.equals(Object.class)) {
-                out = gson.toJson(value);
-                if (out.matches("^\".*\"$")) {
-                    out = out.replaceAll("^\"", "")
-                            .replaceAll("\"$", "");
-                }
-            } else {
-                Type listOfTestObject = value.getClass().getGenericSuperclass();
-                out = gson.toJson(value, listOfTestObject);
-            }
+            out = gson.toJson(value, type);
             return out;
         }
 
@@ -1025,11 +1009,11 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 } else if (field.getType().isAssignableFrom(Float.class) || field.getType().isAssignableFrom(float.class)) {
                     return Float.valueOf(serialized);
                 } else if (field.getType().isAssignableFrom(Long.class) || field.getType().isAssignableFrom(long.class)) {
-                    Long.valueOf(serialized);
+                    return Long.valueOf(serialized);
                 } else if (field.getType().isAssignableFrom(Boolean.class) || field.getType().isAssignableFrom(boolean.class)) {
-                    Boolean.valueOf(serialized);
+                    return Boolean.valueOf(serialized);
                 } else if (field.getType().isAssignableFrom(Integer.class) || field.getType().isAssignableFrom(int.class)) {
-                    Integer.valueOf(serialized);
+                    return Integer.valueOf(serialized);
                 } else {
                     Gson gson = new Gson();
                     Type type;

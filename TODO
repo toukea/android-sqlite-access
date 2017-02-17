@@ -30,3 +30,5 @@ TableExecutor
 -sql.useSerializer()
 
 -sql.useExecutor()
+
+-public getter for clause vars
