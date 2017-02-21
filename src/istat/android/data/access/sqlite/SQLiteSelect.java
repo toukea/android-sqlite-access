@@ -1,6 +1,7 @@
 package istat.android.data.access.sqlite;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -172,7 +173,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
      * @param <T>
      * @return
      */
-    private <T> T createObjectFromCursor(Class<T> clazz, Cursor c) throws InstantiationException, IllegalAccessException {
+    private <T> T createObjectFromCursor(Class<T> clazz, Cursor c) throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         //TODO make it better
         SQLiteModel model = SQLiteModel.fromClass(clazz);
         model.fillFromCursor(c);

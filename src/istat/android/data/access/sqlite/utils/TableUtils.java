@@ -8,7 +8,7 @@ import java.util.List;
  * Created by istat on 24/01/17.
  */
 
-public class TableScriptExecutor {
+public class TableUtils {
     public static void drop(SQLiteDatabase db, Class... tables) throws InstantiationException, IllegalAccessException {
         List<String> scripts = TableScriptFactory.drop(tables);
         for (String sql : scripts) {

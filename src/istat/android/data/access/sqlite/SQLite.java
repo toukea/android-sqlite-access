@@ -403,6 +403,9 @@ public final class SQLite {
         public <T> T findById(Class<T> cLass, Object id) {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(cLass);
+                if (!model.isPrimaryFieldDefined()) {
+                    throw new RuntimeException("Oups, class:" + cLass + " mapped by table:" + model.getName() + " doesn't has primary field defined.");
+                }
                 return select(cLass)
                         .where(model.getPrimaryFieldName())
                         .equalTo(id)

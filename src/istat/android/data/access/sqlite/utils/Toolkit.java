@@ -2,7 +2,9 @@ package istat.android.data.access.sqlite.utils;
 
 import android.text.TextUtils;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
@@ -78,5 +80,16 @@ public class Toolkit {
 
     public static boolean isJsonObject(String json) {
         return json.matches("(^\\{.*\\}$)");
+    }
+
+    public static <T> T newInstance(Class<T> cLass) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
+        try {
+            return cLass.newInstance();
+        } catch (Exception e) {
+            Constructor<T> constructor = cLass.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            return constructor.newInstance();
+
+        }
     }
 }

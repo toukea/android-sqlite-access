@@ -6,6 +6,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -206,6 +207,10 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return pairs;
     }
 
+    public boolean isPrimaryFieldDefined() {
+        return !TextUtils.isEmpty(getPrimaryFieldName());
+    }
+
     public final void fillFromJson(JSONObject json) {
         try {
             List<String> keySet = JSONArrayToStringList(json.names());
@@ -270,7 +275,8 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     @Override
     public long persist(SQLiteDatabase db) {
         if (exist(db)) {
-            return update(db);
+            update(db);
+            return 0;
         } else {
             return insert(db);
         }
@@ -628,12 +634,12 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return Object.class;
     }
 
-    public <T> T asClass(Class<T> clazz) throws IllegalAccessException, InstantiationException {
+    public <T> T asClass(Class<T> clazz) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
         return asClass(clazz, this.serializer);
     }
 
-    public <T> T asClass(Class<T> clazz, Serializer serializer) throws IllegalAccessException, InstantiationException {
-        T instance = clazz.newInstance();
+    public <T> T asClass(Class<T> clazz, Serializer serializer) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
+        T instance = Toolkit.newInstance(clazz);
         List<Field> fields = Toolkit.getAllFieldFields(clazz, true, false);
         for (Field field : fields) {
             if (!field.isAnnotationPresent(Ignore.class)) {
