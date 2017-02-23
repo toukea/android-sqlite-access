@@ -282,8 +282,8 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         }
     }
 
-    protected void onPersistEmbeddedDbEntity(SQLiteDatabase db, QueryAble entity) {
-        entity.persist(db);
+    protected void onPersistEmbeddedDbEntity(SQLiteDatabase db, Class cLass, QueryAble embeddedModel) {
+        embeddedModel.persist(db);
     }
 
 
@@ -296,7 +296,6 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             e.printStackTrace();
         } finally {
         }
-
         return out;
     }
 
@@ -310,7 +309,6 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             e.printStackTrace();
         } finally {
         }
-
         return out;
     }
 
@@ -531,8 +529,12 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             while (keySet.hasNext()) {
                 String tmp = keySet.next();
                 Object obj = fieldNameValuePair.get(tmp);
-                if (obj != null && obj instanceof QueryAble) {
-                    onPersistEmbeddedDbEntity(db, ((QueryAble) obj));
+                if (obj != null) {
+                    Class cLass = obj.getClass();
+                    if (cLass.isAnnotationPresent(Table.class)) {
+                        SQLiteModel model = SQLiteModel.fromObject(obj);
+                        onPersistEmbeddedDbEntity(db, cLass, model);
+                    }
                 }
             }
         } catch (Exception e) {
