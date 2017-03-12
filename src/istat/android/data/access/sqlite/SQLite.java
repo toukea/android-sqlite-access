@@ -479,6 +479,21 @@ public final class SQLite {
             return persist.persist(entity);
         }
 
+//        public SQLitePersist insertOrUpdate(Object entity) {
+//            SQLitePersist insertOrUpdate = new SQLitePersist(this);
+//            return insertOrUpdate.persist(entity);
+//        }
+//
+//        public SQLitePersist insertOrUpdate(Object... entity) {
+//            SQLitePersist insertOrUpdate = new SQLitePersist(this);
+//            return insertOrUpdate.persist(entity);
+//        }
+//
+//        public <T> SQLitePersist insertOrUpdate(List<T> entity) {
+//            SQLitePersist insertOrUpdate = new SQLitePersist(this);
+//            return insertOrUpdate.persist(entity);
+//        }
+
         public <T> void replaces(List<T> entity) {
             try {
                 if (entity != null && !entity.isEmpty()) {
@@ -647,7 +662,7 @@ public final class SQLite {
     }
 
     public interface PrepareHandler {
-        public void onSQLReady(SQL sql);
+        public void onSQLReady(SQL sql) throws Exception;
 
         public void onSQLPrepareFail(Exception e);
     }

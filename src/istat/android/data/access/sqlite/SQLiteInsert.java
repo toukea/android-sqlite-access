@@ -45,7 +45,7 @@ public final class SQLiteInsert {
         return this;
     }
 
-    public long[] execute(boolean ignoreDuplicate) {
+    public long[] execute(boolean ignoreOnDuplicate) {
         List<Long> tmp = new ArrayList<Long>();
         try {
             if (insertions == null || insertions.size() == 0)
@@ -60,7 +60,7 @@ public final class SQLiteInsert {
             notifyExecuted();
         } catch (IllegalAccessException e) {
             e.printStackTrace();
-            if (!ignoreDuplicate) {
+            if (!ignoreOnDuplicate) {
                 throw new RuntimeException(e);
             }
         }

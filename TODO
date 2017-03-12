@@ -1,3 +1,7 @@
+-reflection sur insertOrUpdate, persist (bien fondé)
+
+-reflection insert bien implementé.
+
 -Bosser le theoreme de jointure d'hibernate
 
 -Manage Join

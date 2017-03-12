@@ -236,7 +236,13 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             return selectClause;
         }
 
-        public SQLiteJoinSelect in(Object... value) {
+//        public SQLiteJoinSelect in(Object value) {
+//            Object[] objS = new Object[1];
+//            objS[0] = value;
+//            return in(objS);
+//        }
+
+        public <T> SQLiteJoinSelect in(T... value) {
             String valueIn = "";
             for (int i = 0; i < value.length; i++) {
                 if (value[i] instanceof Number) {

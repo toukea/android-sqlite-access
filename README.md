@@ -79,7 +79,7 @@ NB: SQL instance will be useful for perform SQL query.
  ```java
     SQLite.prepareSQL(DbName, new SQLite.PrepareHandler() {
         @Override
-        public void onSQLReady(SQLite.SQL sql) {
+        public void onSQLReady(SQLite.SQL sql)  throws Exception {
            //when the prepare succeed, use the SQL instance to query for result.
         }
 
@@ -98,7 +98,7 @@ You can also make a  transactional Prepare.
 After SQL instance has been prepared successfully, you can use them to perform SQL Insert.
 ```java
     @Override
-    public void onSQLReady(SQLite.SQL sql) {
+    public void onSQLReady(SQLite.SQL sql)  throws Exception {
        User user = new User();
        user.userName = "Toukea";
        user.firstName = "Jephte";
@@ -110,7 +110,7 @@ After SQL instance has been prepared successfully, you can use them to perform S
 It is also possible to perform multiple insertions in one step
  ```java
      @Override
-     public void onSQLReady(SQLite.SQL sql) {
+     public void onSQLReady(SQLite.SQL sql)  throws Exception {
        /*
        here, some multiple[3] user definitions
        */
@@ -128,7 +128,7 @@ It is also possible to perform multiple insertions in one step
  After SQL instance has been prepared successfully, you can use them to perform SQL delete.
  ```java
          @Override
-         public void onSQLReady(SQLite.SQL sql) {
+         public void onSQLReady(SQLite.SQL sql)  throws Exception {
          
              int deletedCount = sql.delete(User.class)
                                 .where("firstname")
@@ -144,7 +144,7 @@ It is also possible to perform multiple insertions in one step
 After SQL instance has been prepared successfully, you can use them to perform SQL update.
 ```java
            @Override
-           public void onSQLReady(SQLite.SQL sql) {
+           public void onSQLReady(SQLite.SQL sql)  throws Exception {
                 int updatedCount = sql.update(User.class)
                                    .set("userName", "newName")
                                    .where("firstName")
@@ -157,7 +157,7 @@ After SQL instance has been prepared successfully, you can use them to perform S
 It is also possible to update from another model.
 ```java
            @Override
-           public void onSQLReady(SQLite.SQL sql) {
+           public void onSQLReady(SQLite.SQL sql)  throws Exception {
                 User userModel=new User();
                 userModel.firstName="Julie";
                 userModel.year=21;
@@ -177,7 +177,7 @@ It is also possible to update from another model.
 After SQL instance has been prepared successfully, you can use them to perform SQL selection.
 ```java
            @Override
-           public void onSQLReady(SQLite.SQL sql) {
+           public void onSQLReady(SQLite.SQL sql)  throws Exception {
            
                List<User> users = sql.select(User.class)
                        .where("firstname")
@@ -192,7 +192,7 @@ After SQL instance has been prepared successfully, you can use them to perform S
 It is also possible to make multiple nested selections:
 ```java
            @Override
-           public void onSQLReady(SQLite.SQL sql) {
+           public void onSQLReady(SQLite.SQL sql)  throws Exception {
            /*
             this is my first SQLite Selection
            */
