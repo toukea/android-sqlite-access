@@ -231,16 +231,12 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     @Override
     public final void fillFromCursor(Cursor c) {
-        for (String projection : getColumns()) {
-            if (projection != null) {
-                int columnIndex = c.getColumnIndex(projection);
-                if (columnIndex >= 0) {
-                    String values = c.getString(columnIndex);
-                    if (!TextUtils.isEmpty(values)) {
-                        set(projection, values);
-                    }
-                }
-            }
+        fillFromCursor(c, DEFAULT_CURSOR_READER);
+    }
+
+    public final void fillFromCursor(Cursor cursor, CursorReader reader) {
+        if (reader != null && cursor != null) {
+            reader.onReadCursor(this, cursor);
         }
     }
 
@@ -555,6 +551,12 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             while (keySet.hasNext()) {
                 String tmp = keySet.next();
                 Object obj = bundle.get(tmp);
+                if (obj == null && !acceptEmpty) {
+                    if (acceptEmpty) {
+                        json.put(tmp, null);
+                    }
+                    continue;
+                }
                 if (obj != null) {
                     if (obj instanceof JSONable) {
                         JSONable jsonModel = (JSONable) obj;
@@ -566,7 +568,6 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                             json.put(tmp, value);
                         }
                     }
-
                 }
             }
             return json;
@@ -724,9 +725,9 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     @Target(ElementType.FIELD)
     @Retention(RetentionPolicy.RUNTIME)
     public @interface PrimaryKey {
-        public final static int POLICY_AUTO_GENERATE = 2;
-        public final static int POLICY_AUTO_INCREMENT = 1;
-        public final static int POLICY_NONE = 0;
+        int POLICY_AUTO_GENERATE = 2;
+        int POLICY_AUTO_INCREMENT = 1;
+        int POLICY_NONE = 0;
 
         int policy() default 0;
     }
@@ -988,7 +989,35 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return super.equals(o);
     }
 
+    /**
+     * specify a way to read and fill SQLiteModel from SQLiteDatabase Cursor.
+     *
+     * @param cursorReader
+     */
+    public void setCursorReader(CursorReader cursorReader) {
+        this.cursorReader = cursorReader;
+    }
+
     Serializer serializer = DEFAULT_SERIALIZER;
+    CursorReader cursorReader = DEFAULT_CURSOR_READER;
+
+
+    private static final CursorReader DEFAULT_CURSOR_READER = new CursorReader() {
+        @Override
+        public void onReadCursor(SQLiteModel model, Cursor c) {
+            for (String projection : model.getColumns()) {
+                if (projection != null) {
+                    int columnIndex = c.getColumnIndex(projection);
+                    if (columnIndex >= 0) {
+                        String values = c.getString(columnIndex);
+                        if (!TextUtils.isEmpty(values)) {
+                            model.set(projection, values);
+                        }
+                    }
+                }
+            }
+        }
+    };
     private static final Serializer DEFAULT_SERIALIZER = new Serializer() {
         @Override
         public String onSerialize(Object value, String fieldName) {
@@ -1044,9 +1073,13 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         }
     };
 
-    public static interface Serializer {
-        public String onSerialize(Object obj, String fieldName);
+    public interface Serializer {
+        String onSerialize(Object obj, String fieldName);
 
-        public Object onDeSerialize(String serialized, Field field);
+        Object onDeSerialize(String serialized, Field field);
+    }
+
+    public interface CursorReader {
+        void onReadCursor(SQLiteModel model, Cursor cursor);
     }
 }
