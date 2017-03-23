@@ -5,6 +5,8 @@ import android.database.sqlite.SQLiteDatabase;
 
 import java.util.List;
 
+import istat.android.data.access.sqlite.utils.SQLiteAsyncExecutor;
+
 public final class SQLiteUpdate {
     Updater updater;
 
@@ -74,6 +76,19 @@ public final class SQLiteUpdate {
             int out = Integer.valueOf(onExecute(sql.db) + "");
             notifyExecuted();
             return out;
+        }
+
+        public SQLiteAsyncExecutor.SQLiteThread<Integer> executeAsync(final SQLiteAsyncExecutor.ExecutionCallback<Integer> callback) {
+            return executeAsync(-1, -1, callback);
+        }
+
+        public SQLiteAsyncExecutor.SQLiteThread<Integer> executeAsync(final int limit, final SQLiteAsyncExecutor.ExecutionCallback<Integer> callback) {
+            return executeAsync(-1, limit, callback);
+        }
+
+        public SQLiteAsyncExecutor.SQLiteThread<Integer> executeAsync(final int offset, final int limit, final SQLiteAsyncExecutor.ExecutionCallback<Integer> callback) {
+            SQLiteAsyncExecutor asyncExecutor = new SQLiteAsyncExecutor();
+            return asyncExecutor.execute(this, offset, limit, callback);
         }
 
         public int execute(int offset, int limit) {

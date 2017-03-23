@@ -155,8 +155,13 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
 
     @SuppressWarnings("unchecked")
     public Clause WHERE(SQLiteSelect close) {
-        this.whereClause = close.whereClause;
-        this.whereParams = close.whereParams;
+        if (whereClause == null) {
+            this.whereClause = close.whereClause;
+            this.whereParams = close.whereParams;
+        } else {
+            this.whereClause += " AND " + close.whereClause;
+            this.whereParams.addAll(close.whereParams);
+        }
         return (Clause) this;
     }
 

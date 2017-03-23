@@ -36,3 +36,7 @@ TableExecutor
 -sql.useExecutor()
 
 -public getter for clause vars
+
+-SQLiteAsyncExecutor should return itemList for insert, persist, merge.
+
+-SQLiteAsyncExecutor add promise philosophy.

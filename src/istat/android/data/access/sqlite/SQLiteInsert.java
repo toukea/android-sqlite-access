@@ -3,6 +3,8 @@ package istat.android.data.access.sqlite;
 import java.util.ArrayList;
 import java.util.List;
 
+import istat.android.data.access.sqlite.utils.SQLiteAsyncExecutor;
+
 public final class SQLiteInsert {
     List<QueryAble> insertions = new ArrayList<QueryAble>();
     SQLite.SQL sql;
@@ -85,6 +87,11 @@ public final class SQLiteInsert {
         insertions.clear();
         notifyExecuted();
         return out;
+    }
+
+    public SQLiteAsyncExecutor.SQLiteThread executeAsync(final int offset, final int limit, final SQLiteAsyncExecutor.ExecutionCallback<long[]> callback) {
+        SQLiteAsyncExecutor asyncExecutor = new SQLiteAsyncExecutor();
+        return asyncExecutor.execute(this, callback);
     }
 
     private void notifyExecuted() {
