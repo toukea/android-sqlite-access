@@ -4,22 +4,22 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-abstract interface QueryAble {
+interface QueryAble {
 
     long persist(SQLiteDatabase db);
 
-    abstract int delete(SQLiteDatabase db);
+    int delete(SQLiteDatabase db);
 
-    public abstract boolean exist(SQLiteDatabase db);
+    boolean exist(SQLiteDatabase db);
 
-    abstract ContentValues toContentValues();
+    ContentValues toContentValues();
 
     void fillFromCursor(Cursor c);
 
-    abstract String getName();
+    String getName();
 
-    abstract String[] getColumns();
+    String[] getColumns();
 
-    abstract String getPrimaryFieldName();
+    String getPrimaryFieldName();
 
 }

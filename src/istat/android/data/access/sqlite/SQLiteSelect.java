@@ -157,7 +157,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
                 }
             }
             c.close();
-            notifyExecutionSucced(TYPE, this, list);
+            notifyExecutionSucceed(TYPE, this, list);
         } catch (Exception e) {
             e.printStackTrace();
             notifyExecutionFail(e);

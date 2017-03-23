@@ -408,7 +408,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         return sql;
     }
 
-    protected void notifyExecutionSucced(int type, Object clause, Object result) {
+    protected void notifyExecutionSucceed(int type, Object clause, Object result) {
 
     }
 
