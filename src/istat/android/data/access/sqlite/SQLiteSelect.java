@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
 import istat.android.data.access.sqlite.utils.SQLiteAsyncExecutor;
+import istat.android.data.access.sqlite.utils.SQLiteThread;
 
 public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     public final static String ORDER_BY_DESC = "DESC", ORDER_BY_ASC = "ASC";
@@ -167,15 +168,19 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         notifyExecuted();
     }
 
-    public <T> SQLiteAsyncExecutor.SQLiteThread<List<T>> executeAsync(final SQLiteAsyncExecutor.ExecutionCallback<List<T>> callback) {
+    public <T> SQLiteThread<List<T>> executeAsync() {
+        return executeAsync(-1, -1, null);
+    }
+
+    public <T> SQLiteThread<List<T>> executeAsync(final SQLiteAsyncExecutor.ExecutionCallback<List<T>> callback) {
         return executeAsync(-1, -1, callback);
     }
 
-    public <T> SQLiteAsyncExecutor.SQLiteThread<List<T>> executeAsync(final int limit, final SQLiteAsyncExecutor.ExecutionCallback<List<T>> callback) {
+    public <T> SQLiteThread<List<T>> executeAsync(final int limit, final SQLiteAsyncExecutor.ExecutionCallback<List<T>> callback) {
         return executeAsync(-1, limit, callback);
     }
 
-    public <T> SQLiteAsyncExecutor.SQLiteThread<List<T>> executeAsync(final int offset, final int limit, final SQLiteAsyncExecutor.ExecutionCallback<List<T>> callback) {
+    public <T> SQLiteThread<List<T>> executeAsync(final int offset, final int limit, final SQLiteAsyncExecutor.ExecutionCallback<List<T>> callback) {
         SQLiteAsyncExecutor asyncExecutor = new SQLiteAsyncExecutor();
         return asyncExecutor.execute(this, offset, limit, callback);
     }

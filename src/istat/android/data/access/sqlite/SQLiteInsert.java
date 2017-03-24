@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import istat.android.data.access.sqlite.utils.SQLiteAsyncExecutor;
+import istat.android.data.access.sqlite.utils.SQLiteThread;
 
 public final class SQLiteInsert {
-    List<QueryAble> insertions = new ArrayList<QueryAble>();
+    List<QueryAble> modelInsertions = new ArrayList<QueryAble>();
+    List<Object> insertions = new ArrayList<Object>();
     SQLite.SQL sql;
 
     SQLiteInsert(SQLite.SQL sql) {
@@ -16,7 +18,8 @@ public final class SQLiteInsert {
     public SQLiteInsert insert(Object insert) {
         try {
             QueryAble model = SQLiteModel.fromObject(insert);
-            insertions.add(model);
+            modelInsertions.add(model);
+            insertions.add(insert);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -24,10 +27,14 @@ public final class SQLiteInsert {
     }
 
     public SQLiteInsert insert(List<?> insert) {
+        if (insert == null || insert.isEmpty()) {
+            return this;
+        }
         for (Object obj : insert) {
             try {
                 QueryAble model = SQLiteModel.fromObject(obj);
-                insertions.add(model);
+                modelInsertions.add(model);
+                insertions.add(obj);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -36,10 +43,14 @@ public final class SQLiteInsert {
     }
 
     public SQLiteInsert insert(Object... insert) {
+        if (insert == null || insert.length == 0) {
+            return this;
+        }
         for (Object obj : insert) {
             try {
                 QueryAble model = SQLiteModel.fromObject(obj);
-                insertions.add(model);
+                modelInsertions.add(model);
+                insertions.add(obj);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -50,15 +61,15 @@ public final class SQLiteInsert {
     public long[] execute(boolean ignoreOnDuplicate) {
         List<Long> tmp = new ArrayList<Long>();
         try {
-            if (insertions == null || insertions.size() == 0)
+            if (modelInsertions == null || modelInsertions.size() == 0)
                 return new long[]{0};
-            for (QueryAble insertion : insertions) {
+            for (QueryAble insertion : modelInsertions) {
                 if (insertion.exist(sql.db)) {
                     throw new IllegalAccessException("entity :0" + insertion + " already exist inside table " + insertion.getName());
                 }
                 tmp.add(insertion.persist(sql.db));
             }
-            insertions.clear();
+            modelInsertions.clear();
             notifyExecuted();
         } catch (IllegalAccessException e) {
             e.printStackTrace();
@@ -74,22 +85,26 @@ public final class SQLiteInsert {
     }
 
     public long[] execute() throws IllegalAccessException {
-        if (insertions == null || insertions.size() == 0)
+        if (modelInsertions == null || modelInsertions.size() == 0)
             return new long[]{0};
-        long[] out = new long[insertions.size()];
+        long[] out = new long[modelInsertions.size()];
         int index = 0;
-        for (QueryAble insertion : insertions) {
+        for (QueryAble insertion : modelInsertions) {
             if (insertion.exist(sql.db)) {
                 throw new IllegalAccessException("entity :0" + insertion + " already exist inside table " + insertion.getName());
             }
             out[index] = insertion.persist(sql.db);
         }
-        insertions.clear();
+        modelInsertions.clear();
         notifyExecuted();
         return out;
     }
 
-    public SQLiteAsyncExecutor.SQLiteThread executeAsync(final int offset, final int limit, final SQLiteAsyncExecutor.ExecutionCallback<long[]> callback) {
+    public SQLiteThread executeAsync() {
+        return executeAsync(null);
+    }
+
+    public SQLiteThread executeAsync(final SQLiteAsyncExecutor.ExecutionCallback<long[]> callback) {
         SQLiteAsyncExecutor asyncExecutor = new SQLiteAsyncExecutor();
         return asyncExecutor.execute(this, callback);
     }
@@ -98,5 +113,9 @@ public final class SQLiteInsert {
         if (sql.autoClose) {
             sql.close();
         }
+    }
+
+    public List<Object> getInsertions() {
+        return insertions;
     }
 }

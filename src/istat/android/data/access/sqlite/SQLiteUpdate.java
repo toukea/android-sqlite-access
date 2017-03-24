@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 import java.util.List;
 
 import istat.android.data.access.sqlite.utils.SQLiteAsyncExecutor;
+import istat.android.data.access.sqlite.utils.SQLiteThread;
 
 public final class SQLiteUpdate {
     Updater updater;
@@ -78,28 +79,25 @@ public final class SQLiteUpdate {
             return out;
         }
 
-        public SQLiteAsyncExecutor.SQLiteThread<Integer> executeAsync(final SQLiteAsyncExecutor.ExecutionCallback<Integer> callback) {
-            return executeAsync(-1, -1, callback);
+        public SQLiteThread<Integer> executeAsync() {
+            return executeAsync(-1, null);
         }
 
-        public SQLiteAsyncExecutor.SQLiteThread<Integer> executeAsync(final int limit, final SQLiteAsyncExecutor.ExecutionCallback<Integer> callback) {
-            return executeAsync(-1, limit, callback);
+        public SQLiteThread<Integer> executeAsync(final SQLiteAsyncExecutor.ExecutionCallback<Integer> callback) {
+            return executeAsync(-1, callback);
         }
 
-        public SQLiteAsyncExecutor.SQLiteThread<Integer> executeAsync(final int offset, final int limit, final SQLiteAsyncExecutor.ExecutionCallback<Integer> callback) {
+        public SQLiteThread<Integer> executeAsync(final int limit, final SQLiteAsyncExecutor.ExecutionCallback<Integer> callback) {
             SQLiteAsyncExecutor asyncExecutor = new SQLiteAsyncExecutor();
-            return asyncExecutor.execute(this, offset, limit, callback);
+            return asyncExecutor.execute(this, limit, callback);
         }
 
-        public int execute(int offset, int limit) {
+        public int execute(int limit) {
             String limitS;
             if (limit < 0) {
                 limitS = null;
             } else {
-                if (offset < 0) {
-                    offset = 0;
-                }
-                limitS = offset + ", " + limit;
+                limitS = "" + limit;
             }
             return execute(limitS);
         }
@@ -107,10 +105,6 @@ public final class SQLiteUpdate {
         public int execute(String limit) {
             this.limit = limit;
             return execute();
-        }
-
-        public int execute(int limit) {
-            return execute(limit > 0 ? "" + limit : null);
         }
 
 

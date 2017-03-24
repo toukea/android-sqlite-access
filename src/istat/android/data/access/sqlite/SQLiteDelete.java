@@ -3,6 +3,7 @@ package istat.android.data.access.sqlite;
 import android.database.sqlite.SQLiteDatabase;
 
 import istat.android.data.access.sqlite.utils.SQLiteAsyncExecutor;
+import istat.android.data.access.sqlite.utils.SQLiteThread;
 
 public final class SQLiteDelete extends SQLiteClause<SQLiteDelete> {
 
@@ -23,7 +24,7 @@ public final class SQLiteDelete extends SQLiteClause<SQLiteDelete> {
         return out;
     }
 
-    public SQLiteAsyncExecutor.SQLiteThread<Integer> executeAsync(final SQLiteAsyncExecutor.ExecutionCallback<Integer> callback) {
+    public SQLiteThread<Integer> executeAsync(final SQLiteAsyncExecutor.ExecutionCallback<Integer> callback) {
         SQLiteAsyncExecutor asyncExecutor = new SQLiteAsyncExecutor();
         return asyncExecutor.execute(this, callback);
     }

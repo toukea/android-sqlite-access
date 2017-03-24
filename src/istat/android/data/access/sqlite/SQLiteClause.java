@@ -426,4 +426,18 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             sql.close();
         }
     }
+
+//    protected Object result;
+//
+//    public final Object getResult() {
+//        return this.result;
+//    }
+//
+//    public final <T> T optResult() {
+//        try {
+//            return (T) this.result;
+//        } catch (Exception e) {
+//            return null;
+//        }
+//    }
 }

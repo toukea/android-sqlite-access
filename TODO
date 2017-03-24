@@ -1,3 +1,4 @@
+TODO----------------
 -reflection sur insertOrUpdate, persist (bien fondé)
 
 -reflection insert bien implementé.
@@ -40,3 +41,8 @@ TableExecutor
 -SQLiteAsyncExecutor should return itemList for insert, persist, merge.
 
 -SQLiteAsyncExecutor add promise philosophy.
+
+-Nested selection as where param.
+
+
+DONE-----------------------------
