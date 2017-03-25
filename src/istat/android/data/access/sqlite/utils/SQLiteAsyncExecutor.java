@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.os.Looper;
 
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -70,6 +71,7 @@ public class SQLiteAsyncExecutor {
         return thread;
     }
 
+    //--------------------------------
     public SQLiteThread execute(final SQLiteInsert clause, ExecutionCallback<long[]> callback) {
         SQLiteThread<long[]> thread = new SQLiteThread<long[]>(callback) {
 
@@ -110,6 +112,52 @@ public class SQLiteAsyncExecutor {
         thread.start();
         return thread;
     }
+    //---------------------------------
+
+//    public SQLiteThread execute(final SQLiteInsert clause, ExecutionCallback<List<Object>> callback) {
+//       SQLiteThread<List<Object>> thread = new SQLiteThread<List<Object>>(callback) {
+//
+//            @Override
+//            protected List<Object> onExecute() {
+//                try {
+//                    clause.execute();
+//                    return clause.getInsertions();
+//                } catch (IllegalAccessException e) {
+//                    e.printStackTrace();
+//                    throw new RuntimeException(e);
+//                }
+//            }
+//        };
+//        thread.start();
+//        return thread;
+//    }
+//
+//    public SQLiteThread execute(final SQLiteMerge clause, ExecutionCallback<List<Object>> callback) {
+//        SQLiteThread<List<Object>> thread = new SQLiteThread<List<Object>>(callback) {
+//
+//            @Override
+//            protected List<Object> onExecute() {
+//                clause.execute();
+//                return clause.getInsertions();
+//            }
+//        };
+//        thread.start();
+//        return thread;
+//    }
+//
+//    public <Object> SQLiteThread execute(final SQLitePersist clause, ExecutionCallback<List<Object>> callback) {
+//        SQLiteThread<List<Object>> thread = new SQLiteThread<List<Object>>(callback) {
+//
+//            @Override
+//            protected List<Object> onExecute() {
+//                clause.execute();
+//                return clause.getInsertions();
+//            }
+//        };
+//        thread.start();
+//        return thread;
+//    }
+    //---------------------------------
 
     public SQLiteThread execute(final SQLiteDelete clause, ExecutionCallback<Integer> callback) {
         SQLiteThread<Integer> thread = new SQLiteThread<Integer>(callback) {
@@ -122,75 +170,6 @@ public class SQLiteAsyncExecutor {
         thread.start();
         return thread;
     }
-
-//    public abstract class SQLiteThread<T> extends Thread {
-//        boolean running = false;
-//        ExecutionCallback<T> callback;
-//        final ConcurrentHashMap<Runnable, Integer> executedRunnable = new ConcurrentHashMap<Runnable, Integer>();
-//        final ConcurrentHashMap<Integer, ConcurrentLinkedQueue<Runnable>> runnableTask = new ConcurrentHashMap<Integer, ConcurrentLinkedQueue<Runnable>>();
-//
-//
-//        public SQLiteThread(ExecutionCallback<T> callback) {
-//            this.callback = callback;
-//        }
-//
-//        @Override
-//        public final void run() {
-//            try {
-//                notifySuccess(onExecute());
-//            } catch (Exception e) {
-//                notifyError(e);
-//            }
-//        }
-//
-//        protected abstract T onExecute();
-//
-//        @Override
-//        public synchronized void start() {
-//            running = true;
-//            super.start();
-//            notifyStarted(this);
-//        }
-//
-//        @Override
-//        public void interrupt() {
-//            running = false;
-//            if (callback != null) {
-//                callback.onAborted();
-//            }
-//            super.interrupt();
-//        }
-//
-//        public void cancel() {
-//            interrupt();
-//        }
-//
-//        protected void notifySuccess(T result) {
-//            if (callback != null) {
-//                notifyCompleted(true);
-//                callback.onSuccess(result);
-//            }
-//
-//        }
-//
-//        protected void notifyError(Throwable e) {
-//            if (callback != null) {
-//                notifyCompleted(false);
-//                callback.onError(e);
-//            }
-//
-//        }
-//
-//        private void notifyCompleted(boolean state) {
-//            callback.onComplete(state);
-//        }
-//
-//        private void notifyStarted(SQLiteThread thread) {
-//            if (callback != null) {
-//                callback.onStart(thread);
-//            }
-//        }
-//    }
 
     public interface ExecutionCallback<T> {
         void onStart(SQLiteThread thread);
