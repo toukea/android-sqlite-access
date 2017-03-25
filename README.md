@@ -334,7 +334,7 @@ dependencies {
 }
 ```
 
-All available version are: 1.0.0, 1.1.0, 1.1.1 and 1.1.2
+All available versions are: 1.0.0, 1.1.0, 1.1.1 and 1.1.2
 
 minSdkVersion = 10
 ------------------
