@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 ext {
     PUBLISH_GROUP_ID = 'istat.android.data.access.sqlite'
     PUBLISH_ARTIFACT_ID = 'istat-access-sqlite'
-    PUBLISH_VERSION = '1.1.3'
+    PUBLISH_VERSION = '1.2.0'
 }
 apply from: 'release-jar.gradle'
 dependencies {
