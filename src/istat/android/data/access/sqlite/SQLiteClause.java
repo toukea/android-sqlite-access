@@ -204,7 +204,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             Class<? extends QueryAble> clazz) {
         String className = clazz + "";
         className = className.substring(6, className.length()).trim();
-        Object obj = null;
+        Object obj;
         try {
             obj = Class.forName(className).newInstance();
         } catch (Exception e) {
@@ -271,8 +271,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
                     valueIn += ", ";
                 }
             }
-            prepare("(" + valueIn + ")");
-            whereClause += " IN ? ";
+            whereClause += " IN (" + valueIn + ")";
             return (Clause) SQLiteClause.this;
         }
 

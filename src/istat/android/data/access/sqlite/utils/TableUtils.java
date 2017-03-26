@@ -4,11 +4,24 @@ import android.database.sqlite.SQLiteDatabase;
 
 import java.util.List;
 
+import istat.android.data.access.sqlite.SQLiteModel;
+
 /**
  * Created by istat on 24/01/17.
  */
 
 public class TableUtils {
+    public final static boolean exist(SQLiteDatabase db, Class cLass) {
+        try {
+            SQLiteModel model = SQLiteModel.fromClass(cLass);
+            db.query(model.getName(), null, null, null, null, null, null);
+            return true;
+        } catch (Exception e) {
+
+        }
+        return false;
+    }
+
     public static void drop(SQLiteDatabase db, Class... tables) throws InstantiationException, IllegalAccessException {
         List<String> scripts = TableScriptFactory.drop(tables);
         for (String sql : scripts) {
@@ -29,6 +42,7 @@ public class TableUtils {
             db.execSQL(sql);
         }
     }
+
     //TODO make a good implementation.
     public static boolean alter(SQLiteDatabase db, Class tables) throws InstantiationException, IllegalAccessException {
         List<String> scripts = TableScriptFactory.alter(tables);

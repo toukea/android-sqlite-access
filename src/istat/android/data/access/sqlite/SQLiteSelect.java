@@ -288,8 +288,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
                     valueIn += ", ";
                 }
             }
-            prepare("(" + valueIn + ")");
-            whereClause += " IN ? ";
+            whereClause += " IN (" + valueIn + ")";
             return selectClause;
         }
 
@@ -319,6 +318,51 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             whereClause += " <" + (acceptEqual ? "=" : "") + " ? ";
             return selectClause;
         }
+
+        //------------------------------------------------
+        @SuppressWarnings("unchecked")
+        public SQLiteJoinSelect equalTo(SQLiteSelect value) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " = (" + value + ") ";
+            return selectClause;
+        }
+
+        public SQLiteJoinSelect in(SQLiteSelect value) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " IN (" + value.getSql() + ") ";
+            return selectClause;
+        }
+
+        public SQLiteJoinSelect greatThan(SQLiteSelect value) {
+            return greatThan(value, false);
+        }
+
+        public SQLiteJoinSelect lessThan(SQLiteSelect value) {
+            return lessThan(value, false);
+        }
+
+        @SuppressWarnings("unchecked")
+        public SQLiteJoinSelect greatThan(SQLiteSelect value, boolean acceptEqual) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " >" + (acceptEqual ? "=" : "") + " (" + value.getSql() + ") ";
+            return selectClause;
+        }
+
+        @SuppressWarnings("unchecked")
+        public SQLiteJoinSelect lessThan(SQLiteSelect value, boolean acceptEqual) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " <" + (acceptEqual ? "=" : "") + " (" + value.getSql() + ") ";
+            return selectClause;
+        }
+
+        @SuppressWarnings("unchecked")
+        public SQLiteJoinSelect like(SQLiteSelect value) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " like (" + value.getSql() + ")";
+            return selectClause;
+        }
+        //------------------------------------------------
+
 
         private void prepare(Object value) {
             whereParams.add(value + "");
