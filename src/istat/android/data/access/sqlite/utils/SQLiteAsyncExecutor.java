@@ -138,20 +138,20 @@ public class SQLiteAsyncExecutor {
 //            @Override
 //            protected List<Object> onExecute() {
 //                clause.execute();
-//                return clause.getInsertions();
+//                return clause.getMerges();
 //            }
 //        };
 //        thread.start();
 //        return thread;
 //    }
 //
-//    public <Object> SQLiteThread execute(final SQLitePersist clause, ExecutionCallback<List<Object>> callback) {
+//    public  SQLiteThread execute(final SQLitePersist clause, ExecutionCallback<List<Object>> callback) {
 //        SQLiteThread<List<Object>> thread = new SQLiteThread<List<Object>>(callback) {
 //
 //            @Override
 //            protected List<Object> onExecute() {
 //                clause.execute();
-//                return clause.getInsertions();
+//                return clause.getPersists();
 //            }
 //        };
 //        thread.start();

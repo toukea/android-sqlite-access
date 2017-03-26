@@ -3,8 +3,11 @@ package istat.android.data.access.sqlite;
 import java.util.ArrayList;
 import java.util.List;
 
+import istat.android.data.access.sqlite.interfaces.QueryAble;
+
 public final class SQLitePersist {
-    List<QueryAble> insertions = new ArrayList<QueryAble>();
+    List<SQLiteModel> modelPersist = new ArrayList<SQLiteModel>();
+    List<Object> persists = new ArrayList<Object>();
     SQLite.SQL sql;
 
     SQLitePersist(SQLite.SQL sql) {
@@ -13,8 +16,9 @@ public final class SQLitePersist {
 
     public SQLitePersist persist(Object insert) {
         try {
-            QueryAble model = SQLiteModel.fromObject(insert);
-            insertions.add(model);
+            SQLiteModel model = SQLiteModel.fromObject(insert);
+            modelPersist.add(model);
+            persists.add(insert);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -24,8 +28,9 @@ public final class SQLitePersist {
     public SQLitePersist persist(List<?> insert) {
         for (Object obj : insert) {
             try {
-                QueryAble model = SQLiteModel.fromObject(obj);
-                insertions.add(model);
+                SQLiteModel model = SQLiteModel.fromObject(obj);
+                modelPersist.add(model);
+                persists.add(obj);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -36,8 +41,9 @@ public final class SQLitePersist {
     public SQLitePersist persist(Object... insert) {
         for (Object obj : insert) {
             try {
-                QueryAble model = SQLiteModel.fromObject(obj);
-                insertions.add(model);
+                SQLiteModel model = SQLiteModel.fromObject(obj);
+                modelPersist.add(model);
+                persists.add(obj);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -46,14 +52,14 @@ public final class SQLitePersist {
     }
 
     public long[] execute() {
-        if (insertions == null || insertions.size() == 0)
+        if (modelPersist == null || modelPersist.size() == 0)
             return new long[]{0};
-        long[] out = new long[insertions.size()];
+        long[] out = new long[modelPersist.size()];
         int index = 0;
-        for (QueryAble insertion : insertions) {
+        for (QueryAble insertion : modelPersist) {
             out[index] = insertion.persist(sql.db);
         }
-        insertions.clear();
+        modelPersist.clear();
         notifyExecuted();
         return out;
     }
@@ -62,5 +68,9 @@ public final class SQLitePersist {
         if (sql.autoClose) {
             sql.close();
         }
+    }
+
+    public List<Object> getPersists() {
+        return persists;
     }
 }

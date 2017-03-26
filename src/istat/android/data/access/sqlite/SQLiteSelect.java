@@ -9,6 +9,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
+import istat.android.data.access.sqlite.interfaces.QueryAble;
 import istat.android.data.access.sqlite.utils.SQLiteAsyncExecutor;
 import istat.android.data.access.sqlite.utils.SQLiteThread;
 

@@ -3,6 +3,7 @@ package istat.android.data.access.sqlite;
 import java.util.ArrayList;
 import java.util.List;
 
+import istat.android.data.access.sqlite.interfaces.QueryAble;
 import istat.android.data.access.sqlite.utils.SQLiteAsyncExecutor;
 import istat.android.data.access.sqlite.utils.SQLiteThread;
 

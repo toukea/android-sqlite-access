@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class SQLiteMerge {
-    List<SQLiteModel> merges = new ArrayList<SQLiteModel>();
+    List<SQLiteModel> modelMerges = new ArrayList<SQLiteModel>();
+    List<Object> merges = new ArrayList<Object>();
     SQLite.SQL sql;
 
     SQLiteMerge(SQLite.SQL sql) {
@@ -14,7 +15,8 @@ public final class SQLiteMerge {
     public SQLiteMerge merge(Object merge) {
         try {
             SQLiteModel model = SQLiteModel.fromObject(merge);
-            merges.add(model);
+            modelMerges.add(model);
+            merges.add(merge);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -25,7 +27,8 @@ public final class SQLiteMerge {
         for (Object obj : entities) {
             try {
                 SQLiteModel model = SQLiteModel.fromObject(obj);
-                merges.add(model);
+                modelMerges.add(model);
+                merges.add(obj);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -37,7 +40,8 @@ public final class SQLiteMerge {
         for (Object obj : merge) {
             try {
                 SQLiteModel model = SQLiteModel.fromObject(obj);
-                merges.add(model);
+                modelMerges.add(model);
+                merges.add(obj);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -46,14 +50,14 @@ public final class SQLiteMerge {
     }
 
     public long[] execute() {
-        if (merges == null || merges.isEmpty())
+        if (modelMerges == null || modelMerges.isEmpty())
             return new long[]{0};
-        long[] out = new long[merges.size()];
+        long[] out = new long[modelMerges.size()];
         int index = 0;
-        for (SQLiteModel merge : merges) {
+        for (SQLiteModel merge : modelMerges) {
             out[index] = merge.merge(sql.db);
         }
-        merges.clear();
+        modelMerges.clear();
         notifyExecuted();
         return out;
     }
@@ -62,5 +66,9 @@ public final class SQLiteMerge {
         if (sql.autoClose) {
             sql.close();
         }
+    }
+
+    public List<Object> getMerges() {
+        return merges;
     }
 }

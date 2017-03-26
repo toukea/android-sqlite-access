@@ -12,6 +12,8 @@ import android.database.sqlite.SQLiteDatabase;
 
 import android.text.TextUtils;
 
+import istat.android.data.access.sqlite.interfaces.QueryAble;
+
 abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     protected SQLite.SQL sql;
     // protected SQLiteDatabase db;

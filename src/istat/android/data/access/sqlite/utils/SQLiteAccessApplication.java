@@ -8,6 +8,8 @@ import java.util.List;
 import istat.android.data.access.sqlite.SQLite;
 import istat.android.data.access.sqlite.SQLiteDelete;
 import istat.android.data.access.sqlite.SQLiteInsert;
+import istat.android.data.access.sqlite.SQLiteMerge;
+import istat.android.data.access.sqlite.SQLitePersist;
 import istat.android.data.access.sqlite.SQLiteSelect;
 import istat.android.data.access.sqlite.SQLiteUpdate;
 
@@ -41,6 +43,14 @@ public abstract class SQLiteAccessApplication extends Application implements SQL
 
     public static SQLiteInsert insert(Object... obj) throws Exception {
         return SQLite.fromConnection(applicationDbName, true).insert(obj);
+    }
+
+    public static SQLiteMerge merge(Object... obj) throws Exception {
+        return SQLite.fromConnection(applicationDbName, true).merge(obj);
+    }
+
+    public static SQLitePersist persist(Object... obj) throws Exception {
+        return SQLite.fromConnection(applicationDbName, true).persist(obj);
     }
 
     public static SQLiteUpdate update(Class<?> cLass) throws Exception {

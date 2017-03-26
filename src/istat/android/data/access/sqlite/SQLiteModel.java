@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import istat.android.data.access.sqlite.interfaces.JSONable;
+import istat.android.data.access.sqlite.interfaces.QueryAble;
 import istat.android.data.access.sqlite.utils.Toolkit;
 
 import org.json.JSONArray;

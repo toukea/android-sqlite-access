@@ -1,10 +1,10 @@
-package istat.android.data.access.sqlite;
+package istat.android.data.access.sqlite.interfaces;
 
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-interface QueryAble {
+public interface QueryAble {
 
     long persist(SQLiteDatabase db);
 
