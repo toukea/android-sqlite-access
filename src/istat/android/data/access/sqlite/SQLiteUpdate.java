@@ -2,6 +2,7 @@ package istat.android.data.access.sqlite;
 
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
+import android.text.TextUtils;
 
 import java.util.List;
 
@@ -109,8 +110,22 @@ public final class SQLiteUpdate {
 
 
         @Override
-        public final String getStatement() {
-            return super.getStatement();
+        public String getStatement() {
+            String out = "UPDATE FROM " + table;
+            if (!TextUtils.isEmpty(whereClause)) {
+                out += " WHERE '" + whereClause.trim() + "'";
+            }
+            String[] splits = out.split("\\?");
+            String sql = "";
+            for (int i = 0; i < (!out.endsWith("?") ? splits.length - 1
+                    : splits.length); i++) {
+                sql += splits[i];
+                sql += "'" + whereParams.get(i) + "'";
+            }
+            if (!out.endsWith("?")) {
+                sql += splits[splits.length - 1];
+            }
+            return sql;
         }
     }
 }

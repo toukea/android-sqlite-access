@@ -272,7 +272,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
                 }
             }
             prepare("(" + valueIn + ")");
-            whereClause += " = ? ";
+            whereClause += " IN ? ";
             return (Clause) SQLiteClause.this;
         }
 
@@ -303,6 +303,57 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             return (Clause) SQLiteClause.this;
         }
 
+        @SuppressWarnings("unchecked")
+        public Clause like(Object value) {
+            prepare(value);
+            whereClause += " like ? ";
+            return (Clause) SQLiteClause.this;
+        }
+
+        //------------------------------------------------
+        @SuppressWarnings("unchecked")
+        public Clause equalTo(SQLiteSelect value) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " = (" + value + ") ";
+            return (Clause) SQLiteClause.this;
+        }
+
+        public Clause in(SQLiteSelect value) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " IN (" + value.getSql() + ") ";
+            return (Clause) SQLiteClause.this;
+        }
+
+        public Clause greatThan(SQLiteSelect value) {
+            return greatThan(value, false);
+        }
+
+        public Clause lessThan(SQLiteSelect value) {
+            return lessThan(value, false);
+        }
+
+        @SuppressWarnings("unchecked")
+        public Clause greatThan(SQLiteSelect value, boolean acceptEqual) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " >" + (acceptEqual ? "=" : "") + " (" + value.getSql() + ") ";
+            return (Clause) SQLiteClause.this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public Clause lessThan(SQLiteSelect value, boolean acceptEqual) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " <" + (acceptEqual ? "=" : "") + " (" + value.getSql() + ") ";
+            return (Clause) SQLiteClause.this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public Clause like(SQLiteSelect value) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " like (" + value.getSql() + ")";
+            return (Clause) SQLiteClause.this;
+        }
+        //------------------------------------------------
+
         private void prepare(Object value) {
             whereParams.add(value + "");
             switch (type) {
@@ -317,12 +368,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             }
         }
 
-        @SuppressWarnings("unchecked")
-        public Clause like(Object value) {
-            prepare(value);
-            whereClause += " like ? ";
-            return (Clause) SQLiteClause.this;
-        }
+
     }
 
     //TODO build end of query. GroupBy orderBy, Having with execute
@@ -397,23 +443,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         }
     }
 
-    protected String getStatement() {
-        String out = "SELECT * FROM " + table;
-        if (!TextUtils.isEmpty(whereClause)) {
-            out += " WHERE '" + whereClause.trim() + "'";
-        }
-        String[] splits = out.split("\\?");
-        String sql = "";
-        for (int i = 0; i < (!out.endsWith("?") ? splits.length - 1
-                : splits.length); i++) {
-            sql += splits[i];
-            sql += "'" + whereParams.get(i) + "'";
-        }
-        if (!out.endsWith("?")) {
-            sql += splits[splits.length - 1];
-        }
-        return sql;
-    }
+    public abstract String getStatement();
 
     protected void notifyExecutionSucceed(int type, Object clause, Object result) {
 
@@ -428,18 +458,4 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             sql.close();
         }
     }
-
-//    protected Object result;
-//
-//    public final Object getResult() {
-//        return this.result;
-//    }
-//
-//    public final <T> T optResult() {
-//        try {
-//            return (T) this.result;
-//        } catch (Exception e) {
-//            return null;
-//        }
-//    }
 }

@@ -216,6 +216,25 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         return new ClauseBuilder(TYPE_CLAUSE_AND);
     }
 
+    final String getSql() {
+        String out = "SELECT * FROM " + selection;
+        if (!TextUtils.isEmpty(whereClause)) {
+            out += " WHERE " + whereClause.trim();
+        }
+        if (!TextUtils.isEmpty(orderBy)) {
+            out += " " + orderBy;
+        }
+        if (!TextUtils.isEmpty(groupBy)) {
+            out += " " + groupBy;
+        }
+        return out;
+    }
+
+    @Override
+    public String toString() {
+        return getSql();
+    }
+
     @Override
     public final String getStatement() {
         String out = "SELECT * FROM " + selection;
@@ -257,12 +276,6 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             return selectClause;
         }
 
-//        public SQLiteJoinSelect in(Object value) {
-//            Object[] objS = new Object[1];
-//            objS[0] = value;
-//            return in(objS);
-//        }
-
         public <T> SQLiteJoinSelect in(T... value) {
             String valueIn = "";
             for (int i = 0; i < value.length; i++) {
@@ -276,7 +289,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
                 }
             }
             prepare("(" + valueIn + ")");
-            whereClause += " = ? ";
+            whereClause += " IN ? ";
             return selectClause;
         }
 
@@ -326,7 +339,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         public SQLiteJoinSelect like(Object value) {
             prepare(value);
             whereClause += " like ? ";
-            return (SQLiteJoinSelect) selectClause;
+            return selectClause;
         }
     }
 
