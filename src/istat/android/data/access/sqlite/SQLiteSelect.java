@@ -217,7 +217,14 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     }
 
     final String getSql() {
-        String out = "SELECT * FROM " + selection;
+        String columns = "";//"*";
+        for (int i = 0; i < this.columns.length; i++) {
+            columns += this.columns[i];
+            if (i < this.columns.length - 1) {
+                columns += ",";
+            }
+        }
+        String out = "SELECT " + columns + " FROM " + selection;
         if (!TextUtils.isEmpty(whereClause)) {
             out += " WHERE " + whereClause.trim();
         }

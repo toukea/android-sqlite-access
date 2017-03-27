@@ -353,6 +353,34 @@ public final class SQLite {
             return new SQLiteSelect(this, clazz);
         }
 
+        //------------------------------------------
+        public SQLiteSelect select(String uniqueColumn, Class<?> clazz) {
+            SQLiteSelect select = new SQLiteSelect(this, clazz);
+            select.columns = new String[]{uniqueColumn};
+            return select;
+        }
+
+        public SQLiteSelect select(boolean distinct, String uniqueColumn, Class<?> clazz) {
+            SQLiteSelect select = new SQLiteSelect(this, clazz);
+            select.distinct(distinct);
+            select.columns = new String[]{uniqueColumn};
+            return select;
+        }
+
+        public SQLiteSelect select(boolean distinct, String uniqueColumn, Class<?>... clazz) {
+            SQLiteSelect select = new SQLiteSelect(this, clazz);
+            select.distinct(distinct);
+            select.columns = new String[]{uniqueColumn};
+            return select;
+        }
+
+        public SQLiteSelect select(String uniqueColumn, Class<?>... clazz) {
+            SQLiteSelect select = new SQLiteSelect(this, clazz);
+            select.columns = new String[]{uniqueColumn};
+            return select;
+        }
+
+        //---------------------------------------
         public SQLiteUpdate update(Class<?> clazz) {
             return new SQLiteUpdate(clazz, this);
         }
