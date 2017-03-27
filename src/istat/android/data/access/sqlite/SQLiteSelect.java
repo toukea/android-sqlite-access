@@ -169,6 +169,26 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         notifyExecuted();
     }
 
+    public <T> List<T> execute(Class<T> clazz) {
+        List<T> list = new ArrayList<T>();
+        try {
+            Cursor c = onExecute(sql.db);
+            if (c.getCount() > 0) {
+                while (c.moveToNext()) {
+                    T model = createObjectFromCursor(clazz, c);
+                    list.add(model);
+                }
+            }
+            c.close();
+            notifyExecutionSucceed(TYPE, this, list);
+        } catch (Exception e) {
+            e.printStackTrace();
+            notifyExecutionFail(e);
+        }
+        notifyExecuted();
+        return list;
+    }
+
     public <T> SQLiteThread<List<T>> executeAsync() {
         return executeAsync(-1, -1, null);
     }
@@ -217,7 +237,14 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     }
 
     final String getSql() {
-        String out = "SELECT * FROM " + selection;
+        String columns = "";//"*";
+        for (int i = 0; i < this.columns.length; i++) {
+            columns += this.columns[i];
+            if (i < this.columns.length - 1) {
+                columns += ",";
+            }
+        }
+        String out = "SELECT " + columns + " FROM " + selection;
         if (!TextUtils.isEmpty(whereClause)) {
             out += " WHERE " + whereClause.trim();
         }
@@ -232,12 +259,31 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
 
     @Override
     public String toString() {
-        return getSql();
+        return getStatement();
+    }
+
+    public String toString(boolean details) {
+        return details ? getSql() : getStatement();
     }
 
     @Override
     public final String getStatement() {
-        String out = "SELECT * FROM " + selection;
+        String columnParam = "*";
+        try {
+            SQLiteModel entity = SQLiteModel.fromClass(clazz);
+            if (entity.getColumns().length != this.columns.length) {
+                columnParam = "";
+                for (int i = 0; i < this.columns.length; i++) {
+                    columnParam += this.columns[i];
+                    if (i < this.columns.length - 1) {
+                        columnParam += ",";
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        String out = "SELECT " + columnParam + " FROM " + selection;
         if (!TextUtils.isEmpty(whereClause)) {
             out += " WHERE " + whereClause.trim();
         }
@@ -605,4 +651,42 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         return new ClauseJoinBuilder(clazz, joinSelection);
     }
 
+    public ClauseLimit limit(int limit) {
+        return limit(-1, limit);
+    }
+
+    public ClauseLimit limit(int offset, int limit) {
+        String limitS;
+        if (limit < 0) {
+            limitS = null;
+        } else {
+            if (offset < 0) {
+                offset = 0;
+            }
+            limitS = offset + ", " + limit;
+        }
+        return new ClauseLimit(limitS);
+    }
+
+    public class ClauseLimit {
+        ClauseLimit(String limitS) {
+            SQLiteSelect.this.limit = limitS;
+        }
+
+        public <T> void execute(List<T> list) {
+            SQLiteSelect.this.execute(list);
+        }
+
+        public <T> List<T> execute() {
+            return SQLiteSelect.this.execute();
+        }
+
+        public <T> List<T> execute(Class<T> clazz) {
+            return SQLiteSelect.this.execute(clazz);
+        }
+
+        public String getStatement() {
+            return SQLiteSelect.this.getStatement();
+        }
+    }
 }
