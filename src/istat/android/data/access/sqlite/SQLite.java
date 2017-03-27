@@ -380,6 +380,33 @@ public final class SQLite {
             return select;
         }
 
+        //------------------------------------------
+        public SQLiteSelect select(String[] columns, Class<?> clazz) {
+            SQLiteSelect select = new SQLiteSelect(this, clazz);
+            select.columns = columns;
+            return select;
+        }
+
+        public SQLiteSelect select(boolean distinct, String[] columns, Class<?> clazz) {
+            SQLiteSelect select = new SQLiteSelect(this, clazz);
+            select.distinct(distinct);
+            select.columns = columns;
+            return select;
+        }
+
+        public SQLiteSelect select(boolean distinct, String[] columns, Class<?>... clazz) {
+            SQLiteSelect select = new SQLiteSelect(this, clazz);
+            select.distinct(distinct);
+            select.columns = columns;
+            return select;
+        }
+
+        public SQLiteSelect select(String[] columns, Class<?>... clazz) {
+            SQLiteSelect select = new SQLiteSelect(this, clazz);
+            select.columns = columns;
+            return select;
+        }
+
         //---------------------------------------
         public SQLiteUpdate update(Class<?> clazz) {
             return new SQLiteUpdate(clazz, this);
