@@ -329,22 +329,14 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         }
 
         public <T> SQLiteJoinSelect notIn(T... value) {
-            String valueIn = "";
-            for (int i = 0; i < value.length; i++) {
-                if (value[i] instanceof Number) {
-                    valueIn += value[i];
-                } else {
-                    valueIn += "'" + value[i] + "'";
-                }
-                if (i < value.length - 1) {
-                    valueIn += ", ";
-                }
-            }
-            whereClause += " NOT IN (" + valueIn + ")";
-            return selectClause;
+            return in(false, value);
         }
 
         public <T> SQLiteJoinSelect in(T... value) {
+            return in(true, value);
+        }
+
+        private <T> SQLiteJoinSelect in(boolean truth, T[] value) {
             String valueIn = "";
             for (int i = 0; i < value.length; i++) {
                 if (value[i] instanceof Number) {
@@ -356,7 +348,10 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
                     valueIn += ", ";
                 }
             }
-            whereClause += " IN (" + valueIn + ")";
+            if (!valueIn.startsWith("(") && !valueIn.endsWith(")")) {
+                valueIn = "(" + valueIn + ")";
+            }
+            whereClause += (truth ? "" : " NOT ") + " IN " + valueIn;
             return selectClause;
         }
 
@@ -701,11 +696,11 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         return new ClauseJoinBuilder(clazz, joinSelection);
     }
 
-    public ClauseLimit limit(int limit) {
+    public SQLiteSelectLimit limit(int limit) {
         return limit(-1, limit);
     }
 
-    public ClauseLimit limit(int offset, int limit) {
+    public SQLiteSelectLimit limit(int offset, int limit) {
         String limitS;
         if (limit < 0) {
             limitS = null;
@@ -715,11 +710,11 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             }
             limitS = offset + ", " + limit;
         }
-        return new ClauseLimit(limitS);
+        return new SQLiteSelectLimit(limitS);
     }
 
-    public class ClauseLimit {
-        ClauseLimit(String limitS) {
+    public class SQLiteSelectLimit {
+        SQLiteSelectLimit(String limitS) {
             SQLiteSelect.this.limit = limitS;
         }
 

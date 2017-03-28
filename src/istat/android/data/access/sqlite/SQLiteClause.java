@@ -90,17 +90,16 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         return (Clause) this;
     }
 
+    //TODO implements this method
+    public Clause having(String having) {
+        this.having = having;
+        return (Clause) this;
+    }
+
     public Clause groupBy(String... column) {
         for (String cl : column) {
             groupBy(cl);
         }
-        return (Clause) this;
-    }
-
-    //TODO implements this method
-    public Clause having() {
-
-
         return (Clause) this;
     }
 
@@ -267,22 +266,14 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         }
 
         public Clause notIn(Object... value) {
-            String valueIn = "";
-            for (int i = 0; i < value.length; i++) {
-                if (value[i] instanceof Number) {
-                    valueIn += value[i];
-                } else {
-                    valueIn += "'" + value[i] + "'";
-                }
-                if (i < value.length - 1) {
-                    valueIn += ", ";
-                }
-            }
-            whereClause += " NOT IN (" + valueIn + ")";
-            return (Clause) SQLiteClause.this;
+            return in(false, value);
         }
 
         public Clause in(Object... value) {
+            return in(false, value);
+        }
+
+        private Clause in(boolean truth, Object[] value) {
             String valueIn = "";
             for (int i = 0; i < value.length; i++) {
                 if (value[i] instanceof Number) {
@@ -294,7 +285,10 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
                     valueIn += ", ";
                 }
             }
-            whereClause += " IN (" + valueIn + ")";
+            if (!valueIn.startsWith("(") && !valueIn.endsWith(")")) {
+                valueIn = "(" + valueIn + ")";
+            }
+            whereClause += (truth ? "" : " NOT ") + " IN " + valueIn;
             return (Clause) SQLiteClause.this;
         }
 
@@ -426,13 +420,6 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         public HavingBuilder(int type) {
             this.type = type;
         }
-
-//        @SuppressWarnings("unchecked")
-//        public Clause groupBy(String... column) {
-//            prepare(column);
-//            whereClause += " = ? ";
-//            return (Clause) SQLiteClause.this;
-//        }
 
         public Clause greatThan(Object value) {
             return greatThan(value, false);
