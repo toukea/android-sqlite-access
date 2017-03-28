@@ -88,7 +88,6 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         c.close();
         notifyExecuted();
         return count;
-
     }
 
     public <T> List<T> execute(int offset, int limit) {
@@ -310,15 +309,38 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         int type = 0;
         SQLiteJoinSelect selectClause;
 
-        public ClauseJoinSelectBuilder(int type, SQLiteJoinSelect selecClause) {
+        public ClauseJoinSelectBuilder(int type, SQLiteJoinSelect selectClause) {
             this.type = type;
-            this.selectClause = selecClause;
+            this.selectClause = selectClause;
         }
 
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect equalTo(Object value) {
             prepare(value);
             whereClause += " = ? ";
+            return selectClause;
+        }
+
+        @SuppressWarnings("unchecked")
+        public SQLiteJoinSelect notEqualTo(Object value) {
+            prepare(value);
+            whereClause += " = ? ";
+            return selectClause;
+        }
+
+        public <T> SQLiteJoinSelect notIn(T... value) {
+            String valueIn = "";
+            for (int i = 0; i < value.length; i++) {
+                if (value[i] instanceof Number) {
+                    valueIn += value[i];
+                } else {
+                    valueIn += "'" + value[i] + "'";
+                }
+                if (i < value.length - 1) {
+                    valueIn += ", ";
+                }
+            }
+            whereClause += " NOT IN (" + valueIn + ")";
             return selectClause;
         }
 
@@ -365,6 +387,20 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             return selectClause;
         }
 
+        @SuppressWarnings("unchecked")
+        public SQLiteJoinSelect like(Object value) {
+            prepare(value);
+            whereClause += " like ? ";
+            return selectClause;
+        }
+
+        @SuppressWarnings("unchecked")
+        public SQLiteJoinSelect notLike(Object value) {
+            prepare(value);
+            whereClause += " NOT like ? ";
+            return selectClause;
+        }
+
         //------------------------------------------------
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect equalTo(SQLiteSelect value) {
@@ -373,9 +409,22 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             return selectClause;
         }
 
+        @SuppressWarnings("unchecked")
+        public SQLiteJoinSelect notEqualTo(SQLiteSelect value) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " = (" + value + ") ";
+            return selectClause;
+        }
+
         public SQLiteJoinSelect in(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
             whereClause += " IN (" + value.getSql() + ") ";
+            return selectClause;
+        }
+
+        public SQLiteJoinSelect notIn(SQLiteSelect value) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " NOT IN (" + value.getSql() + ") ";
             return selectClause;
         }
 
@@ -407,6 +456,13 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             whereClause += " like (" + value.getSql() + ")";
             return selectClause;
         }
+
+        @SuppressWarnings("unchecked")
+        public SQLiteJoinSelect notLike(SQLiteSelect value) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " NOT like (" + value.getSql() + ")";
+            return selectClause;
+        }
         //------------------------------------------------
 
 
@@ -425,12 +481,6 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             }
         }
 
-        @SuppressWarnings("unchecked")
-        public SQLiteJoinSelect like(Object value) {
-            prepare(value);
-            whereClause += " like ? ";
-            return selectClause;
-        }
     }
 
     public class ClauseJoinBuilder {
@@ -683,6 +733,22 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
 
         public <T> List<T> execute(Class<T> clazz) {
             return SQLiteSelect.this.execute(clazz);
+        }
+
+        public <T> SQLiteThread<List<T>> executeAsync() {
+            return SQLiteSelect.this.executeAsync(-1, -1, null);
+        }
+
+        public <T> SQLiteThread<List<T>> executeAsync(final SQLiteAsyncExecutor.ExecutionCallback<List<T>> callback) {
+            return SQLiteSelect.this.executeAsync(-1, -1, callback);
+        }
+
+        public <T> SQLiteThread<List<T>> executeAsync(final int limit, final SQLiteAsyncExecutor.ExecutionCallback<List<T>> callback) {
+            return SQLiteSelect.this.executeAsync(-1, limit, callback);
+        }
+
+        public <T> SQLiteThread<List<T>> executeAsync(final int offset, final int limit, final SQLiteAsyncExecutor.ExecutionCallback<List<T>> callback) {
+            return SQLiteSelect.this.executeAsync(offset, limit, callback);
         }
 
         public String getStatement() {

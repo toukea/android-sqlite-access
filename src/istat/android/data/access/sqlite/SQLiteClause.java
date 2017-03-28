@@ -259,6 +259,29 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             return (Clause) SQLiteClause.this;
         }
 
+        @SuppressWarnings("unchecked")
+        public Clause notEqualTo(Object value) {
+            prepare(value);
+            whereClause += " != ? ";
+            return (Clause) SQLiteClause.this;
+        }
+
+        public Clause notIn(Object... value) {
+            String valueIn = "";
+            for (int i = 0; i < value.length; i++) {
+                if (value[i] instanceof Number) {
+                    valueIn += value[i];
+                } else {
+                    valueIn += "'" + value[i] + "'";
+                }
+                if (i < value.length - 1) {
+                    valueIn += ", ";
+                }
+            }
+            whereClause += " NOT IN (" + valueIn + ")";
+            return (Clause) SQLiteClause.this;
+        }
+
         public Clause in(Object... value) {
             String valueIn = "";
             for (int i = 0; i < value.length; i++) {
@@ -309,11 +332,30 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             return (Clause) SQLiteClause.this;
         }
 
+        @SuppressWarnings("unchecked")
+        public Clause notLike(Object value) {
+            prepare(value);
+            whereClause += " NOT like ? ";
+            return (Clause) SQLiteClause.this;
+        }
+
         //------------------------------------------------
         @SuppressWarnings("unchecked")
         public Clause equalTo(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
             whereClause += " = (" + value + ") ";
+            return (Clause) SQLiteClause.this;
+        }
+
+        public Clause notEqualTo(SQLiteSelect value) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " != (" + value + ") ";
+            return (Clause) SQLiteClause.this;
+        }
+
+        public Clause notIn(SQLiteSelect value) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " NOT IN (" + value.getSql() + ") ";
             return (Clause) SQLiteClause.this;
         }
 
@@ -349,6 +391,13 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         public Clause like(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
             whereClause += " like (" + value.getSql() + ")";
+            return (Clause) SQLiteClause.this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public Clause notLike(SQLiteSelect value) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " NOT like (" + value.getSql() + ")";
             return (Clause) SQLiteClause.this;
         }
         //------------------------------------------------
