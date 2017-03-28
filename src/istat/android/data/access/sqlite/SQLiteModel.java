@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import istat.android.data.access.sqlite.interfaces.JSONable;
 import istat.android.data.access.sqlite.interfaces.QueryAble;
@@ -192,6 +193,15 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return toJson().toString();
     }
 
+    public String toString(int indentSpaces) {
+        try {
+            return toJson().toString(indentSpaces);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return toString();
+    }
+
 
     @Override
     public ContentValues toContentValues() {
@@ -201,7 +211,24 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             if (column != null) {
                 if (get(column) != null) {
                     String values = getSerializedValue(column);
-                    pairs.put(column, values);
+                    if (column.equals(getPrimaryFieldName())) {
+                        if (getPrimaryKeyPolicy() == PrimaryKey.POLICY_AUTO_INCREMENT && "0".equals(values)) {
+                            //Do nothing id=0 should autoIncremented.
+                            Log.d("SQLiteModel", "toContentValues:" + column + " is primary key should be autoIncremented.");
+                        } else if (getPrimaryKeyPolicy() == PrimaryKey.POLICY_AUTO_GENERATE) {
+                            if (TextUtils.isEmpty(values)) {
+                                values = UUID.randomUUID().toString();
+                            } else if ("0".equals(values)) {
+                                values = "" + (System.currentTimeMillis() + (int) (Math.random() * 100));
+                            }
+                            pairs.put(column, values);
+
+                        } else {
+                            pairs.put(column, values);
+                        }
+                    } else {
+                        pairs.put(column, values);
+                    }
                 }
             }
         }
@@ -404,7 +431,8 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                     }
                     if (columnName != null && !tmp.contains(columnName)) {
                         tmp.add(columnName);
-                        map.put(columnName, field.get(obj));
+                        Object value=field.get(obj);
+                        map.put(columnName, value);
                         nameFieldPair.put(columnName, field);
                         if (isNestedTableProperty(field)) {
                             nestedTableField.put(columnName, field);

@@ -166,7 +166,7 @@ public class TableScriptFactory {
             int policy = model.getPrimaryKeyPolicy();
             out += " PRIMARY KEY ";
             if (policy == SQLiteModel.PrimaryKey.POLICY_AUTO_INCREMENT) {
-                if (field.getType().isAssignableFrom(Integer.class)) {
+                if (field.getType().isAssignableFrom(Integer.class) || field.getType().isAssignableFrom(int.class)) {
                     out += " AUTOINCREMENT ";
                 } else {
                     throw new RuntimeException(field.getName() + " is not eligible to be autoincrement. Only integer colum can be AutoIncrement.");
