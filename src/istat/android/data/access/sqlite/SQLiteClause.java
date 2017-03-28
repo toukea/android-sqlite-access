@@ -91,9 +91,18 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     }
 
     //TODO implements this method
-    public Clause having(String having) {
+    public ClauseBuilder having(String having) {
         this.having = having;
-        return (Clause) this;
+        return new ClauseBuilder(this.having, new ArrayList<String>(), TYPE_CLAUSE_AND);
+    }
+
+    public ClauseBuilder havingCount(String having) {
+        this.having = having;
+        return new ClauseBuilder(this.having, new ArrayList<String>(), TYPE_CLAUSE_AND);
+    }
+
+    public ClauseBuilder having(SQLiteFunction function) {
+        return new ClauseBuilder(this.having, new ArrayList<String>(), TYPE_CLAUSE_AND);
     }
 
     public Clause groupBy(String... column) {
@@ -135,7 +144,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             whereClause = buildWhereParam(column);
         else
             whereClause += " AND " + buildWhereParam(column);
-        return new ClauseBuilder(TYPE_CLAUSE_AND);
+        return new ClauseBuilder(this.whereClause, this.whereParams, TYPE_CLAUSE_AND);
     }
 
     public ClauseBuilder or(String column) {
@@ -143,7 +152,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             whereClause = buildWhereParam(column);
         else
             whereClause += " OR " + buildWhereParam(column);
-        return new ClauseBuilder(TYPE_CLAUSE_OR);
+        return new ClauseBuilder(this.whereClause, this.whereParams, TYPE_CLAUSE_OR);
     }
 
     public ClauseBuilder and(String column) {
@@ -151,7 +160,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             whereClause = buildWhereParam(column);
         else
             whereClause += " AND " + buildWhereParam(column);
-        return new ClauseBuilder(TYPE_CLAUSE_AND);
+        return new ClauseBuilder(this.whereClause, this.whereParams, TYPE_CLAUSE_AND);
     }
 
     @SuppressWarnings("unchecked")
@@ -236,9 +245,13 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
 
     public class ClauseBuilder {
         int type = 0;
+        String whereClause;
+        List<String> whereParams;
 
-        public ClauseBuilder(int type) {
+        public ClauseBuilder(String whereClause, List<String> whereParams, int type) {
             this.type = type;
+            this.whereClause = whereClause;
+            this.whereParams = whereParams;
         }
 
         public Clause isNULL() {
@@ -416,8 +429,10 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     //TODO build end of query. GroupBy orderBy, Having with execute
     public class HavingBuilder {
         int type = 0;
+        String having;
 
-        public HavingBuilder(int type) {
+        public HavingBuilder(String having, int type) {
+            this.having = having;
             this.type = type;
         }
 
@@ -456,13 +471,6 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
                     break;
 
             }
-        }
-
-        @SuppressWarnings("unchecked")
-        public Clause like(Object value) {
-            prepare(value);
-            whereClause += " like ? ";
-            return (Clause) SQLiteClause.this;
         }
     }
 

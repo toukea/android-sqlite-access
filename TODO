@@ -46,6 +46,10 @@ TableExecutor
 
 -allow where rawQuery as Where Param
 
+-implements having
+GROUP BY meetingID
+HAVING COUNT(caseID) < 4 AND COUNT(caseID) > 2
+
 
 DONE-----------------------------
 -Nested selection as where param.
