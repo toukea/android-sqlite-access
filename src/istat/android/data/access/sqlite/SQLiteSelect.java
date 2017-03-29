@@ -248,10 +248,16 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             out += " WHERE " + whereClause.trim();
         }
         if (!TextUtils.isEmpty(orderBy)) {
-            out += " " + orderBy;
+            out += " ORDER BY " + orderBy;
         }
         if (!TextUtils.isEmpty(groupBy)) {
-            out += " " + groupBy;
+            out += " GROUP BY " + groupBy;
+        }
+        if (!TextUtils.isEmpty(having)) {
+            out += " HAVING " + having;
+        }
+        if (!TextUtils.isEmpty(limit)) {
+            out += " LIMIT " + limit;
         }
         return out;
     }
@@ -297,10 +303,16 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             sql += splits[splits.length - 1];
         }
         if (!TextUtils.isEmpty(orderBy)) {
-            sql += " " + orderBy;
+            sql += " ORDER BY " + orderBy;
         }
         if (!TextUtils.isEmpty(groupBy)) {
-            sql += " " + groupBy;
+            sql += " GROUP BY " + groupBy;
+        }
+        if (!TextUtils.isEmpty(having)) {
+            sql += " HAVING " + having;
+        }
+        if (!TextUtils.isEmpty(limit)) {
+            sql += " LIMIT " + limit;
         }
         return sql;
     }
