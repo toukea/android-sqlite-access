@@ -95,9 +95,9 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     @SuppressWarnings("unchecked")
     public Clause orderBy(String column, String value) {
         if (TextUtils.isEmpty(orderBy))
-            orderBy = buildWhereParam(column) + " " + value;
+            orderBy = buildRealColumnName(column) + " " + value;
         else
-            orderBy += buildWhereParam(column) + " " + value;
+            orderBy += buildRealColumnName(column) + " " + value;
         return (Clause) this;
     }
 
@@ -110,9 +110,9 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
 
     public Clause groupBy(String column) {
         if (TextUtils.isEmpty(groupBy))
-            groupBy = buildWhereParam(column);
+            groupBy = buildRealColumnName(column);
         else
-            groupBy += ", " + buildWhereParam(column);
+            groupBy += ", " + buildRealColumnName(column);
         return (Clause) this;
     }
 
@@ -124,7 +124,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         return (Clause) this;
     }
 
-    protected static String buildWhereParam(String tableName, String column) {
+    protected static String buildRealColumnName(String tableName, String column) {
         if (column.matches(".*\\..*")) {
             return column;
         }
@@ -141,31 +141,31 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         }
     }
 
-    protected String buildWhereParam(String column) {
-        return buildWhereParam(table, column);
+    protected String buildRealColumnName(String column) {
+        return buildRealColumnName(table, column);
     }
 
     public ClauseBuilder where(String column) {
         if (whereClause == null) {
-            whereClause = new StringBuilder(buildWhereParam(column));
+            whereClause = new StringBuilder(buildRealColumnName(column));
         } else
-            whereClause.append(" AND " + buildWhereParam(column));
+            whereClause.append(" AND " + buildRealColumnName(column));
         return new ClauseBuilder(this.whereClause, this.whereParams, TYPE_CLAUSE_AND);
     }
 
     public ClauseBuilder or(String column) {
         if (whereClause == null)
-            whereClause = new StringBuilder(buildWhereParam(column));
+            whereClause = new StringBuilder(buildRealColumnName(column));
         else
-            whereClause.append(" OR " + buildWhereParam(column));
+            whereClause.append(" OR " + buildRealColumnName(column));
         return new ClauseBuilder(this.whereClause, this.whereParams, TYPE_CLAUSE_OR);
     }
 
     public ClauseBuilder and(String column) {
         if (whereClause == null)
-            whereClause = new StringBuilder(buildWhereParam(column));
+            whereClause = new StringBuilder(buildRealColumnName(column));
         else
-            whereClause.append(" AND " + buildWhereParam(column));
+            whereClause.append(" AND " + buildRealColumnName(column));
         return new ClauseBuilder(this.whereClause, this.whereParams, TYPE_CLAUSE_AND);
     }
 

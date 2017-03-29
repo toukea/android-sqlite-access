@@ -76,7 +76,8 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         String[] smartColumns = new String[columns.length];
         String tableName = table;
         for (int i = 0; i < columns.length; i++) {
-            smartColumns[i] = tableName + "." + columns[i];
+//            smartColumns[i] = tableName + "." + columns[i];
+            smartColumns[i]= buildRealColumnName(tableName,columns[i]);
         }
         return db.query(distinct, selectionTable, smartColumns, getWhereClause(), getWhereParams(),
                 getGroupBy(), getHaving(), getOrderBy(), getLimit());
@@ -505,7 +506,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         public ClauseSubJoinBuilder on(Class<?> clazz, String name) {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(clazz);
-                name = buildWhereParam(model.getName(), name);
+                name = buildRealColumnName(model.getName(), name);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -540,9 +541,9 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(clazz);
                 if (whereClause == null)
-                    whereClause = new StringBuilder(buildWhereParam(model.getName(), column));
+                    whereClause = new StringBuilder(buildRealColumnName(model.getName(), column));
                 else
-                    whereClause.append(" AND " + buildWhereParam(model.getName(), column));
+                    whereClause.append(" AND " + buildRealColumnName(model.getName(), column));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -608,7 +609,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         public SQLiteJoinSelect equalTo(Class<?> clazz, String name) {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(clazz);
-                name = buildWhereParam(model.getName(), name);
+                name = buildRealColumnName(model.getName(), name);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -632,9 +633,9 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(clazz);
                 if (whereClause == null)
-                    whereClause = new StringBuilder(buildWhereParam(model.getName(), column));
+                    whereClause = new StringBuilder(buildRealColumnName(model.getName(), column));
                 else
-                    whereClause.append(" AND " + buildWhereParam(model.getName(), column));
+                    whereClause.append(" AND " + buildRealColumnName(model.getName(), column));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -645,9 +646,9 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(clazz);
                 if (whereClause == null)
-                    whereClause = new StringBuilder(buildWhereParam(model.getName(), column));
+                    whereClause = new StringBuilder(buildRealColumnName(model.getName(), column));
                 else
-                    whereClause.append(" OR " + buildWhereParam(model.getName(), column));
+                    whereClause.append(" OR " + buildRealColumnName(model.getName(), column));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -658,9 +659,9 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(clazz);
                 if (whereClause == null)
-                    whereClause = new StringBuilder(buildWhereParam(model.getName(), column));
+                    whereClause = new StringBuilder(buildRealColumnName(model.getName(), column));
                 else
-                    whereClause.append(" AND " + buildWhereParam(model.getName(), column));
+                    whereClause.append(" AND " + buildRealColumnName(model.getName(), column));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -668,7 +669,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         }
 
         @Override
-        protected String buildWhereParam(String column) {
+        protected String buildRealColumnName(String column) {
             return column;
         }
     }
@@ -769,15 +770,15 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     //TODO implements this method
     public ClauseBuilder having(String having) {
         if (this.having == null)
-            this.having = new StringBuilder(buildWhereParam(having));
+            this.having = new StringBuilder(buildRealColumnName(having));
         else
-            this.having.append(" AND " + buildWhereParam(having));
+            this.having.append(" AND " + buildRealColumnName(having));
         ClauseBuilder builder = new ClauseBuilder(this.having, havingWhereParams, TYPE_CLAUSE_AND_HAVING);
         return builder;
     }
 
     public ClauseBuilder having(String function, String having) {
-        String value = function + "(" + buildWhereParam(having) + ")";
+        String value = function + "(" + buildRealColumnName(having) + ")";
         if (this.having == null)
             this.having = new StringBuilder(value);
         else
