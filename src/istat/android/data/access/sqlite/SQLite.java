@@ -489,22 +489,22 @@ public final class SQLite {
         public <T> List<T> findAll(Class<T> classTable, boolean distinct, String whereClause, String[] whereParams, String groupBy, String having, String orderBy, String limit) {
             SQLiteSelect select = select(distinct, classTable);
             select.distinct = distinct;
-            select.whereClause = whereClause;
+            select.whereClause = new StringBuilder(whereClause);
             select.whereParams = whereParams != null ? Arrays.asList(whereParams) : null;
             select.limit = limit;
             select.orderBy = orderBy;
             select.groupBy = groupBy;
-            select.having = having;
+            select.having = new StringBuilder(having);
             return select.execute();
         }
 
         public <T> int update(Class<T> classTable, ContentValues contentValues, String whereClause, String[] whereParams, String having, String limit) {
             SQLiteUpdate.Updater update = update(classTable).updater;
             update.model.fillFromContentValues(contentValues);
-            update.whereClause = whereClause;
+            update.whereClause = new StringBuilder(whereClause);
             update.whereParams = whereParams != null ? Arrays.asList(whereParams) : null;
             update.limit = limit;
-            update.having = having;
+            update.having = new StringBuilder(having);
             return update.execute();
         }
 
