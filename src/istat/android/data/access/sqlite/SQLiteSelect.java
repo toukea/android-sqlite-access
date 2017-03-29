@@ -17,14 +17,14 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     public final static String ORDER_BY_DESC = "DESC", ORDER_BY_ASC = "ASC";
     public final static int TYPE = 0;
     Class<?> clazz;
-    String selection;
+    String selectionTable;
     boolean distinct = false;
 
 
     SQLiteSelect(SQLite.SQL db, Class<?>... clazz) {
         super(clazz[0], db);
         this.clazz = clazz[0];
-        this.selection = this.table;
+        this.selectionTable = this.table;
     }
 
     public SQLiteJoinSelect joinOn(Class<?> clazz, String on) {
@@ -32,9 +32,9 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         try {
             QueryAble entity = createQueryAble(clazz);
             join = entity.getName();
-            selection += " INNER JOIN " + join;
+            selectionTable += " INNER JOIN " + join;
             if (!TextUtils.isEmpty(on)) {
-                selection += " ON (" + on + ") ";
+                selectionTable += " ON (" + on + ") ";
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -46,9 +46,9 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         String join;
         try {
             join = joinTable;
-            selection += " INNER JOIN " + join;
+            selectionTable += " INNER JOIN " + join;
             if (!TextUtils.isEmpty(on)) {
-                selection += " ON (" + on + ") ";
+                selectionTable += " ON (" + on + ") ";
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -72,12 +72,13 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
 
     @Override
     protected Cursor onExecute(SQLiteDatabase db) {
+        notifyExecuting();
         String[] smartColumns = new String[columns.length];
         String tableName = table;
         for (int i = 0; i < columns.length; i++) {
             smartColumns[i] = tableName + "." + columns[i];
         }
-        return db.query(distinct, selection, smartColumns, getWhereClause(), getWhereParams(),
+        return db.query(distinct, selectionTable, smartColumns, getWhereClause(), getWhereParams(),
                 getGroupBy(), getHaving(), getOrderBy(), getLimit());
     }
 
@@ -221,19 +222,19 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         return obj;
     }
 
-    //TODO check if 'selection' or 'table'
-    public ClauseBuilder AND_SELECT(SQLiteSelect clause) {
-        this.whereClause.append("(SELECT * FROM " + selection + " WHERE "
-                + clause.whereClause + ")");
-        this.whereParams = clause.whereParams;
-        return new ClauseBuilder(this.whereClause, this.whereParams, TYPE_CLAUSE_AND);
-    }
-
-    public ClauseBuilder OR_SELECT(SQLiteSelect clause) {
-        this.whereClause = clause.whereClause;
-        this.whereParams = clause.whereParams;
-        return new ClauseBuilder(this.whereClause, this.whereParams, TYPE_CLAUSE_AND);
-    }
+//    //TODO check if 'selectionTable' or 'table'
+//    public ClauseBuilder AND_SELECT(SQLiteSelect clause) {
+//        this.whereClause = "(SELECT * FROM " + selectionTable + " WHERE "
+//                + clause.whereClause + ")";
+//        this.whereParams = clause.whereParams;
+//        return new ClauseBuilder(TYPE_CLAUSE_AND);
+//    }
+//
+//    public ClauseBuilder OR_SELECT(SQLiteSelect clause) {
+//        this.whereClause = clause.whereClause;
+//        this.whereParams = clause.whereParams;
+//        return new ClauseBuilder(TYPE_CLAUSE_OR);
+//    }
 
     final String getSql() {
         String columns = "";//"*";
@@ -243,7 +244,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
                 columns += ",";
             }
         }
-        String out = "SELECT " + columns + " FROM " + selection;
+        String out = "SELECT " + columns + " FROM " + selectionTable;
         if (!TextUtils.isEmpty(whereClause)) {
             out += " WHERE " + whereClause.toString().trim();
         }
@@ -288,7 +289,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        String out = "SELECT " + columnParam + " FROM " + selection;
+        String out = "SELECT " + columnParam + " FROM " + selectionTable;
         if (!TextUtils.isEmpty(whereClause)) {
             out += " WHERE " + whereClause.toString().trim();
         }
@@ -300,6 +301,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             sql += " GROUP BY " + groupBy;
         }
         if (!TextUtils.isEmpty(having)) {
+            this.having = new StringBuilder(compute(this.having.toString(), havingWhereParams));
             sql += " HAVING " + having;
         }
         if (!TextUtils.isEmpty(limit)) {
@@ -600,8 +602,8 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            selection += " ON (" + columnJoinName + "=" + name + ") ";
-            this.joinSelect.selection = selection;
+            selectionTable += " ON (" + columnJoinName + "=" + name + ") ";
+            this.joinSelect.selectionTable = selectionTable;
             return joinSelect;
         }
     }
@@ -612,7 +614,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             super(db, clazz);
             this.whereClause = SQLiteSelect.this.whereClause;
             this.whereParams = SQLiteSelect.this.whereParams;
-            this.selection = SQLiteSelect.this.selection;
+            this.selectionTable = SQLiteSelect.this.selectionTable;
             this.table = SQLiteSelect.this.table;
         }
 
@@ -688,9 +690,9 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         try {
             QueryAble entity = createQueryAble(clazz);
             join = entity.getName();
-            selection += joinType + "JOIN " + join;
+            selectionTable += joinType + "JOIN " + join;
 //            if (!TextUtils.isEmpty(on)) {
-//                selection += " ON (" + on + ") ";
+//                selectionTable += " ON (" + on + ") ";
 //            }
         } catch (Exception e) {
             e.printStackTrace();

@@ -19,6 +19,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     // protected SQLiteDatabase db;
     protected StringBuilder whereClause = null;
     protected List<String> whereParams = new ArrayList<String>();
+    List<String> havingWhereParams = new ArrayList<String>();
     protected String orderBy = null;
     protected String groupBy = null;
     protected StringBuilder having = null;
@@ -100,8 +101,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             this.having = new StringBuilder(buildWhereParam(having));
         else
             this.having.append(" AND " + buildWhereParam(having));
-        List<String> where = new ArrayList<String>();
-        ClauseBuilder builder = new ClauseBuilder(this.having, where, TYPE_CLAUSE_AND_HAVING);
+        ClauseBuilder builder = new ClauseBuilder(this.having, havingWhereParams, TYPE_CLAUSE_AND_HAVING);
         return builder;
     }
 
@@ -496,6 +496,13 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     }
 
     public abstract String getStatement();
+
+    protected void notifyExecuting() {
+        if (this.having != null) {
+            this.having = new StringBuilder(compute(this.having.toString(), havingWhereParams));
+        }
+
+    }
 
     protected void notifyExecutionSucceed(int type, Object clause, Object result) {
 
