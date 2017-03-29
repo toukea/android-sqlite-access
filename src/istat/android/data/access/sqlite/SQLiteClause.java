@@ -25,8 +25,12 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     protected String limit = null;
     protected String[] columns;
     protected String table;
-    final static int TYPE_CLAUSE_WHERE = 0, TYPE_CLAUSE_AND = 1,
-            TYPE_CLAUSE_OR = 2, TYPE_CLAUSE_LIKE = 3;
+    final static int TYPE_CLAUSE_WHERE = 0,
+            TYPE_CLAUSE_AND = 1,
+            TYPE_CLAUSE_OR = 2,
+            TYPE_CLAUSE_LIKE = 3,
+            TYPE_CLAUSE_AND_HAVING = 4,
+            TYPE_CLAUSE_OR_HAVING = 5;
 
     protected String getWhereClause() {
         return whereClause;
@@ -92,8 +96,13 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
 
     //TODO implements this method
     public ClauseBuilder having(String having) {
-        this.having = having;
-        return new ClauseBuilder(this.having, new ArrayList<String>(), TYPE_CLAUSE_AND);
+        ClauseBuilder builder = new ClauseBuilder(having, new ArrayList<String>(), TYPE_CLAUSE_AND_HAVING);
+        having = builder.whereClause;
+        if (this.having == null)
+            this.having = buildWhereParam(having);
+        else
+            this.having += " AND " + buildWhereParam(having);
+        return builder;
     }
 
     public ClauseBuilder havingCount(String having) {
@@ -113,10 +122,10 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     }
 
     public Clause groupBy(String column) {
-        if (TextUtils.isEmpty(orderBy))
-            orderBy = buildWhereParam(column);
+        if (TextUtils.isEmpty(groupBy))
+            groupBy = buildWhereParam(column);
         else
-            orderBy += ", " + buildWhereParam(column);
+            groupBy += ", " + buildWhereParam(column);
         return (Clause) this;
     }
 

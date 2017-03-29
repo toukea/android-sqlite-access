@@ -226,13 +226,13 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         this.whereClause = "(SELECT * FROM " + selection + " WHERE "
                 + clause.whereClause + ")";
         this.whereParams = clause.whereParams;
-        return new ClauseBuilder(TYPE_CLAUSE_AND);
+        return new ClauseBuilder(this.whereClause, this.whereParams, TYPE_CLAUSE_AND);
     }
 
     public ClauseBuilder OR_SELECT(SQLiteSelect clause) {
         this.whereClause = clause.whereClause;
         this.whereParams = clause.whereParams;
-        return new ClauseBuilder(TYPE_CLAUSE_AND);
+        return new ClauseBuilder(this.whereClause, this.whereParams, TYPE_CLAUSE_AND);
     }
 
     final String getSql() {
@@ -248,10 +248,16 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             out += " WHERE " + whereClause.trim();
         }
         if (!TextUtils.isEmpty(orderBy)) {
-            out += " " + orderBy;
+            out += " ORDER BY " + orderBy;
         }
         if (!TextUtils.isEmpty(groupBy)) {
-            out += " " + groupBy;
+            out += " GROUP BY " + groupBy;
+        }
+        if (!TextUtils.isEmpty(having)) {
+            out += " HAVING " + having;
+        }
+        if (!TextUtils.isEmpty(limit)) {
+            out += " LIMIT " + limit;
         }
         return out;
     }
@@ -297,10 +303,16 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             sql += splits[splits.length - 1];
         }
         if (!TextUtils.isEmpty(orderBy)) {
-            sql += " " + orderBy;
+            sql += " ORDER BY " + orderBy;
         }
         if (!TextUtils.isEmpty(groupBy)) {
-            sql += " " + groupBy;
+            sql += " GROUP BY " + groupBy;
+        }
+        if (!TextUtils.isEmpty(having)) {
+            sql += " HAVING " + having;
+        }
+        if (!TextUtils.isEmpty(limit)) {
+            sql += " LIMIT " + limit;
         }
         return sql;
     }
