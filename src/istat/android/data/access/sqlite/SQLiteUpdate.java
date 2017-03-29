@@ -1,7 +1,7 @@
 package istat.android.data.access.sqlite;
 
-import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
+import android.text.TextUtils;
 
 import java.util.List;
 
@@ -69,6 +69,9 @@ public final class SQLiteUpdate {
         protected Object onExecute(SQLiteDatabase db) {
             String whereClause = getWhereClause();
             String[] whereParams = getWhereParams();
+            if (!TextUtils.isEmpty(this.limit)) {
+                this.whereClause += " LIMIT " + limit;
+            }
             return db.update(model.getName(), model.toContentValues(),
                     whereClause, whereParams);
         }
@@ -102,15 +105,79 @@ public final class SQLiteUpdate {
             return execute(limitS);
         }
 
-        public int execute(String limit) {
+        private int execute(String limit) {
             this.limit = limit;
             return execute();
         }
 
 
         @Override
-        public final String getStatement() {
-            return super.getStatement();
+        public String getStatement() {
+            String out = "UPDATE FROM " + table;
+            if (!TextUtils.isEmpty(whereClause)) {
+                out += " WHERE '" + whereClause.trim() + "'";
+            }
+            String[] splits = out.split("\\?");
+            String sql = "";
+            for (int i = 0; i < (!out.endsWith("?") ? splits.length - 1
+                    : splits.length); i++) {
+                sql += splits[i];
+                sql += "'" + whereParams.get(i) + "'";
+            }
+            if (!out.endsWith("?")) {
+                sql += splits[splits.length - 1];
+            }
+            return sql;
+        }
+
+        public SQLiteUpdateLimit limit(int limit) {
+            return limit(-1, limit);
+        }
+
+        public SQLiteUpdateLimit limit(int offset, int limit) {
+            String limitS;
+            if (limit < 0) {
+                limitS = null;
+            } else {
+                if (offset < 0) {
+                    offset = 0;
+                }
+                limitS = offset + ", " + limit;
+            }
+            return new SQLiteUpdateLimit(this, limitS);
+        }
+    }
+
+    public class SQLiteUpdateLimit {
+        Updater updater;
+
+        SQLiteUpdateLimit(Updater updater, String limitS) {
+            this.updater.limit = limitS;
+            this.updater = updater;
+        }
+
+        public int execute() {
+            return this.updater.execute();
+        }
+
+        public int execute(int limit) {
+            return this.updater.execute(limit);
+        }
+
+        public SQLiteThread<Integer> executeAsync() {
+            return this.updater.executeAsync();
+        }
+
+        public SQLiteThread<Integer> executeAsync(final SQLiteAsyncExecutor.ExecutionCallback<Integer> callback) {
+            return this.updater.executeAsync(callback);
+        }
+
+        public SQLiteThread<Integer> executeAsync(final int limit, final SQLiteAsyncExecutor.ExecutionCallback<Integer> callback) {
+            return this.updater.executeAsync(limit, callback);
+        }
+
+        public String getStatement() {
+            return this.updater.getStatement();
         }
     }
 }

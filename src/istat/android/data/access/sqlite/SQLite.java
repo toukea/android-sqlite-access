@@ -1,9 +1,14 @@
 package istat.android.data.access.sqlite;
 
+import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.Build;
+import android.os.CancellationSignal;
 
 import java.io.File;
 import java.io.IOException;
@@ -353,6 +358,61 @@ public final class SQLite {
             return new SQLiteSelect(this, clazz);
         }
 
+        //------------------------------------------
+        public SQLiteSelect select(String uniqueColumn, Class<?> clazz) {
+            SQLiteSelect select = new SQLiteSelect(this, clazz);
+            select.columns = new String[]{uniqueColumn};
+            return select;
+        }
+
+        public SQLiteSelect select(boolean distinct, String uniqueColumn, Class<?> clazz) {
+            SQLiteSelect select = new SQLiteSelect(this, clazz);
+            select.distinct(distinct);
+            select.columns = new String[]{uniqueColumn};
+            return select;
+        }
+
+        public SQLiteSelect select(boolean distinct, String uniqueColumn, Class<?>... clazz) {
+            SQLiteSelect select = new SQLiteSelect(this, clazz);
+            select.distinct(distinct);
+            select.columns = new String[]{uniqueColumn};
+            return select;
+        }
+
+        public SQLiteSelect select(String uniqueColumn, Class<?>... clazz) {
+            SQLiteSelect select = new SQLiteSelect(this, clazz);
+            select.columns = new String[]{uniqueColumn};
+            return select;
+        }
+
+        //------------------------------------------
+        public SQLiteSelect select(String[] columns, Class<?> clazz) {
+            SQLiteSelect select = new SQLiteSelect(this, clazz);
+            select.columns = columns;
+            return select;
+        }
+
+        public SQLiteSelect select(boolean distinct, String[] columns, Class<?> clazz) {
+            SQLiteSelect select = new SQLiteSelect(this, clazz);
+            select.distinct(distinct);
+            select.columns = columns;
+            return select;
+        }
+
+        public SQLiteSelect select(boolean distinct, String[] columns, Class<?>... clazz) {
+            SQLiteSelect select = new SQLiteSelect(this, clazz);
+            select.distinct(distinct);
+            select.columns = columns;
+            return select;
+        }
+
+        public SQLiteSelect select(String[] columns, Class<?>... clazz) {
+            SQLiteSelect select = new SQLiteSelect(this, clazz);
+            select.columns = columns;
+            return select;
+        }
+
+        //---------------------------------------
         public SQLiteUpdate update(Class<?> clazz) {
             return new SQLiteUpdate(clazz, this);
         }
@@ -582,6 +642,50 @@ public final class SQLite {
 
         public boolean isReady() {
             return db != null && db.isOpen();
+        }
+
+        public Cursor query(String table, String[] column, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) {
+            return this.db.query(table, column, selection, selectionArgs, groupBy, having, orderBy, limit);
+        }
+
+        public Cursor query(boolean distinct, String table, String[] column, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) {
+            return this.db.query(distinct, table, column, selection, selectionArgs, groupBy, having, orderBy, limit);
+        }
+
+        @SuppressLint("NewApi")
+        public Cursor query(boolean distinct, String table, String[] column, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit, CancellationSignal cancellationSignal) {
+            return this.db.query(distinct, table, column, selection, selectionArgs, groupBy, having, orderBy, limit, cancellationSignal);
+        }
+
+        public Cursor queryWithFactory(SQLiteDatabase.CursorFactory factory, boolean distinct, String table, String[] column, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) {
+            return this.db.queryWithFactory(factory, distinct, table, column, selection, selectionArgs, groupBy, having, orderBy, limit);
+        }
+
+        @SuppressLint("NewApi")
+        public Cursor queryWithFactory(SQLiteDatabase.CursorFactory factory, boolean distinct, String table, String[] column, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit, CancellationSignal cancellationSignal) {
+            return this.db.queryWithFactory(factory, distinct, table, column, selection, selectionArgs, groupBy, having, orderBy, limit, cancellationSignal);
+        }
+
+        public Cursor rawQuery(String sql, String[] selectionArgs) {
+            return this.db.rawQuery(sql, selectionArgs);
+        }
+
+        @SuppressLint("NewApi")
+        public Cursor rawQuery(String sql, String[] selectionArgs, CancellationSignal cancellationSignal) {
+            return this.db.rawQuery(sql, selectionArgs, cancellationSignal);
+        }
+
+        public Cursor rawQueryWithFactory(SQLiteDatabase.CursorFactory cursorFactory, String sql, String[] selectionArgs, String ediTable) {
+            return this.db.rawQueryWithFactory(cursorFactory, sql, selectionArgs, ediTable);
+        }
+
+        @SuppressLint("NewApi")
+        public Cursor rawQueryWithFactory(SQLiteDatabase.CursorFactory cursorFactory, String sql, String[] selectionArgs, String ediTable, CancellationSignal cancellationSignal) {
+            return this.db.rawQueryWithFactory(cursorFactory, sql, selectionArgs, ediTable, cancellationSignal);
+        }
+
+        public SQLiteDatabase getDb() {
+            return db;
         }
     }
 

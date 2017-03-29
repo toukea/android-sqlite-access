@@ -42,7 +42,11 @@ TableExecutor
 
 -SQLiteAsyncExecutor add promise philosophy.
 
--Nested selection as where param.
+-find a way to implement AVG, SUM
+
+-allow where rawQuery as Where Param
 
 
 DONE-----------------------------
+-Nested selection as where param.
+-implement selection negation [NOT] in where clause.

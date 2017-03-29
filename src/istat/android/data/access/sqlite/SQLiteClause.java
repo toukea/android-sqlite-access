@@ -90,17 +90,16 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         return (Clause) this;
     }
 
+    //TODO implements this method
+    public Clause having(String having) {
+        this.having = having;
+        return (Clause) this;
+    }
+
     public Clause groupBy(String... column) {
         for (String cl : column) {
             groupBy(cl);
         }
-        return (Clause) this;
-    }
-
-    //TODO implements this method
-    public Clause having() {
-
-
         return (Clause) this;
     }
 
@@ -204,7 +203,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             Class<? extends QueryAble> clazz) {
         String className = clazz + "";
         className = className.substring(6, className.length()).trim();
-        Object obj = null;
+        Object obj;
         try {
             obj = Class.forName(className).newInstance();
         } catch (Exception e) {
@@ -259,7 +258,22 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             return (Clause) SQLiteClause.this;
         }
 
+        @SuppressWarnings("unchecked")
+        public Clause notEqualTo(Object value) {
+            prepare(value);
+            whereClause += " != ? ";
+            return (Clause) SQLiteClause.this;
+        }
+
+        public Clause notIn(Object... value) {
+            return in(false, value);
+        }
+
         public Clause in(Object... value) {
+            return in(false, value);
+        }
+
+        private Clause in(boolean truth, Object[] value) {
             String valueIn = "";
             for (int i = 0; i < value.length; i++) {
                 if (value[i] instanceof Number) {
@@ -271,8 +285,10 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
                     valueIn += ", ";
                 }
             }
-            prepare("(" + valueIn + ")");
-            whereClause += " = ? ";
+            if (!valueIn.startsWith("(") && !valueIn.endsWith(")")) {
+                valueIn = "(" + valueIn + ")";
+            }
+            whereClause += (truth ? "" : " NOT ") + " IN " + valueIn;
             return (Clause) SQLiteClause.this;
         }
 
@@ -303,6 +319,83 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             return (Clause) SQLiteClause.this;
         }
 
+        @SuppressWarnings("unchecked")
+        public Clause like(Object value) {
+            prepare(value);
+            whereClause += " like ? ";
+            return (Clause) SQLiteClause.this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public Clause notLike(Object value) {
+            prepare(value);
+            whereClause += " NOT like ? ";
+            return (Clause) SQLiteClause.this;
+        }
+
+        //------------------------------------------------
+        @SuppressWarnings("unchecked")
+        public Clause equalTo(SQLiteSelect value) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " = (" + value + ") ";
+            return (Clause) SQLiteClause.this;
+        }
+
+        public Clause notEqualTo(SQLiteSelect value) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " != (" + value + ") ";
+            return (Clause) SQLiteClause.this;
+        }
+
+        public Clause notIn(SQLiteSelect value) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " NOT IN (" + value.getSql() + ") ";
+            return (Clause) SQLiteClause.this;
+        }
+
+        public Clause in(SQLiteSelect value) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " IN (" + value.getSql() + ") ";
+            return (Clause) SQLiteClause.this;
+        }
+
+        public Clause greatThan(SQLiteSelect value) {
+            return greatThan(value, false);
+        }
+
+        public Clause lessThan(SQLiteSelect value) {
+            return lessThan(value, false);
+        }
+
+        @SuppressWarnings("unchecked")
+        public Clause greatThan(SQLiteSelect value, boolean acceptEqual) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " >" + (acceptEqual ? "=" : "") + " (" + value.getSql() + ") ";
+            return (Clause) SQLiteClause.this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public Clause lessThan(SQLiteSelect value, boolean acceptEqual) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " <" + (acceptEqual ? "=" : "") + " (" + value.getSql() + ") ";
+            return (Clause) SQLiteClause.this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public Clause like(SQLiteSelect value) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " like (" + value.getSql() + ")";
+            return (Clause) SQLiteClause.this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public Clause notLike(SQLiteSelect value) {
+            whereParams.addAll(value.whereParams);
+            whereClause += " NOT like (" + value.getSql() + ")";
+            return (Clause) SQLiteClause.this;
+        }
+        //------------------------------------------------
+
         private void prepare(Object value) {
             whereParams.add(value + "");
             switch (type) {
@@ -317,12 +410,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             }
         }
 
-        @SuppressWarnings("unchecked")
-        public Clause like(Object value) {
-            prepare(value);
-            whereClause += " like ? ";
-            return (Clause) SQLiteClause.this;
-        }
+
     }
 
     //TODO build end of query. GroupBy orderBy, Having with execute
@@ -332,13 +420,6 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         public HavingBuilder(int type) {
             this.type = type;
         }
-
-//        @SuppressWarnings("unchecked")
-//        public Clause groupBy(String... column) {
-//            prepare(column);
-//            whereClause += " = ? ";
-//            return (Clause) SQLiteClause.this;
-//        }
 
         public Clause greatThan(Object value) {
             return greatThan(value, false);
@@ -397,23 +478,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         }
     }
 
-    protected String getStatement() {
-        String out = "SELECT * FROM " + table;
-        if (!TextUtils.isEmpty(whereClause)) {
-            out += " WHERE '" + whereClause.trim() + "'";
-        }
-        String[] splits = out.split("\\?");
-        String sql = "";
-        for (int i = 0; i < (!out.endsWith("?") ? splits.length - 1
-                : splits.length); i++) {
-            sql += splits[i];
-            sql += "'" + whereParams.get(i) + "'";
-        }
-        if (!out.endsWith("?")) {
-            sql += splits[splits.length - 1];
-        }
-        return sql;
-    }
+    public abstract String getStatement();
 
     protected void notifyExecutionSucceed(int type, Object clause, Object result) {
 
@@ -428,18 +493,4 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             sql.close();
         }
     }
-
-//    protected Object result;
-//
-//    public final Object getResult() {
-//        return this.result;
-//    }
-//
-//    public final <T> T optResult() {
-//        try {
-//            return (T) this.result;
-//        } catch (Exception e) {
-//            return null;
-//        }
-//    }
 }
