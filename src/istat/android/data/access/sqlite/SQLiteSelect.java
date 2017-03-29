@@ -245,8 +245,13 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             }
         }
         String out = "SELECT " + columns + " FROM " + selectionTable;
+        String whereClause = getWhereClause();
+        String having = getHaving();
+        String orderBy = getOrderBy();
+        String groupBy = getGroupBy();
+        String limit = getLimit();
         if (!TextUtils.isEmpty(whereClause)) {
-            out += " WHERE " + whereClause.toString().trim();
+            out += " WHERE " + whereClause.trim();
         }
         if (!TextUtils.isEmpty(orderBy)) {
             out += " ORDER BY " + orderBy;
@@ -290,8 +295,13 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             e.printStackTrace();
         }
         String out = "SELECT " + columnParam + " FROM " + selectionTable;
+        String whereClause = getWhereClause();
+        String having = getHaving();
+        String orderBy = getOrderBy();
+        String groupBy = getGroupBy();
+        String limit = getLimit();
         if (!TextUtils.isEmpty(whereClause)) {
-            out += " WHERE " + whereClause.toString().trim();
+            out += " WHERE " + whereClause.trim();
         }
         String sql = compute(out, this.whereParams);
         if (!TextUtils.isEmpty(orderBy)) {
@@ -300,8 +310,8 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         if (!TextUtils.isEmpty(groupBy)) {
             sql += " GROUP BY " + groupBy;
         }
+
         if (!TextUtils.isEmpty(having)) {
-            this.having = new StringBuilder(compute(this.having.toString(), havingWhereParams));
             sql += " HAVING " + having;
         }
         if (!TextUtils.isEmpty(limit)) {
@@ -754,5 +764,29 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         public String getStatement() {
             return SQLiteSelect.this.getStatement();
         }
+    }
+
+    //TODO implements this method
+    public ClauseBuilder having(String having) {
+        if (this.having == null)
+            this.having = new StringBuilder(buildWhereParam(having));
+        else
+            this.having.append(" AND " + buildWhereParam(having));
+        ClauseBuilder builder = new ClauseBuilder(this.having, havingWhereParams, TYPE_CLAUSE_AND_HAVING);
+        return builder;
+    }
+
+    public ClauseBuilder having(String function, String having) {
+        String value = function + "(" + buildWhereParam(having) + ")";
+        if (this.having == null)
+            this.having = new StringBuilder(value);
+        else
+            this.having.append(" AND " + value);
+        ClauseBuilder builder = new ClauseBuilder(this.having, havingWhereParams, TYPE_CLAUSE_AND_HAVING);
+        return builder;
+    }
+
+    public ClauseBuilder having(SQLiteFunction function) {
+        return new ClauseBuilder(this.having, new ArrayList<String>(), TYPE_CLAUSE_AND);
     }
 }

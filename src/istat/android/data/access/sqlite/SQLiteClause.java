@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.json.JSONObject;
 
@@ -42,7 +44,11 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     }
 
     protected String getHaving() {
-        return having != null ? having.toString() : null;
+        if (having == null) {
+            return null;
+        }
+        String out = compute(this.having.toString(), havingWhereParams);
+        return out;
     }
 
     protected String getLimit() {
@@ -95,25 +101,6 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         return (Clause) this;
     }
 
-    //TODO implements this method
-    public ClauseBuilder having(String having) {
-        if (this.having == null)
-            this.having = new StringBuilder(buildWhereParam(having));
-        else
-            this.having.append(" AND " + buildWhereParam(having));
-        ClauseBuilder builder = new ClauseBuilder(this.having, havingWhereParams, TYPE_CLAUSE_AND_HAVING);
-        return builder;
-    }
-
-    public ClauseBuilder havingCount(String having) {
-        this.having = new StringBuilder(having);
-        return new ClauseBuilder(this.having, new ArrayList<String>(), TYPE_CLAUSE_AND);
-    }
-
-    public ClauseBuilder having(SQLiteFunction function) {
-        return new ClauseBuilder(this.having, new ArrayList<String>(), TYPE_CLAUSE_AND);
-    }
-
     public Clause groupBy(String... column) {
         for (String cl : column) {
             groupBy(cl);
@@ -141,7 +128,17 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         if (column.matches(".*\\..*")) {
             return column;
         }
-        return tableName + "." + column;
+        Pattern pattern = Pattern.compile("(\\()(.*)(\\))");
+        Matcher matcher = pattern.matcher(column);
+        if (matcher.matches()) {
+            while (matcher.find()) {
+                String columnNameOnly = matcher.group(2);
+                column = column.replace(columnNameOnly, tableName + "." + columnNameOnly);
+            }
+            return column;
+        } else {
+            return tableName + "." + column;
+        }
     }
 
     protected String buildWhereParam(String column) {
@@ -498,9 +495,6 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     public abstract String getStatement();
 
     protected void notifyExecuting() {
-        if (this.having != null) {
-            this.having = new StringBuilder(compute(this.having.toString(), havingWhereParams));
-        }
 
     }
 
