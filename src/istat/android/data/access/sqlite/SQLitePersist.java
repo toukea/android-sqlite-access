@@ -58,6 +58,7 @@ public final class SQLitePersist {
         int index = 0;
         for (QueryAble insertion : modelPersist) {
             out[index] = insertion.persist(sql.db);
+            index++;
         }
         modelPersist.clear();
         notifyExecuted();

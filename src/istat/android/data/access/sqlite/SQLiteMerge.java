@@ -56,6 +56,7 @@ public final class SQLiteMerge {
         int index = 0;
         for (SQLiteModel merge : modelMerges) {
             out[index] = merge.merge(sql.db);
+            index++;
         }
         modelMerges.clear();
         notifyExecuted();

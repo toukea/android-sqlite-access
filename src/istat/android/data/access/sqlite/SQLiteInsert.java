@@ -95,6 +95,7 @@ public final class SQLiteInsert {
                 throw new IllegalAccessException("entity :0" + insertion + " already exist inside table " + insertion.getName());
             }
             out[index] = insertion.persist(sql.db);
+
         }
         modelInsertions.clear();
         notifyExecuted();
