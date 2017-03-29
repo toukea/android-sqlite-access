@@ -480,6 +480,10 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
 
     public abstract String getStatement();
 
+    protected void notifyExecuting() {
+
+    }
+
     protected void notifyExecutionSucceed(int type, Object clause, Object result) {
 
     }
