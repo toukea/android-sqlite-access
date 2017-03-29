@@ -77,7 +77,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         String tableName = table;
         for (int i = 0; i < columns.length; i++) {
 //            smartColumns[i] = tableName + "." + columns[i];
-            smartColumns[i]= buildRealColumnName(tableName,columns[i]);
+            smartColumns[i] = buildRealColumnName(tableName, columns[i]);
         }
         return db.query(distinct, selectionTable, smartColumns, getWhereClause(), getWhereParams(),
                 getGroupBy(), getHaving(), getOrderBy(), getLimit());
@@ -668,6 +668,50 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             return new ClauseJoinSelectBuilder(TYPE_CLAUSE_AND, this);
         }
 
+        public ClauseBuilder having(Class cLass, String having) {
+            String table = this.selectionTable;
+            try {
+                SQLiteModel model = SQLiteModel.fromClass(cLass);
+                table = model.getName();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+            if (this.having == null)
+                this.having = new StringBuilder(buildRealColumnName(table, having));
+            else
+                this.having.append(" AND " + buildRealColumnName(table, having));
+            ClauseBuilder builder = new ClauseBuilder(this.having, havingWhereParams, TYPE_CLAUSE_AND_HAVING);
+            return builder;
+        }
+
+        public ClauseBuilder having(Class cLass, String function, String having) {
+            String table = this.selectionTable;
+            try {
+                SQLiteModel model = SQLiteModel.fromClass(cLass);
+                table = model.getName();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+            String value = function + "(" + buildRealColumnName(table, having) + ")";
+            if (this.having == null)
+                this.having = new StringBuilder(value);
+            else
+                this.having.append(" AND " + value);
+            ClauseBuilder builder = new ClauseBuilder(this.having, havingWhereParams, TYPE_CLAUSE_AND_HAVING);
+            return builder;
+        }
+
+        public ClauseBuilder having(SQLiteFunction function) {
+            throw new RuntimeException("Not yet implemented");
+        }
+
+        /*
+        there has 2 table in Selection clause. i can't myself choose what table is right to use. So i just put column name
+         */
         @Override
         protected String buildRealColumnName(String column) {
             return column;
@@ -767,7 +811,6 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         }
     }
 
-    //TODO implements this method
     public ClauseBuilder having(String having) {
         if (this.having == null)
             this.having = new StringBuilder(buildRealColumnName(having));
@@ -788,6 +831,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     }
 
     public ClauseBuilder having(SQLiteFunction function) {
-        return new ClauseBuilder(this.having, new ArrayList<String>(), TYPE_CLAUSE_AND);
+        throw new RuntimeException("Not yet implemented");
+        // return new ClauseBuilder(this.having, new ArrayList<String>(), TYPE_CLAUSE_AND);
     }
 }
