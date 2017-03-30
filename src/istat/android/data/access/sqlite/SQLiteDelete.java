@@ -14,6 +14,7 @@ public final class SQLiteDelete extends SQLiteClause<SQLiteDelete> {
 
     @Override
     protected Integer onExecute(SQLiteDatabase db) {
+        notifyExecuting();
         String whereClause = getWhereClause();
         String[] whereParams = getWhereParams();
         return db.delete(table, whereClause, whereParams);

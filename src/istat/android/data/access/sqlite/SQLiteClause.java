@@ -104,10 +104,10 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     }
 
     public Clause groupBy(String column) {
-        if (TextUtils.isEmpty(orderBy))
-            orderBy = buildWhereParam(column);
+        if (TextUtils.isEmpty(groupBy))
+            groupBy = buildWhereParam(column);
         else
-            orderBy += ", " + buildWhereParam(column);
+            groupBy += ", " + buildWhereParam(column);
         return (Clause) this;
     }
 
@@ -479,6 +479,10 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     }
 
     public abstract String getStatement();
+
+    protected void notifyExecuting() {
+
+    }
 
     protected void notifyExecutionSucceed(int type, Object clause, Object result) {
 

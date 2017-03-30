@@ -67,6 +67,7 @@ public final class SQLiteUpdate {
 
         @Override
         protected Object onExecute(SQLiteDatabase db) {
+            notifyExecuting();
             String whereClause = getWhereClause();
             String[] whereParams = getWhereParams();
             if (!TextUtils.isEmpty(this.limit)) {
