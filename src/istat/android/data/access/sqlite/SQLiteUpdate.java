@@ -71,7 +71,7 @@ public final class SQLiteUpdate {
             String whereClause = getWhereClause();
             String[] whereParams = getWhereParams();
             if (!TextUtils.isEmpty(this.limit)) {
-                this.whereClause += " LIMIT " + limit;
+                this.whereClause.append(" LIMIT " + limit);
             }
             return db.update(model.getName(), model.toContentValues(),
                     whereClause, whereParams);
@@ -116,7 +116,7 @@ public final class SQLiteUpdate {
         public String getStatement() {
             String out = "UPDATE FROM " + table;
             if (!TextUtils.isEmpty(whereClause)) {
-                out += " WHERE '" + whereClause.trim() + "'";
+                out += " WHERE '" + whereClause.toString().trim() + "'";
             }
             String[] splits = out.split("\\?");
             String sql = "";

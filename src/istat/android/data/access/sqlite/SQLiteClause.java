@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.json.JSONObject;
 
@@ -17,19 +19,24 @@ import istat.android.data.access.sqlite.interfaces.QueryAble;
 abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     protected SQLite.SQL sql;
     // protected SQLiteDatabase db;
-    protected String whereClause = null;
+    protected StringBuilder whereClause = null;
     protected List<String> whereParams = new ArrayList<String>();
+    List<String> havingWhereParams = new ArrayList<String>();
     protected String orderBy = null;
     protected String groupBy = null;
-    protected String having = null;
+    protected StringBuilder having = null;
     protected String limit = null;
     protected String[] columns;
     protected String table;
-    final static int TYPE_CLAUSE_WHERE = 0, TYPE_CLAUSE_AND = 1,
-            TYPE_CLAUSE_OR = 2, TYPE_CLAUSE_LIKE = 3;
+    final static int TYPE_CLAUSE_WHERE = 0,
+            TYPE_CLAUSE_AND = 1,
+            TYPE_CLAUSE_OR = 2,
+            TYPE_CLAUSE_LIKE = 3,
+            TYPE_CLAUSE_AND_HAVING = 4,
+            TYPE_CLAUSE_OR_HAVING = 5;
 
     protected String getWhereClause() {
-        return whereClause;
+        return whereClause != null ? whereClause.toString() : null;
     }
 
     protected String getOrderBy() {
@@ -37,7 +44,11 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     }
 
     protected String getHaving() {
-        return having;
+        if (having == null) {
+            return null;
+        }
+        String out = compute(this.having.toString(), havingWhereParams);
+        return out;
     }
 
     protected String getLimit() {
@@ -84,15 +95,9 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     @SuppressWarnings("unchecked")
     public Clause orderBy(String column, String value) {
         if (TextUtils.isEmpty(orderBy))
-            orderBy = buildWhereParam(column) + " " + value;
+            orderBy = buildRealColumnName(column) + " " + value;
         else
-            orderBy += buildWhereParam(column) + " " + value;
-        return (Clause) this;
-    }
-
-    //TODO implements this method
-    public Clause having(String having) {
-        this.having = having;
+            orderBy += buildRealColumnName(column) + " " + value;
         return (Clause) this;
     }
 
@@ -105,9 +110,9 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
 
     public Clause groupBy(String column) {
         if (TextUtils.isEmpty(groupBy))
-            groupBy = buildWhereParam(column);
+            groupBy = buildRealColumnName(column);
         else
-            groupBy += ", " + buildWhereParam(column);
+            groupBy += ", " + buildRealColumnName(column);
         return (Clause) this;
     }
 
@@ -119,39 +124,49 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         return (Clause) this;
     }
 
-    protected static String buildWhereParam(String tableName, String column) {
+    protected static String buildRealColumnName(String tableName, String column) {
         if (column.matches(".*\\..*")) {
             return column;
         }
-        return tableName + "." + column;
+        Pattern pattern = Pattern.compile("(\\()(.*)(\\))");
+        Matcher matcher = pattern.matcher(column);
+        if (matcher.matches()) {
+            while (matcher.find()) {
+                String columnNameOnly = matcher.group(2);
+                column = column.replace(columnNameOnly, tableName + "." + columnNameOnly);
+            }
+            return column;
+        } else {
+            return tableName + "." + column;
+        }
     }
 
-    protected String buildWhereParam(String column) {
-        return buildWhereParam(table, column);
+    protected String buildRealColumnName(String column) {
+        return buildRealColumnName(table, column);
     }
 
     public ClauseBuilder where(String column) {
-        if (whereClause == null)
-            whereClause = buildWhereParam(column);
-        else
-            whereClause += " AND " + buildWhereParam(column);
-        return new ClauseBuilder(TYPE_CLAUSE_AND);
+        if (whereClause == null) {
+            whereClause = new StringBuilder(buildRealColumnName(column));
+        } else
+            whereClause.append(" AND " + buildRealColumnName(column));
+        return new ClauseBuilder(this.whereClause, this.whereParams, TYPE_CLAUSE_AND);
     }
 
     public ClauseBuilder or(String column) {
         if (whereClause == null)
-            whereClause = buildWhereParam(column);
+            whereClause = new StringBuilder(buildRealColumnName(column));
         else
-            whereClause += " OR " + buildWhereParam(column);
-        return new ClauseBuilder(TYPE_CLAUSE_OR);
+            whereClause.append(" OR " + buildRealColumnName(column));
+        return new ClauseBuilder(this.whereClause, this.whereParams, TYPE_CLAUSE_OR);
     }
 
     public ClauseBuilder and(String column) {
         if (whereClause == null)
-            whereClause = buildWhereParam(column);
+            whereClause = new StringBuilder(buildRealColumnName(column));
         else
-            whereClause += " AND " + buildWhereParam(column);
-        return new ClauseBuilder(TYPE_CLAUSE_AND);
+            whereClause.append(" AND " + buildRealColumnName(column));
+        return new ClauseBuilder(this.whereClause, this.whereParams, TYPE_CLAUSE_AND);
     }
 
     @SuppressWarnings("unchecked")
@@ -160,7 +175,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             this.whereClause = close.whereClause;
             this.whereParams = close.whereParams;
         } else {
-            this.whereClause += " AND " + close.whereClause;
+            this.whereClause.append(" AND " + close.whereClause);
             this.whereParams.addAll(close.whereParams);
         }
         return (Clause) this;
@@ -174,16 +189,16 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
 
     @SuppressWarnings("unchecked")
     public Clause OR(SQLiteSelect close) {
-        this.whereClause = "(" + this.whereClause + ") OR (" + close.whereClause
-                + ")";
+        this.whereClause.append("(" + this.whereClause + ") OR (" + close.whereClause
+                + ")");
         this.whereParams.addAll(close.whereParams);
         return (Clause) this;
     }
 
     @SuppressWarnings("unchecked")
     public Clause AND(SQLiteSelect close) {
-        this.whereClause = "(" + this.whereClause + ") AND (" + close.whereClause
-                + ")";
+        this.whereClause.append("(" + this.whereClause + ") AND (" + close.whereClause
+                + ")");
         this.whereParams.addAll(close.whereParams);
         return (Clause) this;
     }
@@ -236,32 +251,36 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
 
     public class ClauseBuilder {
         int type = 0;
+        StringBuilder whereClause;
+        List<String> whereParams;
 
-        public ClauseBuilder(int type) {
+        public ClauseBuilder(StringBuilder whereClause, List<String> whereParams, int type) {
             this.type = type;
+            this.whereClause = whereClause;
+            this.whereParams = whereParams;
         }
 
         public Clause isNULL() {
-            whereClause += " IS NULL ";
+            whereClause.append(" IS NULL ");
             return (Clause) SQLiteClause.this;
         }
 
         public Clause isNOTNULL() {
-            whereClause += " IS NOT NULL ";
+            whereClause.append(" IS NOT NULL ");
             return (Clause) SQLiteClause.this;
         }
 
         @SuppressWarnings("unchecked")
         public Clause equalTo(Object value) {
             prepare(value);
-            whereClause += " = ? ";
+            whereClause.append(" = ? ");
             return (Clause) SQLiteClause.this;
         }
 
         @SuppressWarnings("unchecked")
         public Clause notEqualTo(Object value) {
             prepare(value);
-            whereClause += " != ? ";
+            whereClause.append(" != ? ");
             return (Clause) SQLiteClause.this;
         }
 
@@ -288,7 +307,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             if (!valueIn.startsWith("(") && !valueIn.endsWith(")")) {
                 valueIn = "(" + valueIn + ")";
             }
-            whereClause += (truth ? "" : " NOT ") + " IN " + valueIn;
+            whereClause.append((truth ? "" : " NOT ") + " IN " + valueIn);
             return (Clause) SQLiteClause.this;
         }
 
@@ -308,28 +327,28 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         @SuppressWarnings("unchecked")
         public Clause greatThan(Object value, boolean acceptEqual) {
             prepare(value);
-            whereClause += " >" + (acceptEqual ? "=" : "") + " ? ";
+            whereClause.append(" >" + (acceptEqual ? "=" : "") + " ? ");
             return (Clause) SQLiteClause.this;
         }
 
         @SuppressWarnings("unchecked")
         public Clause lessThan(Object value, boolean acceptEqual) {
             prepare(value);
-            whereClause += " <" + (acceptEqual ? "=" : "") + " ? ";
+            whereClause.append(" <" + (acceptEqual ? "=" : "") + " ? ");
             return (Clause) SQLiteClause.this;
         }
 
         @SuppressWarnings("unchecked")
         public Clause like(Object value) {
             prepare(value);
-            whereClause += " like ? ";
+            whereClause.append(" like ? ");
             return (Clause) SQLiteClause.this;
         }
 
         @SuppressWarnings("unchecked")
         public Clause notLike(Object value) {
             prepare(value);
-            whereClause += " NOT like ? ";
+            whereClause.append(" NOT like ? ");
             return (Clause) SQLiteClause.this;
         }
 
@@ -337,25 +356,25 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         @SuppressWarnings("unchecked")
         public Clause equalTo(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
-            whereClause += " = (" + value + ") ";
+            whereClause.append(" = (" + value + ") ");
             return (Clause) SQLiteClause.this;
         }
 
         public Clause notEqualTo(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
-            whereClause += " != (" + value + ") ";
+            whereClause.append(" != (" + value + ") ");
             return (Clause) SQLiteClause.this;
         }
 
         public Clause notIn(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
-            whereClause += " NOT IN (" + value.getSql() + ") ";
+            whereClause.append(" NOT IN (" + value.getSql() + ") ");
             return (Clause) SQLiteClause.this;
         }
 
         public Clause in(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
-            whereClause += " IN (" + value.getSql() + ") ";
+            whereClause.append(" IN (" + value.getSql() + ") ");
             return (Clause) SQLiteClause.this;
         }
 
@@ -370,28 +389,28 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         @SuppressWarnings("unchecked")
         public Clause greatThan(SQLiteSelect value, boolean acceptEqual) {
             whereParams.addAll(value.whereParams);
-            whereClause += " >" + (acceptEqual ? "=" : "") + " (" + value.getSql() + ") ";
+            whereClause.append(" >" + (acceptEqual ? "=" : "") + " (" + value.getSql() + ") ");
             return (Clause) SQLiteClause.this;
         }
 
         @SuppressWarnings("unchecked")
         public Clause lessThan(SQLiteSelect value, boolean acceptEqual) {
             whereParams.addAll(value.whereParams);
-            whereClause += " <" + (acceptEqual ? "=" : "") + " (" + value.getSql() + ") ";
+            whereClause.append(" <" + (acceptEqual ? "=" : "") + " (" + value.getSql() + ") ");
             return (Clause) SQLiteClause.this;
         }
 
         @SuppressWarnings("unchecked")
         public Clause like(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
-            whereClause += " like (" + value.getSql() + ")";
+            whereClause.append(" like (" + value.getSql() + ")");
             return (Clause) SQLiteClause.this;
         }
 
         @SuppressWarnings("unchecked")
         public Clause notLike(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
-            whereClause += " NOT like (" + value.getSql() + ")";
+            whereClause.append(" NOT like (" + value.getSql() + ")");
             return (Clause) SQLiteClause.this;
         }
         //------------------------------------------------
@@ -416,8 +435,10 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     //TODO build end of query. GroupBy orderBy, Having with execute
     public class HavingBuilder {
         int type = 0;
+        String having;
 
-        public HavingBuilder(int type) {
+        public HavingBuilder(String having, int type) {
+            this.having = having;
             this.type = type;
         }
 
@@ -432,14 +453,14 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         @SuppressWarnings("unchecked")
         public Clause greatThan(Object value, boolean acceptEqual) {
             prepare(value);
-            whereClause += " >" + (acceptEqual ? "=" : "") + " ? ";
+            whereClause.append(" >" + (acceptEqual ? "=" : "") + " ? ");
             return (Clause) SQLiteClause.this;
         }
 
         @SuppressWarnings("unchecked")
         public Clause lessThan(Object value, boolean acceptEqual) {
             prepare(value);
-            whereClause += " <" + (acceptEqual ? "=" : "") + " ? ";
+            whereClause.append(" <" + (acceptEqual ? "=" : "") + " ? ");
             return (Clause) SQLiteClause.this;
         }
 
@@ -456,13 +477,6 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
                     break;
 
             }
-        }
-
-        @SuppressWarnings("unchecked")
-        public Clause like(Object value) {
-            prepare(value);
-            whereClause += " like ? ";
-            return (Clause) SQLiteClause.this;
         }
     }
 
@@ -496,5 +510,19 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         if (sql.autoClose) {
             sql.close();
         }
+    }
+
+    String compute(String out, List<String> whereParams) {
+        String[] splits = out.split("\\?");
+        String sql = "";
+        for (int i = 0; i < (!out.endsWith("?") ? splits.length - 1
+                : splits.length); i++) {
+            sql += splits[i];
+            sql += whereParams.get(i);
+        }
+        if (!out.endsWith("?")) {
+            sql += splits[splits.length - 1];
+        }
+        return sql;
     }
 }

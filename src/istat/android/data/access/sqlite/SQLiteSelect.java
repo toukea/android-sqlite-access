@@ -76,7 +76,8 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         String[] smartColumns = new String[columns.length];
         String tableName = table;
         for (int i = 0; i < columns.length; i++) {
-            smartColumns[i] = tableName + "." + columns[i];
+//            smartColumns[i] = tableName + "." + columns[i];
+            smartColumns[i] = buildRealColumnName(tableName, columns[i]);
         }
         return db.query(distinct, selectionTable, smartColumns, getWhereClause(), getWhereParams(),
                 getGroupBy(), getHaving(), getOrderBy(), getLimit());
@@ -245,6 +246,11 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             }
         }
         String out = "SELECT " + columns + " FROM " + selectionTable;
+        String whereClause = getWhereClause();
+        String having = getHaving();
+        String orderBy = getOrderBy();
+        String groupBy = getGroupBy();
+        String limit = getLimit();
         if (!TextUtils.isEmpty(whereClause)) {
             out += " WHERE " + whereClause.trim();
         }
@@ -290,25 +296,22 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             e.printStackTrace();
         }
         String out = "SELECT " + columnParam + " FROM " + selectionTable;
+        String whereClause = getWhereClause();
+        String having = getHaving();
+        String orderBy = getOrderBy();
+        String groupBy = getGroupBy();
+        String limit = getLimit();
         if (!TextUtils.isEmpty(whereClause)) {
             out += " WHERE " + whereClause.trim();
         }
-        String[] splits = out.split("\\?");
-        String sql = "";
-        for (int i = 0; i < (!out.endsWith("?") ? splits.length - 1
-                : splits.length); i++) {
-            sql += splits[i];
-            sql += whereParams.get(i);
-        }
-        if (!out.endsWith("?")) {
-            sql += splits[splits.length - 1];
-        }
+        String sql = compute(out, this.whereParams);
         if (!TextUtils.isEmpty(orderBy)) {
             sql += " ORDER BY " + orderBy;
         }
         if (!TextUtils.isEmpty(groupBy)) {
             sql += " GROUP BY " + groupBy;
         }
+
         if (!TextUtils.isEmpty(having)) {
             sql += " HAVING " + having;
         }
@@ -330,14 +333,14 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect equalTo(Object value) {
             prepare(value);
-            whereClause += " = ? ";
+            whereClause.append(" = ? ");
             return selectClause;
         }
 
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect notEqualTo(Object value) {
             prepare(value);
-            whereClause += " = ? ";
+            whereClause.append(" = ? ");
             return selectClause;
         }
 
@@ -364,7 +367,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             if (!valueIn.startsWith("(") && !valueIn.endsWith(")")) {
                 valueIn = "(" + valueIn + ")";
             }
-            whereClause += (truth ? "" : " NOT ") + " IN " + valueIn;
+            whereClause.append((truth ? "" : " NOT ") + " IN " + valueIn);
             return selectClause;
         }
 
@@ -384,28 +387,28 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect greatThan(Object value, boolean acceptEqual) {
             prepare(value);
-            whereClause += " >" + (acceptEqual ? "=" : "") + " ? ";
+            whereClause.append(" >" + (acceptEqual ? "=" : "") + " ? ");
             return selectClause;
         }
 
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect lessThan(Object value, boolean acceptEqual) {
             prepare(value);
-            whereClause += " <" + (acceptEqual ? "=" : "") + " ? ";
+            whereClause.append(" <" + (acceptEqual ? "=" : "") + " ? ");
             return selectClause;
         }
 
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect like(Object value) {
             prepare(value);
-            whereClause += " like ? ";
+            whereClause.append(" like ? ");
             return selectClause;
         }
 
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect notLike(Object value) {
             prepare(value);
-            whereClause += " NOT like ? ";
+            whereClause.append(" NOT like ? ");
             return selectClause;
         }
 
@@ -413,26 +416,26 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect equalTo(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
-            whereClause += " = (" + value + ") ";
+            whereClause.append(" = (" + value + ") ");
             return selectClause;
         }
 
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect notEqualTo(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
-            whereClause += " = (" + value + ") ";
+            whereClause.append(" = (" + value + ") ");
             return selectClause;
         }
 
         public SQLiteJoinSelect in(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
-            whereClause += " IN (" + value.getSql() + ") ";
+            whereClause.append(" IN (" + value.getSql() + ") ");
             return selectClause;
         }
 
         public SQLiteJoinSelect notIn(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
-            whereClause += " NOT IN (" + value.getSql() + ") ";
+            whereClause.append(" NOT IN (" + value.getSql() + ") ");
             return selectClause;
         }
 
@@ -447,28 +450,28 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect greatThan(SQLiteSelect value, boolean acceptEqual) {
             whereParams.addAll(value.whereParams);
-            whereClause += " >" + (acceptEqual ? "=" : "") + " (" + value.getSql() + ") ";
+            whereClause.append(" >" + (acceptEqual ? "=" : "") + " (" + value.getSql() + ") ");
             return selectClause;
         }
 
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect lessThan(SQLiteSelect value, boolean acceptEqual) {
             whereParams.addAll(value.whereParams);
-            whereClause += " <" + (acceptEqual ? "=" : "") + " (" + value.getSql() + ") ";
+            whereClause.append(" <" + (acceptEqual ? "=" : "") + " (" + value.getSql() + ") ");
             return selectClause;
         }
 
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect like(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
-            whereClause += " like (" + value.getSql() + ")";
+            whereClause.append(" like (" + value.getSql() + ")");
             return selectClause;
         }
 
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect notLike(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
-            whereClause += " NOT like (" + value.getSql() + ")";
+            whereClause.append(" NOT like (" + value.getSql() + ")");
             return selectClause;
         }
         //------------------------------------------------
@@ -503,7 +506,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         public ClauseSubJoinBuilder on(Class<?> clazz, String name) {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(clazz);
-                name = buildWhereParam(model.getName(), name);
+                name = buildRealColumnName(model.getName(), name);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -538,9 +541,9 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(clazz);
                 if (whereClause == null)
-                    whereClause = buildWhereParam(model.getName(), column);
+                    whereClause = new StringBuilder(buildRealColumnName(model.getName(), column));
                 else
-                    whereClause += " AND " + buildWhereParam(model.getName(), column);
+                    whereClause.append(" AND " + buildRealColumnName(model.getName(), column));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -606,7 +609,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         public SQLiteJoinSelect equalTo(Class<?> clazz, String name) {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(clazz);
-                name = buildWhereParam(model.getName(), name);
+                name = buildRealColumnName(model.getName(), name);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -630,9 +633,9 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(clazz);
                 if (whereClause == null)
-                    whereClause = buildWhereParam(model.getName(), column);
+                    whereClause = new StringBuilder(buildRealColumnName(model.getName(), column));
                 else
-                    whereClause += " AND " + buildWhereParam(model.getName(), column);
+                    whereClause.append(" AND " + buildRealColumnName(model.getName(), column));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -643,9 +646,9 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(clazz);
                 if (whereClause == null)
-                    whereClause = buildWhereParam(model.getName(), column);
+                    whereClause = new StringBuilder(buildRealColumnName(model.getName(), column));
                 else
-                    whereClause += " OR " + buildWhereParam(model.getName(), column);
+                    whereClause.append(" OR " + buildRealColumnName(model.getName(), column));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -656,17 +659,61 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(clazz);
                 if (whereClause == null)
-                    whereClause = buildWhereParam(model.getName(), column);
+                    whereClause = new StringBuilder(buildRealColumnName(model.getName(), column));
                 else
-                    whereClause += " AND " + buildWhereParam(model.getName(), column);
+                    whereClause.append(" AND " + buildRealColumnName(model.getName(), column));
             } catch (Exception e) {
                 e.printStackTrace();
             }
             return new ClauseJoinSelectBuilder(TYPE_CLAUSE_AND, this);
         }
 
+        public ClauseBuilder having(Class cLass, String having) {
+            String table = this.selectionTable;
+            try {
+                SQLiteModel model = SQLiteModel.fromClass(cLass);
+                table = model.getName();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+            if (this.having == null)
+                this.having = new StringBuilder(buildRealColumnName(table, having));
+            else
+                this.having.append(" AND " + buildRealColumnName(table, having));
+            ClauseBuilder builder = new ClauseBuilder(this.having, havingWhereParams, TYPE_CLAUSE_AND_HAVING);
+            return builder;
+        }
+
+        public ClauseBuilder having(Class cLass, String function, String having) {
+            String table = this.selectionTable;
+            try {
+                SQLiteModel model = SQLiteModel.fromClass(cLass);
+                table = model.getName();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+            String value = function + "(" + buildRealColumnName(table, having) + ")";
+            if (this.having == null)
+                this.having = new StringBuilder(value);
+            else
+                this.having.append(" AND " + value);
+            ClauseBuilder builder = new ClauseBuilder(this.having, havingWhereParams, TYPE_CLAUSE_AND_HAVING);
+            return builder;
+        }
+
+        public ClauseBuilder having(SQLiteFunction function) {
+            throw new RuntimeException("Not yet implemented");
+        }
+
+        /*
+        there has 2 table in Selection clause. i can't myself choose what table is right to use. So i just put column name
+         */
         @Override
-        protected String buildWhereParam(String column) {
+        protected String buildRealColumnName(String column) {
             return column;
         }
     }
@@ -762,5 +809,29 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         public String getStatement() {
             return SQLiteSelect.this.getStatement();
         }
+    }
+
+    public ClauseBuilder having(String having) {
+        if (this.having == null)
+            this.having = new StringBuilder(buildRealColumnName(having));
+        else
+            this.having.append(" AND " + buildRealColumnName(having));
+        ClauseBuilder builder = new ClauseBuilder(this.having, havingWhereParams, TYPE_CLAUSE_AND_HAVING);
+        return builder;
+    }
+
+    public ClauseBuilder having(String function, String having) {
+        String value = function + "(" + buildRealColumnName(having) + ")";
+        if (this.having == null)
+            this.having = new StringBuilder(value);
+        else
+            this.having.append(" AND " + value);
+        ClauseBuilder builder = new ClauseBuilder(this.having, havingWhereParams, TYPE_CLAUSE_AND_HAVING);
+        return builder;
+    }
+
+    public ClauseBuilder having(SQLiteFunction function) {
+        throw new RuntimeException("Not yet implemented");
+        // return new ClauseBuilder(this.having, new ArrayList<String>(), TYPE_CLAUSE_AND);
     }
 }

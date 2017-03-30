@@ -35,7 +35,7 @@ public final class SQLiteDelete extends SQLiteClause<SQLiteDelete> {
     public String getStatement() {
         String out = "DELETE FROM " + table;
         if (!TextUtils.isEmpty(whereClause)) {
-            out += " WHERE '" + whereClause.trim() + "'";
+            out += " WHERE '" + whereClause.toString().trim() + "'";
         }
         String[] splits = out.split("\\?");
         String sql = "";
