@@ -663,7 +663,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             return new ClauseJoinSelectBuilder(TYPE_CLAUSE_AND, this);
         }
 
-        public ClauseBuilder having(Class cLass, String having) {
+        ClauseBuilder internalHaving(String or_and, Class cLass, String having) {
             String table = this.selectionTable;
             try {
                 SQLiteModel model = SQLiteModel.fromClass(cLass);
@@ -676,12 +676,12 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             if (this.having == null)
                 this.having = new StringBuilder(buildRealColumnName(table, having));
             else
-                this.having.append(" AND " + buildRealColumnName(table, having));
+                this.having.append(" " + or_and + " " + buildRealColumnName(table, having));
             ClauseBuilder builder = new ClauseBuilder(this.having, havingWhereParams, TYPE_CLAUSE_AND_HAVING);
             return builder;
         }
 
-        public ClauseBuilder having(Class cLass, String function, String having) {
+        ClauseBuilder internalHaving(String or_and, Class cLass, String function, String having) {
             String table = this.selectionTable;
             try {
                 SQLiteModel model = SQLiteModel.fromClass(cLass);
@@ -695,14 +695,51 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             if (this.having == null)
                 this.having = new StringBuilder(value);
             else
-                this.having.append(" AND " + value);
+                this.having.append(" " + or_and + " " + value);
             ClauseBuilder builder = new ClauseBuilder(this.having, havingWhereParams, TYPE_CLAUSE_AND_HAVING);
             return builder;
         }
 
-        public ClauseBuilder having(Class cLass,SQLiteFunction function) {
+        ClauseBuilder internalHaving(String or_and, SQLiteFunction function) {
             throw new RuntimeException("Not yet implemented");
         }
+
+        public ClauseBuilder having(Class cLass, String having) {
+            return internalHaving("AND", cLass, having);
+        }
+
+        public ClauseBuilder andHaving(Class cLass, String having) {
+            return internalHaving("AND", cLass, having);
+        }
+
+        public ClauseBuilder orHaving(Class cLass, String having) {
+            return internalHaving("OR", cLass, having);
+        }
+
+        public ClauseBuilder having(Class cLass, String function, String having) {
+            return internalHaving("AND", cLass, function, having);
+        }
+
+        public ClauseBuilder andHaving(Class cLass, String function, String having) {
+            return internalHaving("AND", cLass, function, having);
+        }
+
+        public ClauseBuilder orHaving(Class cLass, String function, String having) {
+            return internalHaving("OR", cLass, function, having);
+        }
+
+        public ClauseBuilder having(SQLiteFunction function) {
+            return internalHaving("AND", function);
+        }
+
+        public ClauseBuilder andHaving(SQLiteFunction function) {
+            return internalHaving("AND", function);
+        }
+
+        public ClauseBuilder orHaving(SQLiteFunction function) {
+            return internalHaving("OR", function);
+        }
+
 
         /*
         there has 2 table in Selection clause. i can't myself choose what table is right to use. So i just put column name
@@ -806,27 +843,63 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         }
     }
 
-    public ClauseBuilder having(String having) {
+    ClauseBuilder internalHaving(String or_and, String having) {
         if (this.having == null)
             this.having = new StringBuilder(buildRealColumnName(having));
         else
-            this.having.append(" AND " + buildRealColumnName(having));
+            this.having.append(" " + or_and + " " + buildRealColumnName(having));
         ClauseBuilder builder = new ClauseBuilder(this.having, havingWhereParams, TYPE_CLAUSE_AND_HAVING);
         return builder;
     }
 
-    public ClauseBuilder having(String function, String having) {
+    ClauseBuilder internalHaving(String or_and, String function, String having) {
         String value = function + "(" + buildRealColumnName(having) + ")";
         if (this.having == null)
             this.having = new StringBuilder(value);
         else
-            this.having.append(" AND " + value);
+            this.having.append(" " + or_and + " " + value);
         ClauseBuilder builder = new ClauseBuilder(this.having, havingWhereParams, TYPE_CLAUSE_AND_HAVING);
         return builder;
     }
 
-    public ClauseBuilder having(SQLiteFunction function) {
+    ClauseBuilder internalHaving(String or_and, SQLiteFunction function) {
         throw new RuntimeException("Not yet implemented");
         // return new ClauseBuilder(this.having, new ArrayList<String>(), TYPE_CLAUSE_AND);
+    }
+
+    public ClauseBuilder having(String having) {
+        return internalHaving("AND", having);
+    }
+
+    public ClauseBuilder andHaving(String having) {
+        return internalHaving("AND", having);
+    }
+
+    public ClauseBuilder orHaving(String having) {
+        return internalHaving("OR", having);
+    }
+
+    public ClauseBuilder having(String function, String having) {
+        return internalHaving("AND", function, having);
+    }
+
+    public ClauseBuilder andHaving(String function, String having) {
+        return internalHaving("AND", function, having);
+    }
+
+    public ClauseBuilder orHaving(String function, String having) {
+        return internalHaving("OR", function, having);
+    }
+
+    public ClauseBuilder having(SQLiteFunction function) {
+        return internalHaving("AND", function);
+    }
+
+    public ClauseBuilder andHaving(SQLiteFunction function) {
+        return internalHaving("AND", function);
+    }
+
+    public ClauseBuilder orHaving(SQLiteFunction function) {
+        return internalHaving("OR", function);
     }
 }
