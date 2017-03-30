@@ -221,17 +221,6 @@ public final class SQLite {
         }
     }
 
-    //    public static SQL from(String dbName) throws IllegalAccessException {
-//        SQLiteDataAccess access = findOrCreateConnectionAccess(dbName);
-//        SQLiteDatabase db = access.open();
-//        return from(db);
-//    }
-//
-//    @Deprecated
-//    public static SQL from(Context context, SQLiteConnection connection) {
-//        SQLiteDatabase db = connect(connection).open();
-//        return from(db);
-//    }
     public static void addConnection(Context context, File file, boolean connectInstantly) {
         SQLiteConnection connection = SQLiteConnection.create(context, file, -1, null);
         if (connectInstantly) {
@@ -498,6 +487,20 @@ public final class SQLite {
             return select.execute();
         }
 
+        public <T> List<T> findAll(Class<T> classTable, final String rawQuery, final String[] selectionArgs) {
+            return findAll(classTable, rawQuery, selectionArgs);
+        }
+
+        public <T> List<T> findAll(Class<T> classTable, final String rawQuery, final String[] selectionArgs, final CancellationSignal signal) {
+            SQLiteSelect select = new SQLiteSelect(this.db, classTable) {
+                @Override
+                protected Cursor onExecute(SQLiteDatabase db) {
+                    return db.rawQuery(rawQuery, selectionArgs, signal)
+                }
+            };
+            return select.execute();
+        }
+
         public <T> int update(Class<T> classTable, ContentValues contentValues, String whereClause, String[] whereParams, String having, String limit) {
             SQLiteUpdate.Updater update = update(classTable).updater;
             update.model.fillFromContentValues(contentValues);
@@ -538,21 +541,6 @@ public final class SQLite {
             SQLitePersist persist = new SQLitePersist(this);
             return persist.persist(entity);
         }
-
-//        public SQLitePersist insertOrUpdate(Object entity) {
-//            SQLitePersist insertOrUpdate = new SQLitePersist(this);
-//            return insertOrUpdate.persist(entity);
-//        }
-//
-//        public SQLitePersist insertOrUpdate(Object... entity) {
-//            SQLitePersist insertOrUpdate = new SQLitePersist(this);
-//            return insertOrUpdate.persist(entity);
-//        }
-//
-//        public <T> SQLitePersist insertOrUpdate(List<T> entity) {
-//            SQLitePersist insertOrUpdate = new SQLitePersist(this);
-//            return insertOrUpdate.persist(entity);
-//        }
 
         public <T> void replaces(List<T> entity) {
             try {
@@ -616,14 +604,6 @@ public final class SQLite {
         }
 
         public final void close() {
-            db.close();
-        }
-
-        /**
-         * deprecated use {@link #close()} instead.
-         */
-        @Deprecated
-        public final void closeDb() {
             db.close();
         }
 
@@ -739,11 +719,11 @@ public final class SQLite {
         }
     }
 
-    public static interface BootDescription {
-        abstract void onCreateDb(SQLiteDatabase db);
+    public interface BootDescription {
+        void onCreateDb(SQLiteDatabase db);
 
-        abstract void onUpgradeDb(SQLiteDatabase db, int oldVersion,
-                                  int newVersion);
+        void onUpgradeDb(SQLiteDatabase db, int oldVersion,
+                         int newVersion);
     }
 
     public static void executeSQLScript(SQLiteDatabase db,
@@ -766,9 +746,9 @@ public final class SQLite {
     }
 
     public interface PrepareHandler {
-        public void onSQLReady(SQL sql) throws Exception;
+        void onSQLReady(SQL sql) throws Exception;
 
-        public void onSQLPrepareFail(Exception e);
+        void onSQLPrepareFail(Exception e);
     }
 
     public static abstract class SQLReadyHandler implements PrepareHandler {

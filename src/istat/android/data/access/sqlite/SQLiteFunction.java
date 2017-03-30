@@ -4,7 +4,7 @@ package istat.android.data.access.sqlite;
  * Created by istat on 28/03/17.
  */
 
-class SQLiteFunction {
+public class SQLiteFunction {
     String expression;
     String column;
 
@@ -16,9 +16,13 @@ class SQLiteFunction {
         this.column = column;
     }
 
+
     String getExpression() {
         return expression;
     }
 
+    public static class FuctionExpression {
+
+    }
 
 }

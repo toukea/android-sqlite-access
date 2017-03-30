@@ -311,11 +311,6 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             return (Clause) SQLiteClause.this;
         }
 
-        @Deprecated
-        public Clause equal(Object value) {
-            return equalTo(value);
-        }
-
         public Clause greatThan(Object value) {
             return greatThan(value, false);
         }
