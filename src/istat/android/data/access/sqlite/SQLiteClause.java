@@ -352,6 +352,22 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             return (Clause) SQLiteClause.this;
         }
 
+        @SuppressWarnings("unchecked")
+        public Clause between(Object value, Object value2) {
+            prepare(value);
+            prepare(value2);
+            whereClause.append(" BETWEEN ? AND ? ");
+            return (Clause) SQLiteClause.this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public Clause notBetween(Object value, Object value2) {
+            prepare(value);
+            prepare(value2);
+            whereClause.append(" NOT BETWEEN ? AND ? ");
+            return (Clause) SQLiteClause.this;
+        }
+
         //------------------------------------------------
         @SuppressWarnings("unchecked")
         public Clause equalTo(SQLiteSelect value) {
@@ -411,6 +427,20 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         public Clause notLike(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
             whereClause.append(" NOT like (" + value.getSql() + ")");
+            return (Clause) SQLiteClause.this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public Clause between(SQLiteSelect value, SQLiteSelect value2) {
+            whereParams.addAll(value.whereParams);
+            whereClause.append(" BETWEEN (" + value.getSql() + ") AND (" + value2.getSql() + ")");
+            return (Clause) SQLiteClause.this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public Clause notBetween(SQLiteSelect value, SQLiteSelect value2) {
+            whereParams.addAll(value.whereParams);
+            whereClause.append(" BETWEEN (" + value.getSql() + ") AND (" + value2.getSql() + ")");
             return (Clause) SQLiteClause.this;
         }
         //------------------------------------------------
