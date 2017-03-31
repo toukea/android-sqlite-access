@@ -148,6 +148,10 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         return results.isEmpty() ? null : results.get(0);
     }
 
+    public Cursor getCursor() {
+        return onExecute(this.sql.db);
+    }
+
     @SuppressWarnings("unchecked")
     public <T> void execute(List<T> list) {
         if (list == null) {
@@ -813,6 +817,10 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     public class SQLiteSelectLimit {
         SQLiteSelectLimit(String limitS) {
             SQLiteSelect.this.limit = limitS;
+        }
+
+        public Cursor getCursor() {
+            return SQLiteSelect.this.getCursor();
         }
 
         public <T> void execute(List<T> list) {
