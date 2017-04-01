@@ -228,7 +228,23 @@ It is also possible to make multiple nested selections:
                    System.out.println(u.firstName);
                }
            }
-```   
+```
+# Using SQL function inside where clause args.
+```java
+//in progress...
+```
+# Using HAVING and GROUP BY.
+```java
+//in progress...
+```
+# Make a selection using specified columns.
+```java
+//in progress...
+```
+# Make selection from a specific class-Table for return another specified class.
+```java
+//in progress...
+```
 # Using JOIN with SQL Selection 
 Make and SQL join using Library is "easily" possible.
 Let consider three classes defined by: 
@@ -322,6 +338,10 @@ It is also possible to specify if you want to use an auto closable connection. (
                                .like("%Jephte%")
                                .execute();
     //SQL instance has been auto closed after execution.
+```
+# Make an asynchronous SQL clause execution.
+```java
+//in progress...
 ```
 
 Usage

@@ -128,7 +128,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         if (column.matches(".*\\..*")) {
             return column;
         }
-        Pattern pattern = Pattern.compile("(\\()(.*)(\\))");
+        Pattern pattern = Pattern.compile("(\\()(\\w*)(\\))");
         Matcher matcher = pattern.matcher(column);
         if (matcher.matches()) {
             while (matcher.find()) {

@@ -263,7 +263,10 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     public final void fillFromCursor(Cursor cursor, CursorReader reader) {
-        if (reader != null && cursor != null) {
+        if (reader == null) {
+            reader = DEFAULT_CURSOR_READER;
+        }
+        if (cursor != null) {
             reader.onReadCursor(this, cursor);
         }
     }
@@ -388,6 +391,9 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     @SuppressWarnings("unchecked")
     public static SQLiteModel fromObject(final Object obj, Serializer serializer) throws InstantiationException,
             IllegalAccessException {
+        if (serializer == null) {
+            serializer = DEFAULT_SERIALIZER;
+        }
         try {
             if (obj instanceof SQLiteModel) {
                 SQLiteModel model = (SQLiteModel) obj;
@@ -431,7 +437,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                     }
                     if (columnName != null && !tmp.contains(columnName)) {
                         tmp.add(columnName);
-                        Object value=field.get(obj);
+                        Object value = field.get(obj);
                         map.put(columnName, value);
                         nameFieldPair.put(columnName, field);
                         if (isNestedTableProperty(field)) {
@@ -472,6 +478,20 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return builder.create();
     }
 
+    public static <T> List<T> buildAsArrays(Class<T> cLass, Cursor c, CursorReader reader) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
+        List<T> list = new ArrayList<T>();
+        while (c.moveToNext()) {
+            list.add(buildAs(cLass, c, reader));
+        }
+        return list;
+    }
+
+    public static <T> T buildAs(Class<T> cLass, Cursor c, CursorReader reader) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
+        SQLiteModel model = SQLiteModel.fromClass(cLass);
+        model.fillFromCursor(c, reader);
+        return model.asClass(cLass);
+    }
+
     public static SQLiteModel fromClass(final Class cLass) throws InstantiationException,
             IllegalAccessException {
         return fromClass(cLass, SQLiteModel.DEFAULT_SERIALIZER);
@@ -479,6 +499,9 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     public static SQLiteModel fromClass(final Class cLass, Serializer serializer) throws InstantiationException,
             IllegalAccessException {
+        if (serializer == null) {
+            serializer = DEFAULT_SERIALIZER;
+        }
         Builder builder = new Builder();
         List<String> projectionAdder = new ArrayList<String>();
         HashMap<String, Field> nameFieldPair = new HashMap<String, Field>();
