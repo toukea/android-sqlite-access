@@ -375,11 +375,6 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             return selectClause;
         }
 
-        @Deprecated
-        public SQLiteJoinSelect equal(Object value) {
-            return equalTo(value);
-        }
-
         public SQLiteJoinSelect greatThan(Object value) {
             return greatThan(value, false);
         }

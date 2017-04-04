@@ -130,15 +130,13 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         }
         Pattern pattern = Pattern.compile("(\\()(\\w*)(\\))");
         Matcher matcher = pattern.matcher(column);
-        if (matcher.matches()) {
-            while (matcher.find()) {
-                String columnNameOnly = matcher.group(2);
+        while (matcher.find()) {
+            String columnNameOnly = matcher.group(2);
+            if (!TextUtils.isEmpty(columnNameOnly)) {
                 column = column.replace(columnNameOnly, tableName + "." + columnNameOnly);
             }
-            return column;
-        } else {
-            return tableName + "." + column;
         }
+        return column;
     }
 
     protected String buildRealColumnName(String column) {
@@ -309,11 +307,6 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             }
             whereClause.append((truth ? "" : " NOT ") + " IN " + valueIn);
             return (Clause) SQLiteClause.this;
-        }
-
-        @Deprecated
-        public Clause equal(Object value) {
-            return equalTo(value);
         }
 
         public Clause greatThan(Object value) {
