@@ -488,14 +488,18 @@ public final class SQLite {
         }
 
         public <T> List<T> findAll(Class<T> classTable, final String rawQuery, final String[] selectionArgs) {
-            return findAll(classTable, rawQuery, selectionArgs);
+            return findAll(classTable, rawQuery, selectionArgs, null);
         }
 
         public <T> List<T> findAll(Class<T> classTable, final String rawQuery, final String[] selectionArgs, final CancellationSignal signal) {
-            SQLiteSelect select = new SQLiteSelect(this.db, classTable) {
+            SQLiteSelect select = new SQLiteSelect(this, classTable) {
                 @Override
                 protected Cursor onExecute(SQLiteDatabase db) {
-                    return db.rawQuery(rawQuery, selectionArgs, signal)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                        return db.rawQuery(rawQuery, selectionArgs, signal);
+                    } else {
+                        return db.rawQuery(rawQuery, selectionArgs);
+                    }
                 }
             };
             return select.execute();
