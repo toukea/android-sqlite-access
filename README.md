@@ -27,7 +27,7 @@ public class User {
     String id;
     
     @Ignore     //ignore this field when persisting and querying on Db.
-    boolean readOnly=false
+    boolean readOnly=false;
  }
 ```
 
@@ -237,11 +237,23 @@ It is also possible to make multiple nested selections:
 ```java
 //in progress...
 ```
-# Make a selection using specified columns.
+# Make a selection with specified columns.
 ```java
-//in progress...
+    /*
+     create a string array which represent
+     columns you want to fetch from User table.
+    */
+      String[] columns={"userName", "firstName"};
+
+    /*
+     I am selecting only 2 columns from User table: userName and firstName.
+    */
+      List<User> users = sql.select(columns, User.class)
+                           .where("firstname")
+                           .like("%Jephte%")
+                           .execute();
 ```
-# Make selection from a specific class-Table for return another specified class.
+# Make a selection ResultSet class conversion
 ```java
 //in progress...
 ```
