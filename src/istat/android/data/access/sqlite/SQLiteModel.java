@@ -38,9 +38,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     HashMap<String, Object> fieldNameValuePair = new HashMap<String, Object>();
     HashMap<String, Field> nameFieldPair = new HashMap<String, Field>();
     HashMap<String, Field> nestedTableFieldPair = new HashMap<String, Field>();
-    //    protected String tb_name, primary_key;
-//    protected String[] tb_projection;
-    public static String TAG_CLASS = "istat.android.data.access.SQLiteModel.class";
+    public static final String TAG_CLASS = SQLiteModel.class.getCanonicalName();
     private Object instance;
     List<String> reflectionFieldNames = new ArrayList<String>();
 
@@ -779,6 +777,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     public @interface PrimaryKey {
         int POLICY_AUTO_GENERATE = 2;
         int POLICY_AUTO_INCREMENT = 1;
+        int POLICY_SYSTEM = 3;
         int POLICY_NONE = 0;
 
         int policy() default 0;
