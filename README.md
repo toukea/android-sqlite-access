@@ -231,22 +231,43 @@ It is also possible to make multiple nested selections:
 ```
 # Using SQL function inside where clause args.
 ```java
-//in progress...
+      List<User> users = sql.select(User.class)
+                           .where("UPPER(firstname)")//you can put all SQL fuctions combination.
+                           .equalTo("JEPHTE")
+                           .execute();
 ```
 # Using HAVING and GROUP BY.
+Let consider Purchase.class defined by:
 ```java
-//in progress...
+     public static class Purchase {
+            @SQLiteModel.PrimaryKey(policy = SQLiteModel.PrimaryKey.POLICY_AUTO_INCREMENT)
+            int id;
+            int amount = 0;
+            String clientName;
+}
+```
+So it is possible to make selection using Having and Group By as SQL clause.
+```java
+    List<Purchase> purchases = sql.select(Purchase.class)
+                            .groupBy("clientName")
+                            .having("SUM(amount)")// or use having("SUM","amouclientNament")
+                            .greatThan(8)
+                            .orHaving("COUNT", "clientName")// or use orHaving("COUNT","clientName")
+                            .greatThan(10)
+                            .limit(5)
+                            .execute();
 ```
 # Make a selection with specified columns.
 ```java
     /*
      create a string array which represent
-     columns you want to fetch from User table.
+     columns you want to 'Moisturize/ hydrate' from User table.
     */
       String[] columns={"userName", "firstName"};
 
     /*
-     I am selecting only 2 columns from User table: userName and firstName.
+     I am selecting only 2 columns from User table: userName and firstName
+     as defined by the String array.
     */
       List<User> users = sql.select(columns, User.class)
                            .where("firstname")
@@ -255,7 +276,25 @@ It is also possible to make multiple nested selections:
 ```
 # Make a selection ResultSet class conversion
 ```java
-//in progress...
+    public static class PurchaseStatistic {
+            int amountSum=0; //the purchase total sum
+            int amountAvg = 0;// the purchase amount average
+            int purchaseCount=0;//The purchase total count
+            String clientName;//The client name.
+    }
+```
+
+```java
+    String[] columns={
+                     "SUM(amount) as amountSum",
+                     "AVG(amount) as amountAvg",
+                     "COUNT(client) as purchaseCount",
+                     "clientName"
+                     };
+
+    List<PurchaseStatistic> statistic = sql.select(columns, Purchase.class)
+                              .groupBy("clientName")
+                              .execute();
 ```
 # Using JOIN with SQL Selection 
 Make and SQL join using Library is "easily" possible.
