@@ -152,6 +152,17 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         return onExecute(this.sql.db);
     }
 
+    public List<SQLiteModel> getResults() throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+        Cursor c = getCursor();
+        List<SQLiteModel> list = new ArrayList<SQLiteModel>();
+        while (c.moveToNext()) {
+            SQLiteModel model = SQLiteModel.fromClass(this.clazz);
+            model.fillFromCursor(c);
+            list.add(model);
+        }
+        return list;
+    }
+
     @SuppressWarnings("unchecked")
     public <T> void execute(List<T> list) {
         if (list == null) {
@@ -812,6 +823,10 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     public class SQLiteSelectLimit {
         SQLiteSelectLimit(String limitS) {
             SQLiteSelect.this.limit = limitS;
+        }
+
+        public List<SQLiteModel> getResults() throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+            return SQLiteSelect.this.getResults();
         }
 
         public Cursor getCursor() {

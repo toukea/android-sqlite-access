@@ -17,9 +17,9 @@ public final class SQLiteDelete extends SQLiteClause<SQLiteDelete> {
     @Override
     protected Integer onExecute(SQLiteDatabase db) {
         notifyExecuting();
-        String whereClause = getWhereClause()
-                + (orderBy != null ? "" : " ORDER BY " + orderBy)
-                + (limit != null ? "" : " LIMIT " + limit);
+        String whereClause = getWhereClause();
+        whereClause += (TextUtils.isEmpty(orderBy) ? "" : " ORDER BY " + orderBy)
+                + (TextUtils.isEmpty(orderBy) ? "" : " LIMIT " + limit);
         String[] whereParams = getWhereParams();
         return db.delete(table, whereClause, whereParams);
     }
