@@ -40,18 +40,17 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     HashMap<String, Field> nestedTableFieldPair = new HashMap<String, Field>();
     public static final String TAG_CLASS = SQLiteModel.class.getCanonicalName();
     private Object instance;
-    List<String> reflectionFieldNames = new ArrayList<String>();
 
     SQLiteModel() {
         instance = this;
     }
 
     public final void set(String name, Object value) {
-        set(name, this, value);
+        this.fieldNameValuePair.put(name, value);
     }
 
     public final Object get(String name) {
-        return get(name, this);// fieldNameValuePair.get(name);
+        return this.fieldNameValuePair.get(name);
     }
 
     public final String getString(String name) {
@@ -111,51 +110,6 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             return null;
         }
         return serializer.onSerialize(value, name);
-    }
-
-
-    protected static <T extends SQLiteModel> void set(String name, T obj,
-                                                      Object value) {
-        try {
-            if (obj.reflectionFieldNames.contains(name)) {
-                Field field = obj.getClass().getDeclaredField(name);
-                field.setAccessible(true);
-                field.set(obj, value);
-            } else {
-                obj.fieldNameValuePair.put(name, value);
-            }
-
-        } catch (NoSuchFieldException noe) {
-            obj.fieldNameValuePair.put(name, value);
-            noe.printStackTrace();
-        } catch (Exception e) {
-            // Log.e("ERROR", name);
-            e.printStackTrace();
-            obj.fieldNameValuePair.put(name, value);
-
-        }
-    }
-
-    protected static <T extends SQLiteModel> Object get(String name, T obj) {
-        try {
-            if (obj.reflectionFieldNames.contains(name)) {
-                Field field = obj.getClass().getDeclaredField(name);
-                field.setAccessible(true);
-                return field.get(obj);
-            } else {
-                return obj.fieldNameValuePair.get(name);
-            }
-
-        } catch (NoSuchFieldException noe) {
-            noe.printStackTrace();
-            return obj.fieldNameValuePair.get(name);
-
-        } catch (Exception e) {
-            // Log.e("ERROR", name);
-            e.printStackTrace();
-            return obj.fieldNameValuePair.get(name);
-
-        }
     }
 
     public HashMap<String, Object> toHashMap() {
