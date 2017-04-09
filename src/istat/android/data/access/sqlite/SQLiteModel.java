@@ -38,22 +38,19 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     HashMap<String, Object> fieldNameValuePair = new HashMap<String, Object>();
     HashMap<String, Field> nameFieldPair = new HashMap<String, Field>();
     HashMap<String, Field> nestedTableFieldPair = new HashMap<String, Field>();
-    //    protected String tb_name, primary_key;
-//    protected String[] tb_projection;
-    public static String TAG_CLASS = "istat.android.data.access.SQLiteModel.class";
+    public static final String TAG_CLASS = SQLiteModel.class.getCanonicalName();
     private Object instance;
-    List<String> reflectionFieldNames = new ArrayList<String>();
 
     SQLiteModel() {
         instance = this;
     }
 
     public final void set(String name, Object value) {
-        set(name, this, value);
+        this.fieldNameValuePair.put(name, value);
     }
 
     public final Object get(String name) {
-        return get(name, this);// fieldNameValuePair.get(name);
+        return this.fieldNameValuePair.get(name);
     }
 
     public final String getString(String name) {
@@ -113,51 +110,6 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             return null;
         }
         return serializer.onSerialize(value, name);
-    }
-
-
-    protected static <T extends SQLiteModel> void set(String name, T obj,
-                                                      Object value) {
-        try {
-            if (obj.reflectionFieldNames.contains(name)) {
-                Field field = obj.getClass().getDeclaredField(name);
-                field.setAccessible(true);
-                field.set(obj, value);
-            } else {
-                obj.fieldNameValuePair.put(name, value);
-            }
-
-        } catch (NoSuchFieldException noe) {
-            obj.fieldNameValuePair.put(name, value);
-            noe.printStackTrace();
-        } catch (Exception e) {
-            // Log.e("ERROR", name);
-            e.printStackTrace();
-            obj.fieldNameValuePair.put(name, value);
-
-        }
-    }
-
-    protected static <T extends SQLiteModel> Object get(String name, T obj) {
-        try {
-            if (obj.reflectionFieldNames.contains(name)) {
-                Field field = obj.getClass().getDeclaredField(name);
-                field.setAccessible(true);
-                return field.get(obj);
-            } else {
-                return obj.fieldNameValuePair.get(name);
-            }
-
-        } catch (NoSuchFieldException noe) {
-            noe.printStackTrace();
-            return obj.fieldNameValuePair.get(name);
-
-        } catch (Exception e) {
-            // Log.e("ERROR", name);
-            e.printStackTrace();
-            return obj.fieldNameValuePair.get(name);
-
-        }
     }
 
     public HashMap<String, Object> toHashMap() {
@@ -779,6 +731,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     public @interface PrimaryKey {
         int POLICY_AUTO_GENERATE = 2;
         int POLICY_AUTO_INCREMENT = 1;
+        int POLICY_SYSTEM = 3;
         int POLICY_NONE = 0;
 
         int policy() default 0;

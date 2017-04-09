@@ -294,7 +294,7 @@ So it is possible to make selection using Having and Group By as SQL clause.
 
     List<PurchaseStatistic> statistic = sql.select(columns, Purchase.class)
                               .groupBy("clientName")
-                              .execute();
+                              .execute(PurchaseStatistic.class);
 ```
 # Using JOIN with SQL Selection 
 Make and SQL join using Library is "easily" possible.
