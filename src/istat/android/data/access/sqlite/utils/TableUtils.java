@@ -1,5 +1,6 @@
 package istat.android.data.access.sqlite.utils;
 
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import java.util.List;
