@@ -1,15 +1,18 @@
 package istat.android.data.access.sqlite.utils;
 
+import android.content.Context;
 import android.text.TextUtils;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
+
+import dalvik.system.DexFile;
 
 /**
  * Created by istat on 31/10/16.
@@ -33,12 +36,12 @@ public class Toolkit {
         }
     }
 
-    public static List<Field> getAllFieldFields(Class<?> klass, boolean includingPrivateAndSuper, boolean acceptStatic) {
+    public static List<Field> getAllFieldFields(Class<?> cLass, boolean includingPrivateAndSuper, boolean acceptStatic) {
         if (includingPrivateAndSuper) {
-            return getAllFieldIncludingPrivateAndSuper(klass, acceptStatic);
+            return getAllFieldIncludingPrivateAndSuper(cLass, acceptStatic);
         } else {
             List<Field> fields = new ArrayList<Field>();
-            Field[] tmp = klass.getDeclaredFields();
+            Field[] tmp = cLass.getDeclaredFields();
             for (Field f : tmp) {
                 if (f != null && (f.toString().contains("static") && !acceptStatic)) {
                     continue;
@@ -49,20 +52,20 @@ public class Toolkit {
         }
     }
 
-    public static List<Field> getAllFieldIncludingPrivateAndSuper(Class<?> klassc) {
-        return getAllFieldIncludingPrivateAndSuper(klassc, false);
+    public static List<Field> getAllFieldIncludingPrivateAndSuper(Class<?> cLass) {
+        return getAllFieldIncludingPrivateAndSuper(cLass, false);
     }
 
-    public static List<Field> getAllFieldIncludingPrivateAndSuper(Class<?> klass, boolean acceptStatic) {
+    public static List<Field> getAllFieldIncludingPrivateAndSuper(Class<?> cLass, boolean acceptStatic) {
         List<Field> fields = new ArrayList<Field>();
-        while (!klass.equals(Object.class)) {
-            for (Field field : klass.getDeclaredFields()) {
+        while (!cLass.equals(Object.class)) {
+            for (Field field : cLass.getDeclaredFields()) {
                 if (field != null && (field.toString().contains("static") && !acceptStatic)) {
                     continue;
                 }
                 fields.add(field);
             }
-            klass = klass.getSuperclass();
+            cLass = cLass.getSuperclass();
         }
         return fields;
     }
@@ -74,7 +77,7 @@ public class Toolkit {
         return json.matches("(^\\{.*\\}$)|(^\\[.*\\]$)");
     }
 
-    public static boolean isJArray(String json) {
+    public static boolean isJsonArray(String json) {
         return json.matches("(^\\[.*\\]$)");
     }
 
@@ -92,4 +95,86 @@ public class Toolkit {
 
         }
     }
+
+    public final static String[] fetchPackageClass(Context context, String packageName) {
+        ArrayList<String> classes = new ArrayList<String>();
+        try {
+            String packageCodePath = context.getPackageCodePath();
+            DexFile df = new DexFile(packageCodePath);
+            for (Enumeration<String> iterator = df.entries(); iterator.hasMoreElements(); ) {
+                String className = iterator.nextElement();
+                if (className.contains(packageName)) {
+                    classes.add(className);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return classes.toArray(new String[classes.size()]);
+    }
+
+//    public final static List<Class> getClassesForPackage(String packageName) throws ClassNotFoundException {
+//        // This will hold a list of directories matching the pckgname. There may be more than one if a package is split over multiple jars/paths
+//        ArrayList<File> directories = new ArrayList<File>();
+//        String packageToPath = packageName.replace('.', '/');
+//        try {
+//            ClassLoader cld = Thread.currentThread().getContextClassLoader();
+//            if (cld == null) {
+//                throw new ClassNotFoundException("Can't get class loader.");
+//            }
+//
+//            // Ask for all resources for the packageToPath
+//            Enumeration<URL> resources = cld.getResources(packageToPath);
+//            while (resources.hasMoreElements()) {
+//                directories.add(new File(URLDecoder.decode(resources.nextElement().getPath(), "UTF-8")));
+//            }
+//        } catch (NullPointerException x) {
+//            throw new ClassNotFoundException(packageName + " does not appear to be a valid package (Null pointer exception)");
+//        } catch (UnsupportedEncodingException encex) {
+//            throw new ClassNotFoundException(packageName + " does not appear to be a valid package (Unsupported encoding)");
+//        } catch (IOException ioex) {
+//            throw new ClassNotFoundException("IOException was thrown when trying to get all resources for " + packageName);
+//        }
+//
+//        ArrayList<Class> classes = new ArrayList<Class>();
+//        // For every directoryFile identified capture all the .class files
+//        while (!directories.isEmpty()) {
+//            File directoryFile = directories.remove(0);
+//            if (directoryFile.exists()) {
+//                // Get the list of the files contained in the package
+//                File[] files = directoryFile.listFiles();
+//
+//                for (File file : files) {
+//                    // we are only interested in .class files
+//                    if ((file.getName().endsWith(".class")) && (!file.getName().contains("$"))) {
+//                        // removes the .class extension
+//                        int index = directoryFile.getPath().indexOf(packageToPath);
+//                        String packagePrefix = directoryFile.getPath().substring(index).replace('/', '.');
+//                        ;
+//                        try {
+//                            String className = packagePrefix + '.' + file.getName().substring(0, file.getName().length() - 6);
+//                            classes.add(Class.forName(className));
+//                        } catch (NoClassDefFoundError e) {
+//                            // do nothing. this class hasn't been found by the loader, and we don't care.
+//                        }
+//                    } else if (file.isDirectory()) { // If we got to a subdirectory
+//                        directories.add(new File(file.getPath()));
+//                    }
+//                }
+//            } else {
+//                throw new ClassNotFoundException(packageName + " (" + directoryFile.getPath() + ") does not appear to be a valid package");
+//            }
+//        }
+//        return classes;
+//    }
+
+//    public static List<Class> fetchPackageClass(String packageName) {
+//        List<Class> myTypes = new ArrayList();
+//        Reflections reflections = new Reflections(packageName);
+//        for (String s : reflections.getStore().get(SubTypesScanner.class).values()) {
+//            myTypes.add(Class.forName(s));
+//        }
+//        return myTypes;
+//    }
 }

@@ -405,7 +405,7 @@ dependencies {
 }
 ```
 
-All available versions are: 
+All available public versions are:
 * 1.0.0
 * 1.1.0
     - 1.1.1

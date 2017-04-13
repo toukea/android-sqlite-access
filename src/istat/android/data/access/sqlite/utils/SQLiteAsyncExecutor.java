@@ -35,15 +35,27 @@ public class SQLiteAsyncExecutor {
 
     }
 
-    public <T> SQLiteThread execute(final SQLiteSelect clause, int limit, final ExecutionCallback<List<T>> callback) {
+    public <T> SQLiteThread execute(final SQLiteSelect clause, int limit, final ResultCallback<T> callback) {
         return execute(clause, -1, limit, callback);
     }
 
-    public <T> SQLiteThread execute(final SQLiteSelect clause, final ExecutionCallback<List<T>> callback) {
+    public <T> SQLiteThread execute(final SQLiteSelect clause, final ResultCallback<T> callback) {
         return execute(clause, -1, -1, callback);
     }
 
-    public <T> SQLiteThread execute(final SQLiteSelect clause, final int offset, final int limit, final ExecutionCallback<List<T>> callback) {
+    public <T> SQLiteThread execute(final SQLiteSelect clause, final ExecutionCallback<T> callback) {
+        SQLiteThread<T> thread = new SQLiteThread<T>(callback) {
+
+            @Override
+            protected T onExecute() {
+                return clause.executeLimitOne();
+            }
+        };
+        thread.start();
+        return thread;
+    }
+
+    public <T> SQLiteThread execute(final SQLiteSelect clause, final int offset, final int limit, final ResultCallback<T> callback) {
         SQLiteThread<List<T>> thread = new SQLiteThread<List<T>>(callback) {
 
             @Override
@@ -169,6 +181,10 @@ public class SQLiteAsyncExecutor {
         };
         thread.start();
         return thread;
+    }
+
+    public interface ResultCallback<T> extends ExecutionCallback<List<T>> {
+
     }
 
     public interface ExecutionCallback<T> {

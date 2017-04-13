@@ -37,7 +37,7 @@ public abstract class SQLiteAccessApplication extends Application implements SQL
         }
     }
 
-    public static SQLiteSelect select(Class<?> cLass) throws Exception {
+    public static SQLiteSelect select(Class<?>... cLass) throws Exception {
         return SQLite.fromConnection(applicationDbName, true).select(cLass);
     }
 

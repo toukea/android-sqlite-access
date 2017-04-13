@@ -50,6 +50,8 @@ TableExecutor
 GROUP BY meetingID
 HAVING COUNT(caseID) < 4 AND COUNT(caseID) > 2
 
+-make ClauseJoinSelectBuilder and ClauseBuilder familiar inside a beautiful Abstract genericity
+
 
 DONE-----------------------------
 -Nested selection as where param.

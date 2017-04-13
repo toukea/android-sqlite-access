@@ -100,6 +100,17 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             orderBy += buildRealColumnName(column) + " " + value;
         return (Clause) this;
     }
+    /*
+     public Clause orderBy(String column, String value) {
+        String realColumnName = buildRealColumnName(column);
+        if (TextUtils.isEmpty(orderBy)) {
+            orderBy = realColumnName + (realColumnName.equals(column) ? " " : " " + value);
+        } else {
+            orderBy += realColumnName + (realColumnName.equals(column) ? " " : " " + value);
+        }
+        return (Clause) this;
+    }
+     */
 
     public Clause groupBy(String... column) {
         for (String cl : column) {
@@ -116,10 +127,22 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         return (Clause) this;
     }
 
-    public Clause orderBy(String... columns) {
+    public Clause orderBy(String columns) {
+        return orderBy(columns, "ASC");
+    }
+
+    public Clause orderByAsc(String... columns) {
+        return orderBy("ASC", columns);
+    }
+
+    public Clause orderByDesc(String... columns) {
+        return orderBy("DESC", columns);
+    }
+
+    Clause orderBy(String direction, String... columns) {
         for (String column : columns) {
             boolean endWithDescOrAsc = column.toLowerCase().matches(".+\\s(desc|asc)$");
-            orderBy(column, endWithDescOrAsc ? "" : "ASC");
+            orderBy(column, endWithDescOrAsc ? "" : direction);
         }
         return (Clause) this;
     }
