@@ -94,10 +94,15 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
 
     @SuppressWarnings("unchecked")
     public Clause orderBy(String column, String value) {
-        if (TextUtils.isEmpty(orderBy))
-            orderBy = buildRealColumnName(column) + " " + value;
-        else
-            orderBy += buildRealColumnName(column) + " " + value;
+        String realColumnName = buildRealColumnName(column);
+        if (TextUtils.isEmpty(orderBy)) {
+            orderBy = realColumnName + " " + value;
+        } else {
+            orderBy += realColumnName + " " + value;
+        }
+        if (!TextUtils.isEmpty(value)) {
+            orderBy += value;
+        }
         return (Clause) this;
     }
     /*
@@ -128,7 +133,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     }
 
     public Clause orderBy(String columns) {
-        return orderBy(columns, "ASC");
+        return orderBy(columns, "");
     }
 
     public Clause orderByAsc(String... columns) {
@@ -564,7 +569,8 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         for (int i = 0; i < (!out.endsWith("?") ? splits.length - 1
                 : splits.length); i++) {
             sql += splits[i];
-            sql += whereParams.get(i);
+            if (i < whereParams.size())
+                sql += whereParams.get(i);
         }
         if (!out.endsWith("?")) {
             sql += splits[splits.length - 1];
