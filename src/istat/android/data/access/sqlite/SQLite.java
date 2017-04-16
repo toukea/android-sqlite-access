@@ -458,7 +458,7 @@ public final class SQLite {
                 return select(cLass)
                         .where(model.getPrimaryFieldName())
                         .equalTo(id)
-                        .executeLimitOne();
+                        .executeLimit1();
             } catch (InstantiationException e) {
                 e.printStackTrace();
             } catch (IllegalAccessException e) {

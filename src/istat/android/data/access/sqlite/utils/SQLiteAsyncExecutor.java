@@ -4,10 +4,7 @@ import android.os.Handler;
 import android.os.Looper;
 
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import istat.android.data.access.sqlite.SQLiteDelete;
 import istat.android.data.access.sqlite.SQLiteInsert;
@@ -48,7 +45,7 @@ public class SQLiteAsyncExecutor {
 
             @Override
             protected T onExecute() {
-                return clause.executeLimitOne();
+                return clause.executeLimit1();
             }
         };
         thread.start();

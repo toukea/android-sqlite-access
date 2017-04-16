@@ -143,6 +143,12 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         return list;
     }
 
+    public <T> T executeLimit1() {
+        List<T> results = execute(1);
+        return results.isEmpty() ? null : results.get(0);
+    }
+
+    @Deprecated
     public <T> T executeLimitOne() {
         List<T> results = execute(1);
         return results.isEmpty() ? null : results.get(0);
@@ -528,6 +534,10 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             this.joinSelect = selection;
         }
 
+        public SQLiteJoinSelect where1() {
+            return joinSelect;
+        }
+
         public ClauseSubJoinBuilder on(Class<?> clazz, String name) {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(clazz);
@@ -618,7 +628,6 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             }
             return null;
         }
-
     }
 
     public class ClauseSubJoinBuilder {
@@ -768,6 +777,49 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
 
         public ClauseBuilder orHaving(SQLiteFunction function) {
             return internalHaving("OR", function);
+        }
+
+        public SQLiteJoinSelect groupBy(Class<?> cLass, String column) {
+            String table = this.selectionTable;
+            try {
+                SQLiteModel model = SQLiteModel.fromClass(cLass);
+                table = model.getName();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+            if (TextUtils.isEmpty(groupBy))
+                groupBy = buildRealColumnName(table, column);
+            else
+                groupBy += ", " + buildRealColumnName(table, column);
+            return this;
+        }
+
+        public SQLiteJoinSelect orderBy(Class<?> cLass, String column) {
+            return orderBy(cLass, column, "ASC");
+        }
+
+        public SQLiteJoinSelect orderBy(Class<?> cLass, String column, String direction) {
+            String table = this.selectionTable;
+            try {
+                SQLiteModel model = SQLiteModel.fromClass(cLass);
+                table = model.getName();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+            String realColumnName = buildRealColumnName(table, column);
+            if (TextUtils.isEmpty(orderBy)) {
+                orderBy = realColumnName;
+            } else {
+                orderBy += realColumnName;
+            }
+            if (!TextUtils.isEmpty(direction)) {
+                orderBy += direction;
+            }
+            return this;
         }
 
 

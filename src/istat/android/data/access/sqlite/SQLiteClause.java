@@ -96,9 +96,9 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     public Clause orderBy(String column, String value) {
         String realColumnName = buildRealColumnName(column);
         if (TextUtils.isEmpty(orderBy)) {
-            orderBy = realColumnName + " " + value;
+            orderBy = realColumnName;
         } else {
-            orderBy += realColumnName + " " + value;
+            orderBy += realColumnName;
         }
         if (!TextUtils.isEmpty(value)) {
             orderBy += value;
@@ -171,6 +171,10 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         return buildRealColumnName(table, column);
     }
 
+    public Clause where1() {
+        return (Clause) this;
+    }
+
     public ClauseBuilder where(String column) {
         if (whereClause == null) {
             whereClause = new StringBuilder(buildRealColumnName(column));
@@ -215,7 +219,10 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
 
     @SuppressWarnings("unchecked")
     public Clause OR(SQLiteSelect close) {
-        this.whereClause.append("(" + this.whereClause + ") OR (" + close.whereClause
+        if (!TextUtils.isEmpty(this.whereClause)) {
+            this.whereClause.append(" OR ");
+        }
+        this.whereClause.append(close.whereClause
                 + ")");
         this.whereParams.addAll(close.whereParams);
         return (Clause) this;
@@ -223,7 +230,10 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
 
     @SuppressWarnings("unchecked")
     public Clause AND(SQLiteSelect close) {
-        this.whereClause.append("(" + this.whereClause + ") AND (" + close.whereClause
+        if (!TextUtils.isEmpty(this.whereClause)) {
+            this.whereClause.append(" AND ");
+        }
+        this.whereClause.append(close.whereClause
                 + ")");
         this.whereParams.addAll(close.whereParams);
         return (Clause) this;
