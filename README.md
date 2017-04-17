@@ -232,12 +232,12 @@ It is also possible to make multiple nested selections:
 # Using SQL function inside where clause args.
 ```java
       List<User> users = sql.select(User.class)
-                           .where("UPPER(firstname)")//you can put all SQL fuctions combination.
+                           .where("UPPER(firstname)")//you can put all SQL functions combination.
                            .equalTo("JEPHTE")
                            .execute();
 ```
 # Using HAVING and GROUP BY.
-Let consider Purchase.class defined by:
+Let consider **Purchase.class** defined by:
 ```java
      public static class Purchase {
             @SQLiteModel.PrimaryKey(policy = SQLiteModel.PrimaryKey.POLICY_AUTO_INCREMENT)
@@ -261,7 +261,7 @@ So it is possible to make selection using Having and Group By as SQL clause.
 ```java
     /*
      create a string array which represent
-     columns you want to 'Moisturize/ hydrate' from User table.
+     columns you want to 'Moisturize/ hydrate' from User table above.
     */
       String[] columns={"userName", "firstName"};
 
@@ -294,7 +294,7 @@ So it is possible to make selection using Having and Group By as SQL clause.
 
     List<PurchaseStatistic> statistic = sql.select(columns, Purchase.class)
                               .groupBy("clientName")
-                              .execute();
+                              .execute(PurchaseStatistic.class);
 ```
 # Using JOIN with SQL Selection 
 Make and SQL join using Library is "easily" possible.
@@ -391,6 +391,7 @@ It is also possible to specify if you want to use an auto closable connection. (
     //SQL instance has been auto closed after execution.
 ```
 # Make an asynchronous SQL clause execution.
+To perform async SQL clause execution, you just need to use executeAsync instead of execute.
 ```java
 //in progress...
 ```
