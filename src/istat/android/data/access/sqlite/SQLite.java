@@ -1,7 +1,6 @@
 package istat.android.data.access.sqlite;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -320,6 +319,24 @@ public final class SQLite {
     public static class SQL {
         SQLiteDatabase db;
         boolean autoClose = false;
+        SQLiteModel.Serializer serializer;
+        SQLiteModel.CursorReader cursorReader;
+        public SQLiteModel.ContentValueHandler contentValueHandler;
+
+        public SQL useSerializer(SQLiteModel.Serializer serializer) {
+            this.serializer = serializer;
+            return this;
+        }
+
+        public SQL useCursorReader(SQLiteModel.CursorReader reader) {
+            this.cursorReader = reader;
+            return this;
+        }
+
+        public SQL useContentValueHandler(SQLiteModel.ContentValueHandler contentValueHandler) {
+            this.contentValueHandler = contentValueHandler;
+            return this;
+        }
 
         public void setAutoClose(boolean autoClose) {
             this.autoClose = autoClose;

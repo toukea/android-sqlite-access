@@ -16,7 +16,7 @@ public final class SQLitePersist {
 
     public SQLitePersist persist(Object insert) {
         try {
-            SQLiteModel model = SQLiteModel.fromObject(insert);
+            SQLiteModel model = SQLiteModel.fromObject(insert,sql.serializer, sql.contentValueHandler);
             modelPersist.add(model);
             persists.add(insert);
         } catch (Exception e) {
@@ -28,7 +28,7 @@ public final class SQLitePersist {
     public SQLitePersist persist(List<?> insert) {
         for (Object obj : insert) {
             try {
-                SQLiteModel model = SQLiteModel.fromObject(obj);
+                SQLiteModel model = SQLiteModel.fromObject(obj,sql.serializer, sql.contentValueHandler);
                 modelPersist.add(model);
                 persists.add(obj);
             } catch (Exception e) {
@@ -41,7 +41,7 @@ public final class SQLitePersist {
     public SQLitePersist persist(Object... insert) {
         for (Object obj : insert) {
             try {
-                SQLiteModel model = SQLiteModel.fromObject(obj);
+                SQLiteModel model = SQLiteModel.fromObject(obj,sql.serializer, sql.contentValueHandler);
                 modelPersist.add(model);
                 persists.add(obj);
             } catch (Exception e) {
