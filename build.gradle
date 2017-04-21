@@ -18,7 +18,7 @@ android {
         versionName "1.0"
     }
     compileSdkVersion 18
-    buildToolsVersion "21.1.1"
+    buildToolsVersion '25.0.0'
     lintOptions {
         abortOnError false
     }
