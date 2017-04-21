@@ -18,7 +18,7 @@ public final class SQLiteInsert {
 
     public SQLiteInsert insert(Object insert) {
         try {
-            QueryAble model = SQLiteModel.fromObject(insert);
+            QueryAble model = SQLiteModel.fromObject(insert, sql.serializer, sql.contentValueHandler);
             modelInsertions.add(model);
             insertions.add(insert);
         } catch (Exception e) {
@@ -33,7 +33,7 @@ public final class SQLiteInsert {
         }
         for (Object obj : insert) {
             try {
-                QueryAble model = SQLiteModel.fromObject(obj);
+                QueryAble model = SQLiteModel.fromObject(obj, sql.serializer, sql.contentValueHandler);
                 modelInsertions.add(model);
                 insertions.add(obj);
             } catch (Exception e) {
@@ -49,7 +49,7 @@ public final class SQLiteInsert {
         }
         for (Object obj : insert) {
             try {
-                QueryAble model = SQLiteModel.fromObject(obj);
+                QueryAble model = SQLiteModel.fromObject(obj, sql.serializer, sql.contentValueHandler);
                 modelInsertions.add(model);
                 insertions.add(obj);
             } catch (Exception e) {

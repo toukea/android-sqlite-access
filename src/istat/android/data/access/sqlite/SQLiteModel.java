@@ -337,15 +337,12 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     public static SQLiteModel fromObject(final Object obj) throws InstantiationException,
             IllegalAccessException {
-        return fromObject(obj, SQLiteModel.DEFAULT_SERIALIZER);
+        return fromObject(obj, SQLiteModel.DEFAULT_SERIALIZER, DEFAULT_CONTAIN_VALUE_HANDLER);
     }
 
     @SuppressWarnings("unchecked")
-    public static SQLiteModel fromObject(final Object obj, Serializer serializer) throws InstantiationException,
+    public static SQLiteModel fromObject(final Object obj, Serializer serializer, ContentValueHandler contentValueHandler) throws InstantiationException,
             IllegalAccessException {
-        if (serializer == null) {
-            serializer = DEFAULT_SERIALIZER;
-        }
         try {
             if (obj instanceof SQLiteModel) {
                 SQLiteModel model = (SQLiteModel) obj;
@@ -426,7 +423,8 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 .setNameFieldPair(nameFieldPair)
                 .setNestedTableNameFieldPair(nestedTableField)
                 .setModelClass(cLass)
-                .setSerializer(serializer);
+                .setSerializer(serializer)
+                .setContentValueHandler(contentValueHandler);
         return builder.create();
     }
 
@@ -446,13 +444,16 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     public static SQLiteModel fromClass(final Class cLass) throws InstantiationException,
             IllegalAccessException {
-        return fromClass(cLass, SQLiteModel.DEFAULT_SERIALIZER);
+        return fromClass(cLass, SQLiteModel.DEFAULT_SERIALIZER, DEFAULT_CONTAIN_VALUE_HANDLER);
     }
 
-    public static SQLiteModel fromClass(final Class cLass, Serializer serializer) throws InstantiationException,
+    public static SQLiteModel fromClass(final Class cLass, Serializer serializer, ContentValueHandler contentValueHandler) throws InstantiationException,
             IllegalAccessException {
         if (serializer == null) {
             serializer = DEFAULT_SERIALIZER;
+        }
+        if (contentValueHandler == null) {
+            contentValueHandler = DEFAULT_CONTAIN_VALUE_HANDLER;
         }
         Builder builder = new Builder();
         List<String> projectionAdder = new ArrayList<String>();
@@ -519,7 +520,8 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 .setNameFieldPair(nameFieldPair)
                 .setNestedTableNameFieldPair(nestedTableField)
                 .setModelClass(cLass)
-                .setSerializer(serializer);
+                .setSerializer(serializer)
+                .setContentValueHandler(contentValueHandler);
         return builder.create();
     }
 
@@ -883,8 +885,12 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     public final static class Builder {
         Serializer serializer = SQLiteModel.DEFAULT_SERIALIZER;
+        ContentValueHandler contentValueHandler = DEFAULT_CONTAIN_VALUE_HANDLER;
 
         public Builder setSerializer(Serializer serializer) {
+            if (serializer == null) {
+                serializer = DEFAULT_SERIALIZER;
+            }
             this.serializer = serializer;
             return this;
         }
@@ -970,6 +976,13 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         HashMap<String, Object> FieldNameValuePair = new HashMap<String, Object>();
         HashMap<String, Field> nameFieldPair = new HashMap<String, Field>();
         HashMap<String, Field> nestedTableNameFieldPair = new HashMap<String, Field>();
+
+        public void setContentValueHandler(ContentValueHandler contentValueHandler) {
+            if (contentValueHandler == null) {
+                contentValueHandler = DEFAULT_CONTAIN_VALUE_HANDLER;
+            }
+            this.contentValueHandler = contentValueHandler;
+        }
     }
 
     final static SQLiteModel createFromManyToMany(Class<?> parentTableClass, Class<?> childTableClass) throws InstantiationException, IllegalAccessException {
@@ -1078,6 +1091,40 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         }
     };
 
+    private static ContentValueHandler DEFAULT_CONTAIN_VALUE_HANDLER = new ContentValueHandler() {
+        @Override
+        public ContentValues toContentValues(SQLiteModel model, Cursor cursor) {
+            ContentValues pairs = new ContentValues();
+            String[] columns = model.getColumns();
+            for (String column : columns) {
+                if (column != null) {
+                    if (model.get(column) != null) {
+                        String values = model.getSerializedValue(column);
+                        if (column.equals(model.getPrimaryFieldName())) {
+                            if (model.getPrimaryKeyPolicy() == PrimaryKey.POLICY_AUTO_INCREMENT && "0".equals(values)) {
+                                //Do nothing id=0 should autoIncremented.
+                                Log.d("SQLiteModel", "toContentValues:" + column + " is primary key should be autoIncremented.");
+                            } else if (model.getPrimaryKeyPolicy() == PrimaryKey.POLICY_AUTO_GENERATE) {
+                                if (TextUtils.isEmpty(values)) {
+                                    values = UUID.randomUUID().toString();
+                                } else if ("0".equals(values)) {
+                                    values = "" + (System.currentTimeMillis() + (int) (Math.random() * 100));
+                                }
+                                pairs.put(column, values);
+
+                            } else {
+                                pairs.put(column, values);
+                            }
+                        } else {
+                            pairs.put(column, values);
+                        }
+                    }
+                }
+            }
+            return pairs;
+        }
+    };
+
     public interface Serializer {
         String onSerialize(Object obj, String fieldName);
 
@@ -1086,5 +1133,9 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     public interface CursorReader {
         void onReadCursor(SQLiteModel model, Cursor cursor);
+    }
+
+    public interface ContentValueHandler {
+        ContentValues toContentValues(SQLiteModel model, Cursor cursor);
     }
 }
