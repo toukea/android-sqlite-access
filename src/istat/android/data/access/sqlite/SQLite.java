@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -319,23 +320,77 @@ public final class SQLite {
     public static class SQL {
         SQLiteDatabase db;
         boolean autoClose = false;
-        SQLiteModel.Serializer serializer;
-        SQLiteModel.CursorReader cursorReader;
-        public SQLiteModel.ContentValueHandler contentValueHandler;
+        HashMap<Class<?>, SQLiteModel.Serializer> serializers = new HashMap<Class<?>, SQLiteModel.Serializer>() {
+            {
+                put(Object.class, SQLiteModel.DEFAULT_SERIALIZER);
+            }
+        };
+        HashMap<Class<?>, SQLiteModel.CursorReader> cursorReaders = new HashMap<Class<?>, SQLiteModel.CursorReader>() {
+            {
+                put(Object.class, SQLiteModel.DEFAULT_CURSOR_READER);
+            }
+        };
+
+        HashMap<Class<?>, SQLiteModel.ContentValueHandler> contentValueHandlers = new HashMap<Class<?>, SQLiteModel.ContentValueHandler>() {
+            {
+                put(Object.class, SQLiteModel.DEFAULT_CONTAIN_VALUE_HANDLER);
+            }
+        };
+
+
+        SQLiteModel.Serializer getSerializer(Class cLass) {
+            SQLiteModel.Serializer out = serializers.get(cLass);
+            if (out != null) {
+                return out;
+            }
+            return serializers.get(Object.class);
+
+        }
+
+        SQLiteModel.CursorReader getCursorReader(Class cLass) {
+            SQLiteModel.CursorReader out = cursorReaders.get(cLass);
+            if (out != null) {
+                return out;
+            }
+            return cursorReaders.get(Object.class);
+
+        }
+
+        SQLiteModel.ContentValueHandler getConntentValueHandler(Class cLass) {
+            SQLiteModel.ContentValueHandler out = contentValueHandlers.get(cLass);
+            if (out != null) {
+                return out;
+            }
+            return contentValueHandlers.get(Object.class);
+
+        }
+
+
+        public SQL useSerializer(Class<?> cLass, SQLiteModel.Serializer serializer) {
+            this.serializers.put(cLass, serializer);
+            return this;
+        }
+
+        public SQL useCursorReader(Class<?> cLass, SQLiteModel.CursorReader reader) {
+            this.cursorReaders.put(cLass, reader);
+            return this;
+        }
+
+        public SQL useContentValueHandler(Class<?> cLass, SQLiteModel.ContentValueHandler contentValueHandler) {
+            this.contentValueHandlers.put(cLass, contentValueHandler);
+            return this;
+        }
 
         public SQL useSerializer(SQLiteModel.Serializer serializer) {
-            this.serializer = serializer;
-            return this;
+            return useSerializer(Object.class, serializer);
         }
 
         public SQL useCursorReader(SQLiteModel.CursorReader reader) {
-            this.cursorReader = reader;
-            return this;
+            return useCursorReader(Object.class, reader);
         }
 
         public SQL useContentValueHandler(SQLiteModel.ContentValueHandler contentValueHandler) {
-            this.contentValueHandler = contentValueHandler;
-            return this;
+            return useContentValueHandler(Object.class, contentValueHandler);
         }
 
         public void setAutoClose(boolean autoClose) {

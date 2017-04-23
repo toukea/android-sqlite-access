@@ -162,7 +162,9 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         Cursor c = getCursor();
         List<SQLiteModel> list = new ArrayList<SQLiteModel>();
         while (c.moveToNext()) {
-            SQLiteModel model = SQLiteModel.fromClass(this.clazz,sql.serializer,sql.contentValueHandler);
+            SQLiteModel model = SQLiteModel.fromClass(this.clazz,
+                    sql.getSerializer(this.clazz),
+                    sql.getConntentValueHandler(this.clazz));
             model.fillFromCursor(c);
             list.add(model);
         }
@@ -243,8 +245,10 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
      */
     private <T> T createObjectFromCursor(Class<T> clazz, Cursor c) throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         //TODO make it better
-        SQLiteModel model = SQLiteModel.fromClass(clazz,sql.serializer,sql.contentValueHandler);
-        model.fillFromCursor(c, sql.cursorReader);
+        SQLiteModel model = SQLiteModel.fromClass(clazz,
+                sql.getSerializer(clazz),
+                sql.getConntentValueHandler(clazz));
+        model.fillFromCursor(c, sql.getCursorReader(clazz));
         T obj = model.asClass(clazz);
         return obj;
     }

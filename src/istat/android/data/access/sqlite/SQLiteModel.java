@@ -1020,7 +1020,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     CursorReader cursorReader = DEFAULT_CURSOR_READER;
 
 
-    private static final CursorReader DEFAULT_CURSOR_READER = new CursorReader() {
+    static final CursorReader DEFAULT_CURSOR_READER = new CursorReader() {
         @Override
         public void onReadCursor(SQLiteModel model, Cursor c) {
             for (String projection : model.getColumns()) {
@@ -1036,7 +1036,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             }
         }
     };
-    private static final Serializer DEFAULT_SERIALIZER = new Serializer() {
+    static final Serializer DEFAULT_SERIALIZER = new Serializer() {
         @Override
         public String onSerialize(Object value, String fieldName) {
             if (value.getClass().isAssignableFrom(CharSequence.class) || value.getClass().isAssignableFrom(String.class)
@@ -1091,7 +1091,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         }
     };
 
-    private static ContentValueHandler DEFAULT_CONTAIN_VALUE_HANDLER = new ContentValueHandler() {
+    static ContentValueHandler DEFAULT_CONTAIN_VALUE_HANDLER = new ContentValueHandler() {
         @Override
         public ContentValues toContentValues(SQLiteModel model, Cursor cursor) {
             ContentValues pairs = new ContentValues();
@@ -1125,8 +1125,8 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         }
     };
 
-    public interface Serializer {
-        String onSerialize(Object obj, String fieldName);
+    public interface Serializer<T> {
+        String onSerialize(T obj, String fieldName);
 
         Object onDeSerialize(String serialized, Field field);
     }

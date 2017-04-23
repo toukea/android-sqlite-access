@@ -14,7 +14,9 @@ public final class SQLiteMerge {
 
     public SQLiteMerge merge(Object merge) {
         try {
-            SQLiteModel model = SQLiteModel.fromObject(merge,sql.serializer, sql.contentValueHandler);
+            SQLiteModel model = SQLiteModel.fromObject(merge,
+                    sql.getSerializer(merge.getClass()),
+                    sql.getConntentValueHandler(merge.getClass()));
             modelMerges.add(model);
             merges.add(merge);
         } catch (Exception e) {
@@ -24,11 +26,13 @@ public final class SQLiteMerge {
     }
 
     public SQLiteMerge merge(List<?> entities) {
-        for (Object obj : entities) {
+        for (Object merge : entities) {
             try {
-                SQLiteModel model = SQLiteModel.fromObject(obj,sql.serializer, sql.contentValueHandler);
+                SQLiteModel model = SQLiteModel.fromObject(merge,
+                        sql.getSerializer(merge.getClass()),
+                        sql.getConntentValueHandler(merge.getClass()));
                 modelMerges.add(model);
-                merges.add(obj);
+                merges.add(merge);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -39,7 +43,9 @@ public final class SQLiteMerge {
     public SQLiteMerge merge(Object... merge) {
         for (Object obj : merge) {
             try {
-                SQLiteModel model = SQLiteModel.fromObject(obj,sql.serializer, sql.contentValueHandler);
+                SQLiteModel model = SQLiteModel.fromObject(obj,
+                        sql.getSerializer(merge.getClass()),
+                        sql.getConntentValueHandler(merge.getClass()));
                 modelMerges.add(model);
                 merges.add(obj);
             } catch (Exception e) {
