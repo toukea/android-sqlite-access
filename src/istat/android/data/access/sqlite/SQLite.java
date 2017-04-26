@@ -105,6 +105,10 @@ public final class SQLite {
         prepareSQL(dbName, handler, false);
     }
 
+    public static void prepareTransactionalSQL(String dbName, SQLReadyHandler handler) {
+        prepareSQL(dbName, handler, true);
+    }
+
     public static void prepareTransactionalSQL(String dbName, PrepareHandler handler) {
         prepareSQL(dbName, handler, true);
     }
@@ -689,6 +693,13 @@ public final class SQLite {
 
         public final void setTransactionSuccessful() {
             db.setTransactionSuccessful();
+        }
+
+        public final void endTransaction(boolean success) {
+            if (success) {
+                setTransactionSuccessful();
+            }
+            endTransaction();
         }
 
         public final void endTransaction() {
