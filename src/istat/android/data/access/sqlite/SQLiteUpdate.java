@@ -1,9 +1,12 @@
 package istat.android.data.access.sqlite;
 
+import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import istat.android.data.access.sqlite.utils.SQLiteAsyncExecutor;
 import istat.android.data.access.sqlite.utils.SQLiteThread;
@@ -68,11 +71,11 @@ public final class SQLiteUpdate {
         @Override
         protected Object onExecute(SQLiteDatabase db) {
             notifyExecuting();
-            String whereClause = getWhereClause();
-            String[] whereParams = getWhereParams();
             if (!TextUtils.isEmpty(this.limit)) {
                 this.whereClause.append(" LIMIT " + limit);
             }
+            String whereClause = getWhereClause();
+            String[] whereParams = getWhereParams();
             return db.update(model.getName(), model.toContentValues(),
                     whereClause, whereParams);
         }
@@ -115,18 +118,26 @@ public final class SQLiteUpdate {
         @Override
         public String getStatement() {
             String out = "UPDATE FROM " + table;
+            ContentValues contentValues = model.toContentValues();
+            if (contentValues != null && contentValues.size() > 0) {
+                out += " SET ";
+                Iterator<Map.Entry<String, Object>> valueSetIterator = contentValues.valueSet().iterator();
+                while (valueSetIterator.hasNext()) {
+                    Map.Entry<String, Object> set = valueSetIterator.next();
+                    out += set.getKey() + " = " + set.getValue();
+                    if (valueSetIterator.hasNext()) {
+                        out += ", ";
+                    }
+                }
+            }
+            String whereClause = getWhereClause();
+            String limit = getLimit();
             if (!TextUtils.isEmpty(whereClause)) {
-                out += " WHERE '" + whereClause.toString().trim() + "'";
+                out += " WHERE " + whereClause.trim();
             }
-            String[] splits = out.split("\\?");
-            String sql = "";
-            for (int i = 0; i < (!out.endsWith("?") ? splits.length - 1
-                    : splits.length); i++) {
-                sql += splits[i];
-                sql += "'" + whereParams.get(i) + "'";
-            }
-            if (!out.endsWith("?")) {
-                sql += splits[splits.length - 1];
+            String sql = compute(out, this.whereParams);
+            if (!TextUtils.isEmpty(limit)) {
+                sql += " LIMIT " + limit;
             }
             return sql;
         }
@@ -153,6 +164,7 @@ public final class SQLiteUpdate {
         Updater updater;
 
         SQLiteUpdateLimit(Updater updater, String limitS) {
+            this.updater = updater;
             this.updater.limit = limitS;
             this.updater = updater;
         }
