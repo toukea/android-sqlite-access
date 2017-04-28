@@ -20,7 +20,7 @@ public final class SQLiteInsert {
         try {
             QueryAble model = SQLiteModel.fromObject(insert,
                     sql.getSerializer(insert.getClass()),
-                    sql.getConntentValueHandler(insert.getClass()));
+                    sql.getContentValueHandler(insert.getClass()));
             modelInsertions.add(model);
             insertions.add(insert);
         } catch (Exception e) {
@@ -37,7 +37,7 @@ public final class SQLiteInsert {
             try {
                 QueryAble model = SQLiteModel.fromObject(obj,
                         sql.getSerializer(insert.getClass()),
-                        sql.getConntentValueHandler(insert.getClass()));
+                        sql.getContentValueHandler(insert.getClass()));
                 modelInsertions.add(model);
                 insertions.add(obj);
             } catch (Exception e) {
@@ -55,7 +55,7 @@ public final class SQLiteInsert {
             try {
                 QueryAble model = SQLiteModel.fromObject(obj,
                         sql.getSerializer(insert.getClass()),
-                        sql.getConntentValueHandler(insert.getClass()));
+                        sql.getContentValueHandler(insert.getClass()));
                 modelInsertions.add(model);
                 insertions.add(obj);
             } catch (Exception e) {

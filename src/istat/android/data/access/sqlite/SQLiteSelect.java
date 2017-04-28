@@ -164,7 +164,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         while (c.moveToNext()) {
             SQLiteModel model = SQLiteModel.fromClass(this.clazz,
                     sql.getSerializer(this.clazz),
-                    sql.getConntentValueHandler(this.clazz));
+                    sql.getContentValueHandler(this.clazz));
             model.fillFromCursor(c);
             list.add(model);
         }
@@ -247,7 +247,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         //TODO make it better
         SQLiteModel model = SQLiteModel.fromClass(clazz,
                 sql.getSerializer(clazz),
-                sql.getConntentValueHandler(clazz));
+                sql.getContentValueHandler(clazz));
         model.fillFromCursor(c, sql.getCursorReader(clazz));
         T obj = model.asClass(clazz);
         return obj;
@@ -805,6 +805,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         }
 
         public SQLiteJoinSelect orderBy(Class<?> cLass, String column, String direction) {
+            direction = " " + direction;
             String table = this.selectionTable;
             try {
                 SQLiteModel model = SQLiteModel.fromClass(cLass);

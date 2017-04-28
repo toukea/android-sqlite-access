@@ -12,10 +12,13 @@ import android.os.CancellationSignal;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import istat.android.data.access.sqlite.utils.SQLiteParser;
@@ -340,12 +343,20 @@ public final class SQLite {
                 put(Object.class, SQLiteModel.DEFAULT_CONTAIN_VALUE_HANDLER);
             }
         };
+        ArrayList<Class<?>> serializerAssignableTo = new ArrayList<Class<?>>();
+        ArrayList<Class<?>> cursorReaderAssignableTo = new ArrayList<Class<?>>();
+        ArrayList<Class<?>> contentValueHandlerAssignableTo = new ArrayList<Class<?>>();
 
-
+        //TODO manage isAssignableTo
         SQLiteModel.Serializer getSerializer(Class cLass) {
             SQLiteModel.Serializer out = serializers.get(cLass);
             if (out != null) {
                 return out;
+            }
+            for (Class<?> c : serializerAssignableTo) {
+                if (c.isAssignableFrom(cLass)) {
+                    return getSerializer(c);
+                }
             }
             return serializers.get(Object.class);
 
@@ -356,32 +367,63 @@ public final class SQLite {
             if (out != null) {
                 return out;
             }
+            for (Class<?> c : cursorReaderAssignableTo) {
+                if (c.isAssignableFrom(cLass)) {
+                    return getCursorReader(c);
+                }
+            }
             return cursorReaders.get(Object.class);
 
         }
 
-        SQLiteModel.ContentValueHandler getConntentValueHandler(Class cLass) {
+        SQLiteModel.ContentValueHandler getContentValueHandler(Class cLass) {
             SQLiteModel.ContentValueHandler out = contentValueHandlers.get(cLass);
             if (out != null) {
                 return out;
+            }
+            for (Class<?> c : contentValueHandlerAssignableTo) {
+                if (c.isAssignableFrom(cLass)) {
+                    return getContentValueHandler(c);
+                }
             }
             return contentValueHandlers.get(Object.class);
 
         }
 
-
         public SQL useSerializer(Class<?> cLass, SQLiteModel.Serializer serializer) {
-            this.serializers.put(cLass, serializer);
-            return this;
+            return useSerializer(cLass, serializer, false);
         }
 
         public SQL useCursorReader(Class<?> cLass, SQLiteModel.CursorReader reader) {
-            this.cursorReaders.put(cLass, reader);
-            return this;
+            return useCursorReader(cLass, reader, false);
         }
 
         public SQL useContentValueHandler(Class<?> cLass, SQLiteModel.ContentValueHandler contentValueHandler) {
+            return useContentValueHandler(cLass, contentValueHandler, false);
+        }
+
+        //-----------------------------------------------
+        public SQL useSerializer(Class<?> cLass, SQLiteModel.Serializer serializer, boolean assignableTo) {
+            this.serializers.put(cLass, serializer);
+            if (assignableTo) {
+                this.serializerAssignableTo.add(cLass);
+            }
+            return this;
+        }
+
+        public SQL useCursorReader(Class<?> cLass, SQLiteModel.CursorReader reader, boolean assignableTo) {
+            this.cursorReaders.put(cLass, reader);
+            if (assignableTo) {
+                this.cursorReaderAssignableTo.add(cLass);
+            }
+            return this;
+        }
+
+        public SQL useContentValueHandler(Class<?> cLass, SQLiteModel.ContentValueHandler contentValueHandler, boolean assignableTo) {
             this.contentValueHandlers.put(cLass, contentValueHandler);
+            if (assignableTo) {
+                this.contentValueHandlerAssignableTo.add(cLass);
+            }
             return this;
         }
 

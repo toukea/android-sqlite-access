@@ -18,7 +18,7 @@ public final class SQLitePersist {
         try {
             SQLiteModel model = SQLiteModel.fromObject(insert,
                     sql.getSerializer(insert.getClass()),
-                    sql.getConntentValueHandler(insert.getClass()));
+                    sql.getContentValueHandler(insert.getClass()));
             modelPersist.add(model);
             persists.add(insert);
         } catch (Exception e) {
@@ -32,7 +32,7 @@ public final class SQLitePersist {
             try {
                 SQLiteModel model = SQLiteModel.fromObject(obj,
                         sql.getSerializer(insert.getClass()),
-                        sql.getConntentValueHandler(insert.getClass()));
+                        sql.getContentValueHandler(insert.getClass()));
                 modelPersist.add(model);
                 persists.add(obj);
             } catch (Exception e) {
@@ -47,7 +47,7 @@ public final class SQLitePersist {
             try {
                 SQLiteModel model = SQLiteModel.fromObject(obj,
                         sql.getSerializer(insert.getClass()),
-                        sql.getConntentValueHandler(insert.getClass()));
+                        sql.getContentValueHandler(insert.getClass()));
                 modelPersist.add(model);
                 persists.add(obj);
             } catch (Exception e) {
