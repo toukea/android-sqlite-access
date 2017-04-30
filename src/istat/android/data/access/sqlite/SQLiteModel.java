@@ -647,6 +647,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return asClass(clazz, this.serializer);
     }
 
+    //TODO update to combine serializer and cursorReader.
     public <T> T asClass(Class<T> clazz, Serializer serializer) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
         T instance = Toolkit.newInstance(clazz);
         List<Field> fields = Toolkit.getAllFieldFields(clazz, true, false);
@@ -712,6 +713,15 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             Map.Entry<String, Object> name = iterator.next();
             set(name.getKey(), name.getValue());
         }
+    }
+
+    //TODO make it better
+    public static <T> T cursorAsClass(Cursor c, Class<T> clazz, Serializer serializer, CursorReader cursorReader) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
+        SQLiteModel model = SQLiteModel.fromClass(clazz,
+                serializer, null);
+        model.fillFromCursor(c, cursorReader);
+        T obj = model.asClass(clazz);
+        return obj;
     }
 
     @Target(ElementType.TYPE)
@@ -945,6 +955,8 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
         public SQLiteModel create() {
             SQLiteModel model = new SQLiteModel() {
+                String[] columns;
+
                 @Override
                 public String getName() {
                     return name;
@@ -952,7 +964,11 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
                 @Override
                 public String[] getColumns() {
-                    return projections.toArray(new String[projections.size()]);
+                    if (columns != null) {
+                        return columns;
+                    }
+                    columns = projections.toArray(new String[projections.size()]);
+                    return columns;
                 }
 
                 @Override
@@ -1030,6 +1046,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                         String values = c.getString(columnIndex);
                         if (!TextUtils.isEmpty(values)) {
                             model.set(projection, values);
+//                            DEFAULT_SERIALIZER.onDeSerialize(values,model.getField(projection))
                         }
                     }
                 }

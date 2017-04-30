@@ -171,8 +171,18 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         return list;
     }
 
-    @SuppressWarnings("unchecked")
     public <T> void execute(List<T> list) {
+        execute(list, this.clazz);
+    }
+
+    public <T> List<T> execute(Class<T> clazz) {
+        List<T> list = new ArrayList<T>();
+        execute(list, clazz);
+        return list;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> void execute(List<T> list, Class<?> clazz) {
         if (list == null) {
             return;
         }
@@ -180,7 +190,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             Cursor c = onExecute(sql.db);
             if (c.getCount() > 0) {
                 while (c.moveToNext()) {
-                    T model = (T) createObjectFromCursor(clazz, c);
+                    T model = (T) SQLiteModel.cursorAsClass(c, clazz, sql.getSerializer(clazz), sql.getCursorReader(clazz));
                     list.add(model);
                 }
             }
@@ -193,25 +203,6 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         notifyExecuted();
     }
 
-    public <T> List<T> execute(Class<T> clazz) {
-        List<T> list = new ArrayList<T>();
-        try {
-            Cursor c = onExecute(sql.db);
-            if (c.getCount() > 0) {
-                while (c.moveToNext()) {
-                    T model = createObjectFromCursor(clazz, c);
-                    list.add(model);
-                }
-            }
-            c.close();
-            notifyExecutionSucceed(TYPE, this, list);
-        } catch (Exception e) {
-            e.printStackTrace();
-            notifyExecutionFail(e);
-        }
-        notifyExecuted();
-        return list;
-    }
 
     public <T> SQLiteThread<List<T>> executeAsync() {
         return executeAsync(-1, -1, null);
@@ -233,24 +224,6 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     public <T> SQLiteThread<List<T>> executeAsync(final int offset, final int limit, final SQLiteAsyncExecutor.ResultCallback<T> callback) {
         SQLiteAsyncExecutor asyncExecutor = new SQLiteAsyncExecutor();
         return asyncExecutor.execute(this, offset, limit, callback);
-    }
-
-    /**
-     * Create A T instance and fill them from cursor.
-     *
-     * @param clazz
-     * @param c
-     * @param <T>
-     * @return
-     */
-    private <T> T createObjectFromCursor(Class<T> clazz, Cursor c) throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-        //TODO make it better
-        SQLiteModel model = SQLiteModel.fromClass(clazz,
-                sql.getSerializer(clazz),
-                sql.getContentValueHandler(clazz));
-        model.fillFromCursor(c, sql.getCursorReader(clazz));
-        T obj = model.asClass(clazz);
-        return obj;
     }
 
 //    //TODO check if 'selectionTable' or 'table'
