@@ -157,34 +157,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     @Override
     public ContentValues toContentValues() {
-        ContentValues pairs = new ContentValues();
-        String[] columns = getColumns();
-        for (String column : columns) {
-            if (column != null) {
-                if (get(column) != null) {
-                    String values = getSerializedValue(column);
-                    if (column.equals(getPrimaryFieldName())) {
-                        if (getPrimaryKeyPolicy() == PrimaryKey.POLICY_AUTO_INCREMENT && "0".equals(values)) {
-                            //Do nothing id=0 should autoIncremented.
-                            Log.d("SQLiteModel", "toContentValues:" + column + " is primary key should be autoIncremented.");
-                        } else if (getPrimaryKeyPolicy() == PrimaryKey.POLICY_AUTO_GENERATE) {
-                            if (TextUtils.isEmpty(values)) {
-                                values = UUID.randomUUID().toString();
-                            } else if ("0".equals(values)) {
-                                values = "" + (System.currentTimeMillis() + (int) (Math.random() * 100));
-                            }
-                            pairs.put(column, values);
-
-                        } else {
-                            pairs.put(column, values);
-                        }
-                    } else {
-                        pairs.put(column, values);
-                    }
-                }
-            }
-        }
-        return pairs;
+        return contentValueHandler.toContentValues(this);
     }
 
     public boolean isPrimaryFieldDefined() {
@@ -1034,6 +1007,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     Serializer serializer = DEFAULT_SERIALIZER;
     CursorReader cursorReader = DEFAULT_CURSOR_READER;
+    ContentValueHandler contentValueHandler = DEFAULT_CONTAIN_VALUE_HANDLER;
 
 
     static final CursorReader DEFAULT_CURSOR_READER = new CursorReader() {
@@ -1110,7 +1084,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     static ContentValueHandler DEFAULT_CONTAIN_VALUE_HANDLER = new ContentValueHandler() {
         @Override
-        public ContentValues toContentValues(SQLiteModel model, Cursor cursor) {
+        public ContentValues toContentValues(SQLiteModel model) {
             ContentValues pairs = new ContentValues();
             String[] columns = model.getColumns();
             for (String column : columns) {
@@ -1153,6 +1127,6 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
     public interface ContentValueHandler {
-        ContentValues toContentValues(SQLiteModel model, Cursor cursor);
+        ContentValues toContentValues(SQLiteModel model);
     }
 }
