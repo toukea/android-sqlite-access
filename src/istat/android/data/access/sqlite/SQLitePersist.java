@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import istat.android.data.access.sqlite.interfaces.QueryAble;
+import istat.android.data.access.sqlite.utils.SQLiteAsyncExecutor;
+import istat.android.data.access.sqlite.utils.SQLiteThread;
 
 public final class SQLitePersist {
     List<SQLiteModel> modelPersist = new ArrayList<SQLiteModel>();
@@ -79,5 +81,14 @@ public final class SQLitePersist {
 
     public List<Object> getPersists() {
         return persists;
+    }
+
+    public SQLiteThread executeAsync() {
+        return executeAsync(null);
+    }
+
+    public SQLiteThread executeAsync(final SQLiteAsyncExecutor.ExecutionCallback<long[]> callback) {
+        SQLiteAsyncExecutor asyncExecutor = new SQLiteAsyncExecutor();
+        return asyncExecutor.execute(this, callback);
     }
 }

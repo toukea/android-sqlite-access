@@ -3,6 +3,9 @@ package istat.android.data.access.sqlite;
 import java.util.ArrayList;
 import java.util.List;
 
+import istat.android.data.access.sqlite.utils.SQLiteAsyncExecutor;
+import istat.android.data.access.sqlite.utils.SQLiteThread;
+
 public final class SQLiteMerge {
     List<SQLiteModel> modelMerges = new ArrayList<SQLiteModel>();
     List<Object> merges = new ArrayList<Object>();
@@ -77,5 +80,14 @@ public final class SQLiteMerge {
 
     public List<Object> getMerges() {
         return merges;
+    }
+
+    public SQLiteThread executeAsync() {
+        return executeAsync(null);
+    }
+
+    public SQLiteThread executeAsync(final SQLiteAsyncExecutor.ExecutionCallback<long[]> callback) {
+        SQLiteAsyncExecutor asyncExecutor = new SQLiteAsyncExecutor();
+        return asyncExecutor.execute(this, callback);
     }
 }
