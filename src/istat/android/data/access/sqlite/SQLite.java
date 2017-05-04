@@ -132,7 +132,7 @@ public final class SQLite {
             access = connect(dbNameConnectionPair.get(dbName));
             dbNameConnectionPair.remove(dbName);
         } else {
-            throw new IllegalAccessException("Oups, no launcher is currently added dor Data base with name: " + dbName);
+            throw new IllegalAccessException("Oups, no launcher is currently added to Data base with name: " + dbName);
         }
         return access;
     }

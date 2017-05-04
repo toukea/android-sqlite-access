@@ -428,75 +428,83 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         if (contentValueHandler == null) {
             contentValueHandler = DEFAULT_CONTAIN_VALUE_HANDLER;
         }
-        Builder builder = new Builder();
-        List<String> projectionAdder = new ArrayList<String>();
-        HashMap<String, Field> nameFieldPair = new HashMap<String, Field>();
-        HashMap<String, Field> nestedTableField = new HashMap<String, Field>();
-        boolean hasColumnAnnotation = false;
-        String primaryKey = null;
-        String eligiblePrimaryName = null;
-        try {
-            List<Field> fields = Toolkit.getAllFieldFields(cLass, true, false);
-            for (int i = 0; i < fields.size(); i++) {
-                Field field = fields.get(i);
-                if (!field.isAnnotationPresent(Ignore.class)) {
-                    String columnName = null;
-                    if (field.isAnnotationPresent(PrimaryKey.class) && primaryKey == null) {
-                        primaryKey = field.getName();
-                    } else if (field.getName().equalsIgnoreCase("id")) {
-                        eligiblePrimaryName = field.getName();
-                    }
-                    if (field.isAnnotationPresent(Column.class)) {
-                        Annotation columnAnnotation = field.getAnnotation(Column.class);
-                        Column column = (Column) columnAnnotation;
-                        columnName = column.name();
-                        if (!hasColumnAnnotation) {
-                            projectionAdder.clear();
+        Builder builder = BUILDER_BUFFER.get(cLass);
+        if (builder == null) {
+            builder = new Builder();
+            List<String> projectionAdder = new ArrayList<String>();
+            HashMap<String, Field> nameFieldPair = new HashMap<String, Field>();
+            HashMap<String, Field> nestedTableField = new HashMap<String, Field>();
+            boolean hasColumnAnnotation = false;
+            String primaryKey = null;
+            String eligiblePrimaryName = null;
+            try {
+                List<Field> fields = Toolkit.getAllFieldFields(cLass, true, false);
+                for (int i = 0; i < fields.size(); i++) {
+                    Field field = fields.get(i);
+                    if (!field.isAnnotationPresent(Ignore.class)) {
+                        String columnName = null;
+                        if (field.isAnnotationPresent(PrimaryKey.class) && primaryKey == null) {
+                            primaryKey = field.getName();
+                        } else if (field.getName().equalsIgnoreCase("id")) {
+                            eligiblePrimaryName = field.getName();
                         }
-                        hasColumnAnnotation = true;
-                    }
-                    if (columnName == null && !hasColumnAnnotation) {
-                        columnName = field.getName();
-                    }
-                    if (columnName != null && !projectionAdder.contains(columnName)) {
-                        projectionAdder.add(columnName);
-                        nameFieldPair.put(columnName, field);
-                        if (isNestedTableProperty(field)) {
-                            nestedTableField.put(columnName, field);
+                        if (field.isAnnotationPresent(Column.class)) {
+                            Annotation columnAnnotation = field.getAnnotation(Column.class);
+                            Column column = (Column) columnAnnotation;
+                            columnName = column.name();
+                            if (!hasColumnAnnotation) {
+                                projectionAdder.clear();
+                            }
+                            hasColumnAnnotation = true;
+                        }
+                        if (columnName == null && !hasColumnAnnotation) {
+                            columnName = field.getName();
+                        }
+                        if (columnName != null && !projectionAdder.contains(columnName)) {
+                            projectionAdder.add(columnName);
+                            nameFieldPair.put(columnName, field);
+                            if (isNestedTableProperty(field)) {
+                                nestedTableField.put(columnName, field);
+                            }
                         }
                     }
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+            if (primaryKey == null) {
+                primaryKey = eligiblePrimaryName;
+            }
+            if (!projectionAdder.contains(primaryKey) && primaryKey != null) {
+                projectionAdder.add(primaryKey);
+            }
+            final String[] projections = projectionAdder.toArray(new String[projectionAdder.size()]);
+            final String primary = primaryKey;
+            //--------------------------------------------------
+            String tableName = null;
+            if (cLass.isAnnotationPresent(Table.class)) {
+                Table table = (Table) cLass.getAnnotation(Table.class);
+                tableName = table.name();
+            }
+            if (tableName == null) {
+                tableName = cLass.getSimpleName();
+            }
+
+            builder.setName(tableName)
+                    .setColumns(projections)
+                    .setPrimaryFieldName(primary)
+                    .setNameFieldPair(nameFieldPair)
+                    .setNestedTableNameFieldPair(nestedTableField)
+                    .setModelClass(cLass);
+            BUILDER_BUFFER.put(cLass, builder);
         }
-        if (primaryKey == null) {
-            primaryKey = eligiblePrimaryName;
-        }
-        if (!projectionAdder.contains(primaryKey) && primaryKey != null) {
-            projectionAdder.add(primaryKey);
-        }
-        final String[] projections = projectionAdder.toArray(new String[projectionAdder.size()]);
-        final String primary = primaryKey;
-        //--------------------------------------------------
-        String tableName = null;
-        if (cLass.isAnnotationPresent(Table.class)) {
-            Table table = (Table) cLass.getAnnotation(Table.class);
-            tableName = table.name();
-        }
-        if (tableName == null) {
-            tableName = cLass.getSimpleName();
-        }
-        builder.setName(tableName)
-                .setColumns(projections)
-                .setPrimaryFieldName(primary)
-                .setNameFieldPair(nameFieldPair)
-                .setNestedTableNameFieldPair(nestedTableField)
-                .setModelClass(cLass)
-                .setSerializer(serializer)
+
+        builder.setSerializer(serializer)
                 .setContentValueHandler(contentValueHandler);
         return builder.create();
     }
+
+    private final static HashMap<Class, Builder> BUILDER_BUFFER = new HashMap<Class, Builder>();
 
     private void persistEmbeddedDbEntity(SQLiteDatabase db) {
         try {

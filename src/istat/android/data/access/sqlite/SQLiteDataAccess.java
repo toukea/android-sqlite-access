@@ -297,6 +297,7 @@ public abstract class SQLiteDataAccess implements Closeable, SQLite.BootDescript
 
     protected SQLiteDataAccess cloneAccess() throws CloneNotSupportedException {
         Object obj = super.clone();
-        return (SQLiteDataAccess) obj;
+        SQLiteDataAccess access = (SQLiteDataAccess) obj;
+        return access;
     }
 }
