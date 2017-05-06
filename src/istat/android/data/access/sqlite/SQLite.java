@@ -26,7 +26,6 @@ import istat.android.data.access.sqlite.utils.SQLiteParser;
 public final class SQLite {
     static SQLiteDatabase
             lastOpenedDb;
-    final static ConcurrentHashMap<String, SQLiteDataAccess> dbNameAccessPair = new ConcurrentHashMap<String, SQLiteDataAccess>();
     final static ConcurrentHashMap<String, SQLiteConnection> dbNameConnectionPair = new ConcurrentHashMap<String, SQLiteConnection>();
 
     private SQLite() {
@@ -93,11 +92,12 @@ public final class SQLite {
     }
 
     public static boolean removeConnection(String dbName) {
-        boolean contain = dbNameAccessPair.containsKey(dbName);
-        if (contain) {
-            dbNameAccessPair.remove(dbName);
-        }
-        return contain;
+//        boolean contain = dbNameAccessPair.containsKey(dbName);
+//        if (contain) {
+//            dbNameAccessPair.remove(dbName);
+//        }
+//        return contain;
+        return true;
     }
 
     public static boolean removeConnection(SQLiteConnection connection) {
@@ -117,24 +117,29 @@ public final class SQLite {
     }
 
     private static SQLiteDataAccess findOrCreateConnectionAccess(String dbName) throws IllegalAccessException {
-        SQLiteDataAccess access = dbNameAccessPair.get(dbName);
-        if (access != null && access.isOpened()) {
-            try {
-                access = access.cloneAccess();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        SQLiteConnection connection = dbNameConnectionPair.get(dbName);
+        if (connection == null) {
+            throw new IllegalAccessException("Oups, no launcher is currently added to Data base with name: " + dbName);
         }
-        boolean hasLauncher = dbNameConnectionPair.containsKey(dbName);
-        if (access != null) {
-            return access;
-        } else if (access == null && hasLauncher) {
-            access = connect(dbNameConnectionPair.get(dbName));
-            dbNameConnectionPair.remove(dbName);
-        } else {
-            throw new IllegalAccessException("Oups, no launcher is currently added dor Data base with name: " + dbName);
-        }
-        return access;
+        return connect(connection);
+//        SQLiteDataAccess access = dbNameAccessPair.get(dbName);
+//        if (access != null && access.isOpened()) {
+//            try {
+//                access = access.cloneAccess();
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }
+//        boolean hasLauncher = dbNameConnectionPair.containsKey(dbName);
+//        if (access != null) {
+//            return access;
+//        } else if (access == null && hasLauncher) {
+//            access = connect(dbNameConnectionPair.get(dbName));
+//            dbNameConnectionPair.remove(dbName);
+//        } else {
+//            throw new IllegalAccessException("Oups, no launcher is currently added to Data base with name: " + dbName);
+//        }
+//        return access;
     }
 
     public static void prepareSQL(String dbName, PrepareHandler handler, boolean transactional) {
@@ -275,33 +280,33 @@ public final class SQLite {
     public static SQLiteDataAccess connect(SQLiteConnection connection) {
         return connect(connection.context, connection.dbName, connection.dbVersion, connection);
     }
-
-    public static void close(String connectionName) {
-        SQLiteDataAccess access = dbNameAccessPair.get(connectionName);
-        if (access != null) {
-            access.close();
-        }
-    }
-
-    public static void desconnect(String dbName) {
-        SQLiteDataAccess access = dbNameAccessPair.get(dbName);
-        if (access != null) {
-            access.close();
-            dbNameAccessPair.remove(dbName);
-            dbNameConnectionPair.remove(dbName);
-        }
-    }
-
-    public static void release() {
-        Iterator<String> iterator = dbNameAccessPair.keySet().iterator();
-        while (iterator.hasNext()) {
-            String accessName = iterator.next();
-            SQLiteDataAccess access = dbNameAccessPair.get(accessName);
-            access.close();
-        }
-        dbNameAccessPair.clear();
-        dbNameConnectionPair.clear();
-    }
+//
+//    public static void close(String connectionName) {
+////        SQLiteDataAccess access = dbNameAccessPair.get(connectionName);
+////        if (access != null) {
+////            access.close();
+////        }
+//    }
+//
+//    public static void desconnect(String dbName) {
+////        SQLiteDataAccess access = dbNameAccessPair.get(dbName);
+////        if (access != null) {
+////            access.close();
+////            dbNameAccessPair.remove(dbName);
+////            dbNameConnectionPair.remove(dbName);
+////        }
+//    }
+//
+//    public static void release() {
+////        Iterator<String> iterator = dbNameAccessPair.keySet().iterator();
+////        while (iterator.hasNext()) {
+////            String accessName = iterator.next();
+////            SQLiteDataAccess access = dbNameAccessPair.get(accessName);
+////            access.close();
+////        }
+////        dbNameAccessPair.clear();
+//        dbNameConnectionPair.clear();
+//    }
 
     public static SQLiteDataAccess connect(Context context, String dbName, int dbVersion, final BootDescription description) {
         SQLiteDataAccess access = new SQLiteDataAccess(context, dbName, dbVersion) {
@@ -319,7 +324,7 @@ public final class SQLite {
                 }
             }
         };
-        dbNameAccessPair.put(dbName, access);
+//        dbNameAccessPair.put(dbName, access);
         return access;
     }
 

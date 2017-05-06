@@ -328,7 +328,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         int type = 0;
         SQLiteJoinSelect selectClause;
 
-        public ClauseJoinSelectBuilder(int type, SQLiteJoinSelect selectClause) {
+         ClauseJoinSelectBuilder(int type, SQLiteJoinSelect selectClause) {
             this.type = type;
             this.selectClause = selectClause;
         }
