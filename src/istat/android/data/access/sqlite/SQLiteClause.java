@@ -290,7 +290,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         StringBuilder whereClause;
         List<String> whereParams;
 
-        public ClauseBuilder(StringBuilder whereClause, List<String> whereParams, int type) {
+         ClauseBuilder(StringBuilder whereClause, List<String> whereParams, int type) {
             this.type = type;
             this.whereClause = whereClause;
             this.whereParams = whereParams;
@@ -325,7 +325,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         }
 
         public Clause in(Object... value) {
-            return in(false, value);
+            return in(true, value);
         }
 
         private Clause in(boolean truth, Object[] value) {
@@ -498,7 +498,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         int type = 0;
         String having;
 
-        public HavingBuilder(String having, int type) {
+         HavingBuilder(String having, int type) {
             this.having = having;
             this.type = type;
         }
