@@ -330,7 +330,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             e.printStackTrace();
         }
         Builder builder = new Builder();
-        final Class<?> cLass = obj.getClass();
+        Class<?> cLass = obj.getClass();
         List<String> tmp = new ArrayList<String>();
         HashMap<String, Object> map = new HashMap<String, Object>();
         HashMap<String, Field> nameFieldPair = new HashMap<String, Field>();
@@ -394,6 +394,10 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         if (tableName == null) {
             tableName = cLass.getSimpleName();
         }
+        if (tableName == null) {
+            cLass = (Class<?>) cLass.getGenericSuperclass();
+            tableName = cLass.getSimpleName();
+        }
         builder.setName(tableName)
                 .setColumns(projections)
                 .setPrimaryFieldName(primary)
@@ -425,7 +429,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         return fromClass(cLass, SQLiteModel.DEFAULT_SERIALIZER, DEFAULT_CONTAIN_VALUE_HANDLER);
     }
 
-    public static SQLiteModel fromClass(final Class cLass, Serializer serializer, ContentValueHandler contentValueHandler) throws InstantiationException,
+    public static SQLiteModel fromClass(Class cLass, Serializer serializer, ContentValueHandler contentValueHandler) throws InstantiationException,
             IllegalAccessException {
         if (serializer == null) {
             serializer = DEFAULT_SERIALIZER;
@@ -492,6 +496,10 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                 tableName = table.name();
             }
             if (tableName == null) {
+                tableName = cLass.getSimpleName();
+            }
+            if (tableName == null) {
+                cLass = (Class<?>) cLass.getGenericSuperclass();
                 tableName = cLass.getSimpleName();
             }
 
