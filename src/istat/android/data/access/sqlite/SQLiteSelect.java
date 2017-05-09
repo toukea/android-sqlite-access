@@ -837,7 +837,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         try {
             QueryAble entity = createQueryAble(clazz);
             join = entity.getName();
-            selectionTable += joinType + "JOIN " + join;
+            selectionTable += joinType + " JOIN " + join;
 //            if (!TextUtils.isEmpty(on)) {
 //                selectionTable += " ON (" + on + ") ";
 //            }
