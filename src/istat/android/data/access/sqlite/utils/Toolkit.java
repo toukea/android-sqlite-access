@@ -2,12 +2,14 @@ package istat.android.data.access.sqlite.utils;
 
 import android.content.Context;
 import android.text.TextUtils;
+import android.util.Log;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -112,6 +114,22 @@ public class Toolkit {
         }
 
         return classes.toArray(new String[classes.size()]);
+    }
+
+    public final static Class<?> getFieldTypeClass(Field field) {
+        return (Class<?>) getFieldType(field);
+    }
+
+    public final static Type getFieldType(Field field) {
+        Type type;
+        try {
+            type = field.getGenericType();
+            Log.d("asClass", "onTRY=" + type);
+        } catch (Exception e) {
+            type = field.getType();
+            Log.d("asClass", "onCatch=" + type);
+        }
+        return type;
     }
 
 //    public final static List<Class> getClassesForPackage(String packageName) throws ClassNotFoundException {

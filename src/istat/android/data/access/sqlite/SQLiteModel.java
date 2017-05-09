@@ -296,11 +296,16 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         if (TextUtils.isEmpty(primary_key)) {
             return false;
         }
-        Cursor c = db.query(tb_name, new String[]{primary_key}, primary_key
-                + "= ?", new String[]{getPrimaryKey()}, null, null, null);
-        int count = c.getCount();
-        c.close();
-        return count > 0;
+        try {
+            Cursor c = db.query(tb_name, new String[]{primary_key}, primary_key
+                    + "= ?", new String[]{getPrimaryKey()}, null, null, null);
+            int count = c.getCount();
+            c.close();
+            return count > 0;
+        } catch (Exception e) {
+            new RuntimeException(e.getMessage() + ": Table=" + tb_name, e);
+        }
+        return false;
     }
 
     public int delete(SQLiteDatabase db) {
@@ -508,16 +513,14 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     private void persistEmbeddedDbEntity(SQLiteDatabase db) {
         try {
-            Iterator<String> keySet = fieldNameValuePair.keySet().iterator();
+            Iterator<String> keySet = nestedTableFieldPair.keySet().iterator();
             while (keySet.hasNext()) {
                 String tmp = keySet.next();
-                Object obj = fieldNameValuePair.get(tmp);
-                if (obj != null) {
-                    Class cLass = obj.getClass();
-                    if (cLass.isAnnotationPresent(Table.class)) {
-                        SQLiteModel model = SQLiteModel.fromObject(obj);
-                        onPersistEmbeddedDbEntity(db, cLass, model);
-                    }
+                Field field = nestedTableFieldPair.get(tmp);
+                if (field != null) {
+                    Class<?> cLass = Toolkit.getFieldTypeClass(field);
+                    SQLiteModel model = SQLiteModel.fromObject(cLass);
+                    onPersistEmbeddedDbEntity(db, cLass, model);
                 }
             }
         } catch (Exception e) {
@@ -1070,15 +1073,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                     return Integer.valueOf(serialized);
                 } else {
                     Gson gson = new Gson();
-                    Type type;
-                    try {
-                        type = field.getGenericType();
-                        Log.d("asClass", "onTRY=" + type);
-                    } catch (Exception e) {
-                        type = field.getType();
-                        Log.d("asClass", "onCatch=" + type);
-                    }
-
+                    Type type = Toolkit.getFieldType(field);
                     Log.d("asClass", "stringularProperty=" + serialized);
                     Object obj = gson.fromJson(serialized, type);
                     return obj;

@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import istat.android.data.access.sqlite.utils.SQLiteParser;
+import istat.android.data.access.sqlite.utils.TableUtils;
 
 public final class SQLite {
     static SQLiteDatabase
@@ -649,6 +650,11 @@ public final class SQLite {
             return insert.insert(entity);
         }
 
+        public <T> SQLiteInsert insert(boolean asClass, List<T> entity) {
+            SQLiteInsert insert = new SQLiteInsert(this);
+            return insert.insert(asClass, entity);
+        }
+
         public <T> SQLiteInsert insert(List<T> entity) {
             SQLiteInsert insert = new SQLiteInsert(this);
             return insert.insert(entity);
@@ -722,12 +728,7 @@ public final class SQLite {
         }
 
         public boolean isTableExist(Class<?> cLass) {
-            try {
-                select(cLass).count();
-                return true;
-            } catch (Exception e) {
-                return false;
-            }
+            return TableUtils.exist(getDb(), cLass);
         }
 
         public final void close() {

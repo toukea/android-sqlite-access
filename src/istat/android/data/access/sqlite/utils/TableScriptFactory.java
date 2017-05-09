@@ -95,7 +95,7 @@ public class TableScriptFactory {
             Field field = model.getField(columnName);
             if (field != null) {
                 String line = createStatementLine(model, columnName, field);
-                if (!TextUtils.isEmpty(line)) {
+                if (!isEmpty(line)) {
                     if (index > 0) {
                         line = "," + line;
                     }
@@ -106,6 +106,10 @@ public class TableScriptFactory {
         }
         sql += ");";
         return sql;
+    }
+
+    private boolean isEmpty(String line) {
+        return line != null && line.length() == 0;
     }
 
     HashMap<Class, FieldAdapter> adapterQueue = new HashMap() {
