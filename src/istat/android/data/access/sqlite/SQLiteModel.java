@@ -242,8 +242,10 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     public long insert(SQLiteDatabase db) {
         long out = 0;
         try {
-            out = db.insert(getName(), null, toContentValues());
-            persistEmbeddedDbEntity(db);
+            String tbName = getName();
+            ContentValues values = toContentValues();
+            out = db.insert(tbName, null, values);
+            persistNestedEntity(db);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -256,7 +258,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         try {
             out = update(db, getPrimaryFieldName() + "= ?",
                     new String[]{getPrimaryKey()});
-            persistEmbeddedDbEntity(db);
+            persistNestedEntity(db);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -394,7 +396,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         if (tableName == null) {
             tableName = cLass.getSimpleName();
         }
-        if (tableName == null) {
+        if (TextUtils.isEmpty(tableName)) {
             cLass = (Class<?>) cLass.getGenericSuperclass();
             tableName = cLass.getSimpleName();
         }
@@ -498,7 +500,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
             if (tableName == null) {
                 tableName = cLass.getSimpleName();
             }
-            if (tableName == null) {
+            if (TextUtils.isEmpty(tableName)) {
                 cLass = (Class<?>) cLass.getGenericSuperclass();
                 tableName = cLass.getSimpleName();
             }
@@ -519,12 +521,12 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     private final static HashMap<Class, Builder> BUILDER_BUFFER = new HashMap<Class, Builder>();
 
-    private void persistEmbeddedDbEntity(SQLiteDatabase db) {
+    private void persistNestedEntity(SQLiteDatabase db) {
         try {
             Iterator<String> keySet = nestedTableFieldPair.keySet().iterator();
             while (keySet.hasNext()) {
-                String tmp = keySet.next();
-                Field field = nestedTableFieldPair.get(tmp);
+                String tableName = keySet.next();
+                Field field = nestedTableFieldPair.get(tableName);
                 if (field != null) {
                     Class<?> cLass = Toolkit.getFieldTypeClass(field);
                     SQLiteModel model = SQLiteModel.fromObject(cLass);
