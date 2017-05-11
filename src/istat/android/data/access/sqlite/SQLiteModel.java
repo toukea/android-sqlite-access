@@ -41,10 +41,9 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     HashMap<String, Field> nestedTableFieldPair = new HashMap<String, Field>();
     public static final String TAG_CLASS = SQLiteModel.class.getCanonicalName() + ".CLASS";
     public static final String TAG_ITEMS = SQLiteModel.class.getCanonicalName() + ".ITEMS";
-    private Object instance;
 
     SQLiteModel() {
-        instance = this;
+
     }
 
     public final void set(String name, Object value) {
@@ -124,8 +123,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     public JSONObject toJson() {
         JSONObject json = createJsonFromHashMap(fieldNameValuePair);
         try {
-            String className = instance.getClass() + "";
-            className = className.substring(6, className.length()).trim();
+            String className = modelClass.getCanonicalName();
             json.put(TAG_CLASS, className);
         } catch (Exception e) {
             e.printStackTrace();
@@ -794,29 +792,6 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         }
     }
 
-    public void fillJson(Class<?> clazz, JSONObject json)
-            throws IllegalAccessException, IllegalArgumentException,
-            JSONException {
-        List<Field> fields = Toolkit.getAllFieldIncludingPrivateAndSuper(clazz);
-        for (Field field : fields) {
-            if (field.isAnnotationPresent(PrimaryKey.class)
-                    || field.isAnnotationPresent(Column.class)) {
-                field.setAccessible(true);
-                Object obj = field.get(instance);
-                if (obj instanceof JSONable) {
-                    JSONable jsonEntity = (JSONable) obj;
-                    json.put(field.getName(), jsonEntity.toJson());
-                } else {
-                    json.put(field.getName(), field.get(instance));
-                }
-            } else {
-                // field.setAccessible(true);
-                // Log.d("filed::" + field.getName(), field.get(instance) +
-                // "");
-            }
-        }
-    }
-
 
     protected int update(SQLiteDatabase db, String whereClause,
                          String[] whereArgs) {
@@ -1153,7 +1128,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     };
 
     public boolean isCollection() {
-        return Collection.class.isAssignableFrom(this.getModelClass());
+        return Collection.class.isAssignableFrom(this.modelClass);
     }
 
     public interface Serializer<T> {
