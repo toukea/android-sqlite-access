@@ -33,7 +33,7 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 
-public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
+public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Iterable {
 
     Class<?> modelClass = Object.class;
     HashMap<String, Object> fieldNameValuePair = new HashMap<String, Object>();
@@ -105,7 +105,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
     }
 
 
-    protected String getSerializedValue(String name) {
+    public String getSerializedValue(String name) {
         Object value = get(name);
         if (value == null) {
             return null;
@@ -115,13 +115,13 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     public HashMap<String, Object> toHashMap() {
         HashMap<String, Object> map = new HashMap<String, Object>();
-        map.putAll(map);
+        map.putAll(this.fieldNameValuePair);
         return map;
     }
 
     @Override
     public JSONObject toJson() {
-        JSONObject json = createJsonFromHashMap(fieldNameValuePair);
+        JSONObject json = createJsonFromHashMap(this.serializer, fieldNameValuePair);
         try {
             String className = modelClass.getCanonicalName();
             json.put(TAG_CLASS, className);
@@ -383,7 +383,14 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                     }
                 }
             }
-
+            if (isCollection(cLass)) {
+                Collection<?> modelAsCollection = (Collection<?>) obj;
+                if (!modelAsCollection.isEmpty()) {
+                    List tmpList = new ArrayList();
+                    tmpList.addAll(modelAsCollection);
+                    map.put(TAG_ITEMS, tmpList);
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -539,34 +546,34 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         }
     }
 
-    private static JSONObject createJsonFromHashMap(
-            HashMap<String, Object> bundle) {
-        return createJsonFromHashMap(bundle, false);
+    private static JSONObject createJsonFromHashMap(Serializer serializer,
+                                                    HashMap<String, Object> bundle) {
+        return createJsonFromHashMap(serializer, bundle, false);
     }
 
-    private static JSONObject createJsonFromHashMap(
-            HashMap<String, Object> bundle, boolean acceptEmpty) {
+    private static JSONObject createJsonFromHashMap(Serializer serializer,
+                                                    HashMap<String, Object> bundle, boolean acceptEmpty) {
         try {
             JSONObject json = new JSONObject();
             Iterator<String> keySet = bundle.keySet().iterator();
             while (keySet.hasNext()) {
-                String tmp = keySet.next();
-                Object obj = bundle.get(tmp);
+                String name = keySet.next();
+                Object obj = bundle.get(name);
                 if (obj == null && !acceptEmpty) {
                     if (acceptEmpty) {
-                        json.put(tmp, null);
+                        json.put(name, null);
                     }
                     continue;
                 }
                 if (obj != null) {
                     if (obj instanceof JSONable) {
                         JSONable jsonModel = (JSONable) obj;
-                        json.put(tmp, jsonModel.toJson());
+                        json.put(name, jsonModel.toJson());
                     } else {
-                        String value = obj.toString();
+                        String value = serializer.onSerialize(obj, name);
                         if (!TextUtils.isEmpty(value)
                                 && !value.equals(TAG_CLASS)) {
-                            json.put(tmp, value);
+                            json.put(name, value);
                         }
                     }
                 }
@@ -1120,15 +1127,16 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
                     }
                 }
             }
-            if (model.isCollection()) {
-                //   pairs.put("collections", GSON_SERIALIZER.onSerialize());
-            }
             return pairs;
         }
     };
 
     public boolean isCollection() {
         return Collection.class.isAssignableFrom(this.modelClass);
+    }
+
+    public static boolean isCollection(Class<?> cLass) {
+        return Collection.class.isAssignableFrom(cLass);
     }
 
     public interface Serializer<T> {
@@ -1143,5 +1151,31 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
 
     public interface ContentValueHandler {
         ContentValues toContentValues(SQLiteModel model);
+    }
+
+    public <T> List<T> asCollection() {
+        List<T> list = new ArrayList<T>();
+//        try {
+            Object collection = get(TAG_ITEMS);
+            Collection<T> collection1 = (Collection<T>) collection;
+            for (T obj : collection1) {
+                list.add(obj);
+            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+        return list;
+    }
+
+    public Iterator<?> iterator() {
+        Object collection = get(TAG_ITEMS);
+        if (collection != null) {
+            try {
+                return ((Collection<?>) collection).iterator();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
     }
 }
