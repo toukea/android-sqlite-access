@@ -56,8 +56,8 @@ public final class SQLiteInsert {
         return this;
     }
 
-    private SQLiteInsert insertCollectionAsTable(Collection<?> insert) {
-        if (insert == null || insert.isEmpty()) {
+    private SQLiteInsert insertCollectionAsTable(List<?> insert) {
+        if (insert == null) {
             return this;
         }
         try {
@@ -66,7 +66,12 @@ public final class SQLiteInsert {
                     sql.getContentValueHandler(insert.getClass()));
             modelInsertions.add(model);
             insertions.add(insert);
-            insertCollection(insert);
+            if (!insert.isEmpty()) {
+                Object item0 = insert.get(0);
+                if (sql.isTableExist(item0.getClass())) {
+                    insertCollection(insert);
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

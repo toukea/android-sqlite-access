@@ -38,9 +38,13 @@ public class Toolkit {
         }
     }
 
-    public static List<Field> getAllFieldFields(Class<?> cLass, boolean includingPrivateAndSuper, boolean acceptStatic) {
-        if (includingPrivateAndSuper) {
-            return getAllFieldIncludingPrivateAndSuper(cLass, acceptStatic);
+    public static List<Field> getAllFieldFields(Class<?> cLass, boolean includeSuper, boolean acceptStatic) {
+        return getAllFieldFields(cLass, true, includeSuper, acceptStatic);
+    }
+
+    public static List<Field> getAllFieldFields(Class<?> cLass, boolean includingPrivate, boolean includingSuper, boolean acceptStatic) {
+        if (includingSuper) {
+            return getAllFieldIncludingPrivateAndSuper(cLass, !includingPrivate, acceptStatic);
         } else {
             List<Field> fields = new ArrayList<Field>();
             Field[] tmp = cLass.getDeclaredFields();
@@ -48,24 +52,32 @@ public class Toolkit {
                 if (f != null && (f.toString().contains("static") && !acceptStatic)) {
                     continue;
                 }
-                fields.add(f);
+                if (!includingPrivate || f.isAccessible()) {
+                    fields.add(f);
+                }
             }
             return fields;
         }
     }
 
     public static List<Field> getAllFieldIncludingPrivateAndSuper(Class<?> cLass) {
-        return getAllFieldIncludingPrivateAndSuper(cLass, false);
+        return getAllFieldIncludingPrivateAndSuper(cLass, true, false);
     }
 
-    public static List<Field> getAllFieldIncludingPrivateAndSuper(Class<?> cLass, boolean acceptStatic) {
+    public static List<Field> getAllFieldIncludingPrivateAndSuper(Class<?> cLass, boolean accessibleOnly) {
+        return getAllFieldIncludingPrivateAndSuper(cLass, accessibleOnly, false);
+    }
+
+    public static List<Field> getAllFieldIncludingPrivateAndSuper(Class<?> cLass, boolean accessibleOnly, boolean acceptStatic) {
         List<Field> fields = new ArrayList<Field>();
-        while (!cLass.equals(Object.class)) {
+        while (/*!cLass.equals(Object.class) ||*/!cLass.getCanonicalName().startsWith("java")) {
             for (Field field : cLass.getDeclaredFields()) {
                 if (field != null && (field.toString().contains("static") && !acceptStatic)) {
                     continue;
                 }
-                fields.add(field);
+                if (!accessibleOnly || field.isAccessible()) {
+                    fields.add(field);
+                }
             }
             cLass = cLass.getSuperclass();
         }
