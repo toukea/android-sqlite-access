@@ -112,6 +112,7 @@ public class TableScriptFactory {
         return line != null && line.length() == 0;
     }
 
+    //TODO add collectionAdapter
     HashMap<Class, FieldAdapter> adapterQueue = new HashMap() {
         {
             put(String.class, STRING_ADAPTER);
