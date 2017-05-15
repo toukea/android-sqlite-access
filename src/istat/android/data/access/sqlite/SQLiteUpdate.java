@@ -43,6 +43,11 @@ public final class SQLiteUpdate {
         return updater.where(column);
     }
 
+    public Updater where1() {
+        return updater;
+    }
+
+
     public class Updater extends SQLiteClause<Updater> {
         protected SQLiteModel model;
 
