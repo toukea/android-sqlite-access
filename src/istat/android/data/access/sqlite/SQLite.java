@@ -25,6 +25,7 @@ public final class SQLite {
     static SQLiteDatabase
             lastOpenedDb;
     final static ConcurrentHashMap<String, SQLiteConnection> dbNameConnectionPair = new ConcurrentHashMap<String, SQLiteConnection>();
+    final static ConcurrentHashMap<String, SQLiteDataAccess> dbNameAccessPair = new ConcurrentHashMap<String, SQLiteDataAccess>();
 
     private SQLite() {
 
@@ -117,7 +118,12 @@ public final class SQLite {
     private static SQLiteDataAccess findOrCreateConnectionAccess(String dbName) throws IllegalAccessException {
         SQLiteConnection connection = dbNameConnectionPair.get(dbName);
         if (connection == null) {
-            throw new IllegalAccessException("Oups, no launcher is currently added to Data base with name: " + dbName);
+            SQLiteDataAccess access = dbNameAccessPair.get(dbName);
+            if (access == null) {
+                throw new IllegalAccessException("Oups, no launcher is currently added to Data base with name: " + dbName);
+            } else {
+                return connect(access.getContext(), access.getDbName(), access.getDbVersion(), access.getBootDescription());
+            }
         }
         return connect(connection);
 //        SQLiteDataAccess access = dbNameAccessPair.get(dbName);
@@ -307,22 +313,8 @@ public final class SQLite {
 //    }
 
     public static SQLiteDataAccess connect(Context context, String dbName, int dbVersion, final BootDescription description) {
-        SQLiteDataAccess access = new SQLiteDataAccess(context, dbName, dbVersion) {
-            @Override
-            public void onUpgradeDb(SQLiteDatabase db, int oldVersion, int newVersion) {
-                if (description != null) {
-                    description.onUpgradeDb(db, oldVersion, newVersion);
-                }
-            }
-
-            @Override
-            public void onCreateDb(SQLiteDatabase db) {
-                if (description != null) {
-                    description.onCreateDb(db);
-                }
-            }
-        };
-//        dbNameAccessPair.put(dbName, access);
+        SQLiteDataAccess access = new SQLiteDataAccess(context, dbName, dbVersion, description);
+        dbNameAccessPair.put(dbName, access);
         return access;
     }
 

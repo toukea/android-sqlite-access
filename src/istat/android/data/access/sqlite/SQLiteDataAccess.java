@@ -38,7 +38,7 @@ import android.util.Log;
 /**
  * @author Toukea Tatsi (Istat)
  */
-public abstract class SQLiteDataAccess implements Closeable, SQLite.BootDescription, Cloneable {
+public class SQLiteDataAccess implements Closeable, Cloneable {
 
     /*
      * protected static final int BASE_VERSION = 1; protected static final
@@ -51,10 +51,30 @@ public abstract class SQLiteDataAccess implements Closeable, SQLite.BootDescript
     protected static String SHARED_PREF_FILE = "db_file",
             DB_CREATION_TIME = "creation_time",
             DB_UPDATE_TIME = "creation_time";
+    final String dbName;
+    final int dbVersion;
 
-    protected SQLiteDataAccess(Context ctx, String dbName, int dbVersion) {
-        dbOpenHelper = new DbOpenHelper(ctx, dbName, null, dbVersion);
+//    protected SQLiteDataAccess(SQLiteDataAccess accessModel) {
+//        this(accessModel.getContext(), accessModel.getDbName(), accessModel.getDbVersion(), accessModel.getBootDescription());
+//    }
+
+    protected SQLiteDataAccess(Context ctx, String dbName, int dbVersion, SQLite.BootDescription bootDescription) {
+        dbOpenHelper = new DbOpenHelper(ctx, dbName, null, dbVersion, bootDescription);
         context = ctx;
+        this.dbName = dbName;
+        this.dbVersion = dbVersion;
+    }
+
+    public SQLite.BootDescription getBootDescription() {
+        return dbOpenHelper.bootDescription;
+    }
+
+    public int getDbVersion() {
+        return dbVersion;
+    }
+
+    public String getDbName() {
+        return dbName;
     }
 
     public Context getContext() {
@@ -231,23 +251,25 @@ public abstract class SQLiteDataAccess implements Closeable, SQLite.BootDescript
     // ----------------------------------------------------------------------------
     public class DbOpenHelper extends SQLiteOpenHelper {
         Context context;
+        SQLite.BootDescription bootDescription;
 
         public DbOpenHelper(Context context, String nom,
-                            CursorFactory cursorfactory, int version) {
+                            CursorFactory cursorfactory, int version, SQLite.BootDescription description) {
             super(context, nom, cursorfactory, version);
             this.context = context;
+            this.bootDescription = description;
         }
 
         @Override
         public void onCreate(SQLiteDatabase db) {
 
-            onCreateDb(db);
+            bootDescription.onCreateDb(db);
             registerDbCreationTime();
         }
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            onUpgradeDb(db, oldVersion, newVersion);
+            bootDescription.onUpgradeDb(db, oldVersion, newVersion);
             registerDbUpdateTime();
         }
 
