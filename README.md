@@ -402,7 +402,7 @@ Just add the dependency to your `build.gradle`:
 
 ```groovy
 dependencies {
-   compile 'istat.android.data.access.sqlite:istat-access-sqlite:1.2.5'
+   compile 'istat.android.data.access.sqlite:istat-access-sqlite:1.2.6'
 }
 ```
 
@@ -417,6 +417,7 @@ All available public versions are:
     - 1.2.2
     - 1.2.3
     - 1.2.5
+    - 1.2.6
 
 minSdkVersion = 10
 ------------------
@@ -430,7 +431,7 @@ add the dependency to your pom.xml:
 <dependency>
   <groupId>istat.android.data.access.sqlite</groupId>
   <artifactId>istat-access-sqlite</artifactId>
-  <version>1.2.5</version>
+  <version>1.2.6</version>
   <type>pom</type>
 </dependency>
 ```
