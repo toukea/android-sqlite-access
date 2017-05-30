@@ -293,14 +293,15 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     }
 
     public boolean exist(SQLiteDatabase db) {
-        String primary_key = getPrimaryFieldName();
+        String primary_key_name = getPrimaryFieldName();
         String tb_name = getName();
-        if (TextUtils.isEmpty(primary_key)) {
+        if (TextUtils.isEmpty(primary_key_name)) {
             return false;
         }
         try {
-            Cursor c = db.query(tb_name, new String[]{primary_key}, primary_key
-                    + "= ?", new String[]{getPrimaryKey()}, null, null, null);
+            String primaryKeyValue = getPrimaryKey();
+            Cursor c = db.query(tb_name, new String[]{primary_key_name}, primary_key_name
+                    + "= ?", new String[]{primaryKeyValue}, null, null, null);
             int count = c.getCount();
             c.close();
             return count > 0;
@@ -1156,11 +1157,11 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     public <T> List<T> asCollection() {
         List<T> list = new ArrayList<T>();
 //        try {
-            Object collection = get(TAG_ITEMS);
-            Collection<T> collection1 = (Collection<T>) collection;
-            for (T obj : collection1) {
-                list.add(obj);
-            }
+        Object collection = get(TAG_ITEMS);
+        Collection<T> collection1 = (Collection<T>) collection;
+        for (T obj : collection1) {
+            list.add(obj);
+        }
 //        } catch (Exception e) {
 //            e.printStackTrace();
 //        }
