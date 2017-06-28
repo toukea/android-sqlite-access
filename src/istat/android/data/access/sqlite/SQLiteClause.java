@@ -60,7 +60,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     }
 
     protected String[] getWhereParams() {
-        if (whereParams.size() == 0)
+        if (whereParams==null || whereParams.size() == 0)
             return null;
         String[] tmp = new String[whereParams.size()];
         int i = 0;

@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Build;
 import android.os.CancellationSignal;
+import android.text.TextUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -618,8 +619,10 @@ public final class SQLite {
         public <T> List<T> findAll(Class<T> classTable, boolean distinct, String whereClause, String[] whereParams, String groupBy, String having, String orderBy, String limit) {
             SQLiteSelect select = select(distinct, classTable);
             select.distinct = distinct;
-            select.whereClause = new StringBuilder(whereClause);
-            select.whereParams = whereParams != null ? Arrays.asList(whereParams) : null;
+            if (TextUtils.isEmpty(whereClause)) {
+                select.whereClause = new StringBuilder(whereClause);
+            }
+            select.whereParams = whereParams != null ? Arrays.asList(whereParams) : new ArrayList<String>();
             select.limit = limit;
             select.orderBy = orderBy;
             select.groupBy = groupBy;
@@ -649,7 +652,7 @@ public final class SQLite {
             SQLiteUpdate.Updater update = update(classTable).updater;
             update.model.fillFromContentValues(contentValues);
             update.whereClause = new StringBuilder(whereClause);
-            update.whereParams = whereParams != null ? Arrays.asList(whereParams) : null;
+            update.whereParams = whereParams != null ? Arrays.asList(whereParams) : new ArrayList<String>();
             update.limit = limit;
             update.having = new StringBuilder(having);
             return update.execute();
