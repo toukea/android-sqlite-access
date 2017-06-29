@@ -20,6 +20,6 @@ public interface QueryAble {
 
     String[] getColumns();
 
-    String getPrimaryFieldName();
+    String getPrimaryKeyName();
 
 }
