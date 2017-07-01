@@ -726,8 +726,9 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable {
         int POLICY_AUTO_INCREMENT = 1;
         int POLICY_SYSTEM = 3;
         int POLICY_NONE = 0;
+        int POLICY_DEFAULT = -1;
 
-        int policy() default 0;
+        int policy() default POLICY_DEFAULT;
     }
 
     @Target(ElementType.FIELD)
