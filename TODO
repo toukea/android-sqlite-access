@@ -1,4 +1,6 @@
 TODO----------------
+-persist nested collection field
+
 -reflection sur insertOrUpdate, persist (bien fondé)
 
 -reflection insert bien implementé.
@@ -11,30 +13,13 @@ TODO----------------
     *ManyToOne
     *ManyToMany
 
--SQLiteModel, create partial projection model (fromClass(projection),fromObject(projection)
-
--Query builder
-    *add GroupBy
-    *add OrderBy
-    *add Having/havingCount
+-SQLiteModel, create partial projection model (fromClass(projection),fromObject(projection))
 
 -Support
     Advanced SQL: look for doc oka drive
 
 TableFactory
     *Handle ALTER_TABLE
-
-TableExecutor
-    *fill and implement all method
-
-
--Create ObjectFactory like CursorFactory, to spécify a way to convert cursor to Object.
-
--Serializers as HashMap<Class,Serialize>
-
--sql.useSerializer()
-
--sql.useExecutor()
 
 -public getter for clause vars
 
@@ -46,13 +31,25 @@ TableExecutor
 
 -allow where rawQuery as Where Param
 
--implements having
-GROUP BY meetingID
-HAVING COUNT(caseID) < 4 AND COUNT(caseID) > 2
-
 -make ClauseJoinSelectBuilder and ClauseBuilder familiar inside a beautiful Abstract genericity
 
 
 DONE-----------------------------
 -Nested selection as where param.
 -implement selection negation [NOT] in where clause.
+-sql.useSerializer()
+-implements having
+GROUP BY meetingID
+HAVING COUNT(caseID) < 4 AND COUNT(caseID) > 2
+-Serializers as HashMap<Class,Serialize>
+-TableExecutor
+    *fill and implement all method
+-Query builder
+    *add GroupBy
+    *add OrderBy
+    *add Having/havingCount
+-Create ObjectFactory like CursorFactory, to spécify a way to convert cursor to Object.
+
+
+ABORTED--------------------------
+-sql.useExecutor()
