@@ -96,8 +96,8 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         }
     }
 
-    public String getPrimaryKey() {
-        return getString(getPrimaryFieldName());
+    public String getPrimaryKeyValue() {
+        return getString(getPrimaryKeyName());
     }
 
     public Class<?> getModelClass() {
@@ -161,7 +161,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     }
 
     public boolean isPrimaryFieldDefined() {
-        return !TextUtils.isEmpty(getPrimaryFieldName());
+        return !TextUtils.isEmpty(getPrimaryKeyName());
     }
 
     public final void fillFromJson(JSONObject json) {
@@ -199,7 +199,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     public final void fillFromPrimaryKey(String primaryKey, SQLiteDatabase db) {
         String tb_name = getName();
         String[] tb_projection = getColumns();
-        String primary_key_name = getPrimaryFieldName();
+        String primary_key_name = getPrimaryKeyName();
         Cursor c = db.query(tb_name, tb_projection, primary_key_name + "=?",
                 new String[]{primaryKey}, null, null, null);
         if (c.getCount() > 0) {
@@ -210,7 +210,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     }
 
     public void refresh(SQLiteDatabase db) {
-        fillFromPrimaryKey(getPrimaryKey(), db);
+        fillFromPrimaryKey(getPrimaryKeyValue(), db);
     }
 
     public long merge(SQLiteDatabase db) {
@@ -256,9 +256,9 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     public int update(SQLiteDatabase db) {
         int out = 0;
         try {
-            out = update(db, getPrimaryFieldName() + "= ?",
-                    new String[]{getPrimaryKey()});
-            persistNestedEntity(db);
+            out = update(db, getPrimaryKeyName() + "= ?",
+                    new String[]{getPrimaryKeyValue()});
+
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -293,13 +293,13 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     }
 
     public boolean exist(SQLiteDatabase db) {
-        String primary_key_name = getPrimaryFieldName();
+        String primary_key_name = getPrimaryKeyName();
         String tb_name = getName();
         if (TextUtils.isEmpty(primary_key_name)) {
             return false;
         }
         try {
-            String primaryKeyValue = getPrimaryKey();
+            String primaryKeyValue = getPrimaryKeyValue();
             Cursor c = db.query(tb_name, new String[]{primary_key_name}, primary_key_name
                     + "= ?", new String[]{primaryKeyValue}, null, null, null);
             int count = c.getCount();
@@ -312,8 +312,8 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     }
 
     public int delete(SQLiteDatabase db) {
-        return delete(db, getPrimaryFieldName() + "= ?",
-                new String[]{getPrimaryKey()});
+        return delete(db, getPrimaryKeyName() + "= ?",
+                new String[]{getPrimaryKeyValue()});
     }
 
     public static SQLiteModel fromObject(final Object obj) throws InstantiationException,
@@ -746,10 +746,10 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     public @interface PrimaryKey {
         int POLICY_AUTO_GENERATE = 2;
         int POLICY_AUTO_INCREMENT = 1;
-        int POLICY_SYSTEM = 3;
         int POLICY_NONE = 0;
+        int POLICY_DEFAULT = -1;
 
-        int policy() default 0;
+        int policy() default POLICY_DEFAULT;
     }
 
     @Target(ElementType.FIELD)
@@ -790,7 +790,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
 
 
     private boolean hasPrimaryKey() {
-        return !TextUtils.isEmpty(getPrimaryKey());
+        return !TextUtils.isEmpty(getPrimaryKeyValue());
     }
 
     protected void clear() {
@@ -842,7 +842,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     }
 
     public int getPrimaryKeyPolicy() {
-        Field field = getField(getPrimaryFieldName());
+        Field field = getField(getPrimaryKeyName());
         if (field != null && field.isAnnotationPresent(PrimaryKey.class)) {
             PrimaryKey primary = field.getAnnotation(PrimaryKey.class);
             return primary.policy();
@@ -952,7 +952,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
                 }
 
                 @Override
-                public String getPrimaryFieldName() {
+                public String getPrimaryKeyName() {
                     return primaryFieldName;
                 }
             };
@@ -1107,7 +1107,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
                 if (column != null) {
                     if (model.get(column) != null) {
                         String values = model.getSerializedValue(column);
-                        if (column.equals(model.getPrimaryFieldName())) {
+                        if (column.equals(model.getPrimaryKeyName())) {
                             if (model.getPrimaryKeyPolicy() == PrimaryKey.POLICY_AUTO_INCREMENT && "0".equals(values)) {
                                 //Do nothing id=0 should autoIncremented.
                                 Log.d("SQLiteModel", "toContentValues:" + column + " is primary key should be autoIncremented.");

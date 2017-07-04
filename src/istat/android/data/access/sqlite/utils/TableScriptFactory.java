@@ -167,7 +167,7 @@ public class TableScriptFactory {
         } else {
             out = adapterQueue.get(String.class).createLine(columnName, field);
         }
-        if (columnName.equals(model.getPrimaryFieldName())) {
+        if (columnName.equals(model.getPrimaryKeyName())) {
             int policy = model.getPrimaryKeyPolicy();
             out += " PRIMARY KEY ";
             if (policy == SQLiteModel.PrimaryKey.POLICY_AUTO_INCREMENT) {

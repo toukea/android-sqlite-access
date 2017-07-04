@@ -566,7 +566,7 @@ public final class SQLite {
             try {
                 Class<?> cLass = object.getClass();
                 SQLiteModel model = SQLiteModel.fromClass(cLass);
-                return delete(cLass).where(model.getPrimaryFieldName()).equalTo(model.getPrimaryKey()).execute() > 0;
+                return delete(cLass).where(model.getPrimaryKeyName()).equalTo(model.getPrimaryKeyValue()).execute() > 0;
             } catch (InstantiationException e) {
                 e.printStackTrace();
             } catch (IllegalAccessException e) {
@@ -579,7 +579,7 @@ public final class SQLite {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(cLass);
                 return delete(cLass)
-                        .where(model.getPrimaryFieldName())
+                        .where(model.getPrimaryKeyName())
                         .equalTo(id)
                         .execute() > 0;
             } catch (InstantiationException e) {
@@ -597,7 +597,7 @@ public final class SQLite {
                     throw new RuntimeException("Oups, class:" + cLass + " mapped by table:" + model.getName() + " doesn't has primary field defined.");
                 }
                 return select(cLass)
-                        .where(model.getPrimaryFieldName())
+                        .where(model.getPrimaryKeyName())
                         .equalTo(id)
                         .executeLimit1();
             } catch (InstantiationException e) {
