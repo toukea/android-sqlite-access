@@ -165,8 +165,10 @@ public final class SQLite {
             handler.onSQLPrepareFail(e);
 
         } finally {
-            if (transactional && db != null) {
-                db.endTransaction();
+            if (db != null) {
+                if (transactional) {
+                    db.endTransaction();
+                }
                 if (db.isOpen()) {
                     db.close();
                 }
@@ -419,6 +421,11 @@ public final class SQLite {
             }
             return config.contentValueHandlers.get(Object.class);
 
+        }
+
+        public SQL useConfig(SQLConfig config) {
+            this.config = config;
+            return this;
         }
 
         public SQL useSerializer(Class<?> cLass, SQLiteModel.Serializer serializer) {
