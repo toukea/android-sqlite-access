@@ -1077,7 +1077,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         public String onSerialize(Object value, String fieldName) {
             String out;
             Gson gson = new Gson();
-            Type type = value.getClass().getGenericSuperclass();
+            Type type = value.getClass();
             out = gson.toJson(value, type);
             return out;
         }
@@ -1152,6 +1152,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
 
     public interface ContentValueHandler {
         ContentValues toContentValues(SQLiteModel model);
+
     }
 
     public <T> List<T> asCollection() {
