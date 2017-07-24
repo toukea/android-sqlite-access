@@ -328,7 +328,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         int type = 0;
         SQLiteJoinSelect selectClause;
 
-         ClauseJoinSelectBuilder(int type, SQLiteJoinSelect selectClause) {
+        ClauseJoinSelectBuilder(int type, SQLiteJoinSelect selectClause) {
             this.type = type;
             this.selectClause = selectClause;
         }
@@ -531,8 +531,8 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             SQLiteModel selectionModel = SQLiteModel.fromClass(selectionClass);
             SQLiteModel joinModel = SQLiteModel.fromClass(selectionClass);
             Field[] fields = selectionModel.getNestedTableFields();
-            String nestedPrimaryKey = joinModel.getPrimaryFieldName();
-            String foreignKey = selectionModel.getPrimaryFieldName();
+            String nestedPrimaryKey = joinModel.getPrimaryKeyName();
+            String foreignKey = selectionModel.getPrimaryKeyName();
             for (Field field : fields) {
                 if (field.getType().isAssignableFrom(joinClass)) {
                     foreignKey = selectionModel.getFieldNestedMappingName(field);

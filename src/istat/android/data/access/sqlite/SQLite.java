@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Build;
 import android.os.CancellationSignal;
+import android.text.TextUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,13 +16,11 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import istat.android.data.access.sqlite.utils.SQLiteParser;
+import istat.android.data.access.sqlite.utils.TableUtils;
 
 public final class SQLite {
     static SQLiteDatabase
@@ -166,8 +165,10 @@ public final class SQLite {
             handler.onSQLPrepareFail(e);
 
         } finally {
-            if (transactional && db != null) {
-                db.endTransaction();
+            if (db != null) {
+                if (transactional) {
+                    db.endTransaction();
+                }
                 if (db.isOpen()) {
                     db.close();
                 }
@@ -320,71 +321,111 @@ public final class SQLite {
         return access;
     }
 
-
-    public static class SQL {
-        SQLiteDatabase db;
-        boolean autoClose = false;
-        HashMap<Class<?>, SQLiteModel.Serializer> serializers = new HashMap<Class<?>, SQLiteModel.Serializer>() {
-            {
-                put(Object.class, SQLiteModel.DEFAULT_SERIALIZER);
-            }
-        };
-        HashMap<Class<?>, SQLiteModel.CursorReader> cursorReaders = new HashMap<Class<?>, SQLiteModel.CursorReader>() {
-            {
-                put(Object.class, SQLiteModel.DEFAULT_CURSOR_READER);
-            }
-        };
-
-        HashMap<Class<?>, SQLiteModel.ContentValueHandler> contentValueHandlers = new HashMap<Class<?>, SQLiteModel.ContentValueHandler>() {
-            {
-                put(Object.class, SQLiteModel.DEFAULT_CONTAIN_VALUE_HANDLER);
-            }
-        };
+    public static class SQLConfig {
+        HashMap<Class<?>, SQLiteModel.Serializer> serializers = new HashMap<Class<?>, SQLiteModel.Serializer>();
+        HashMap<Class<?>, SQLiteModel.CursorReader> cursorReaders = new HashMap<Class<?>, SQLiteModel.CursorReader>();
+        HashMap<Class<?>, SQLiteModel.ContentValueHandler> contentValueHandlers = new HashMap<Class<?>, SQLiteModel.ContentValueHandler>();
         ArrayList<Class<?>> serializerAssignableTo = new ArrayList<Class<?>>();
         ArrayList<Class<?>> cursorReaderAssignableTo = new ArrayList<Class<?>>();
         ArrayList<Class<?>> contentValueHandlerAssignableTo = new ArrayList<Class<?>>();
 
+        public SQLConfig putSerializer(Class<?> cLass, SQLiteModel.Serializer serializer, boolean assignableTo) {
+            this.serializers.put(cLass, serializer);
+            if (assignableTo) {
+                this.serializerAssignableTo.add(cLass);
+            }
+            return this;
+        }
+
+        public SQLConfig putCursorReader(Class<?> cLass, SQLiteModel.CursorReader reader, boolean assignableTo) {
+            this.cursorReaders.put(cLass, reader);
+            if (assignableTo) {
+                this.cursorReaderAssignableTo.add(cLass);
+            }
+            return this;
+        }
+
+        public SQLConfig putContentValueHandler(Class<?> cLass, SQLiteModel.ContentValueHandler contentValueHandler, boolean assignableTo) {
+            this.contentValueHandlers.put(cLass, contentValueHandler);
+            if (assignableTo) {
+                this.contentValueHandlerAssignableTo.add(cLass);
+            }
+            return this;
+        }
+
+    }
+
+    public static class SQL {
+        SQLiteDatabase db;
+        boolean autoClose = false;
+        public final static SQLConfig GLOBAL_CONFIG = new SQLConfig() {
+            {
+                this.serializers.put(Object.class, SQLiteModel.DEFAULT_SERIALIZER);
+                this.cursorReaders.put(Object.class, SQLiteModel.DEFAULT_CURSOR_READER);
+                this.contentValueHandlers.put(Object.class, SQLiteModel.DEFAULT_CONTAIN_VALUE_HANDLER);
+            }
+        };
+        SQLConfig config = new SQLConfig() {
+            {
+                this.serializers.putAll(GLOBAL_CONFIG.serializers);
+                this.cursorReaders.putAll(GLOBAL_CONFIG.cursorReaders);
+                this.contentValueHandlers.putAll(GLOBAL_CONFIG.contentValueHandlers);
+                this.contentValueHandlerAssignableTo.addAll(GLOBAL_CONFIG.contentValueHandlerAssignableTo);
+                this.serializerAssignableTo.addAll(GLOBAL_CONFIG.serializerAssignableTo);
+                this.cursorReaderAssignableTo.addAll(GLOBAL_CONFIG.cursorReaderAssignableTo);
+            }
+        };
+
+        public SQLConfig getConfig() {
+            return config;
+        }
+
         //TODO manage isAssignableTo
         SQLiteModel.Serializer getSerializer(Class cLass) {
-            SQLiteModel.Serializer out = serializers.get(cLass);
+            SQLiteModel.Serializer out = config.serializers.get(cLass);
             if (out != null) {
                 return out;
             }
-            for (Class<?> c : serializerAssignableTo) {
+            for (Class<?> c : config.serializerAssignableTo) {
                 if (c.isAssignableFrom(cLass)) {
                     return getSerializer(c);
                 }
             }
-            return serializers.get(Object.class);
+            return config.serializers.get(Object.class);
 
         }
 
         SQLiteModel.CursorReader getCursorReader(Class cLass) {
-            SQLiteModel.CursorReader out = cursorReaders.get(cLass);
+            SQLiteModel.CursorReader out = config.cursorReaders.get(cLass);
             if (out != null) {
                 return out;
             }
-            for (Class<?> c : cursorReaderAssignableTo) {
+            for (Class<?> c : config.cursorReaderAssignableTo) {
                 if (c.isAssignableFrom(cLass)) {
                     return getCursorReader(c);
                 }
             }
-            return cursorReaders.get(Object.class);
+            return config.cursorReaders.get(Object.class);
 
         }
 
         SQLiteModel.ContentValueHandler getContentValueHandler(Class cLass) {
-            SQLiteModel.ContentValueHandler out = contentValueHandlers.get(cLass);
+            SQLiteModel.ContentValueHandler out = config.contentValueHandlers.get(cLass);
             if (out != null) {
                 return out;
             }
-            for (Class<?> c : contentValueHandlerAssignableTo) {
+            for (Class<?> c : config.contentValueHandlerAssignableTo) {
                 if (c.isAssignableFrom(cLass)) {
                     return getContentValueHandler(c);
                 }
             }
-            return contentValueHandlers.get(Object.class);
+            return config.contentValueHandlers.get(Object.class);
 
+        }
+
+        public SQL useConfig(SQLConfig config) {
+            this.config = config;
+            return this;
         }
 
         public SQL useSerializer(Class<?> cLass, SQLiteModel.Serializer serializer) {
@@ -401,26 +442,18 @@ public final class SQLite {
 
         //-----------------------------------------------
         public SQL useSerializer(Class<?> cLass, SQLiteModel.Serializer serializer, boolean assignableTo) {
-            this.serializers.put(cLass, serializer);
-            if (assignableTo) {
-                this.serializerAssignableTo.add(cLass);
-            }
+            this.config.putSerializer(cLass, serializer, assignableTo);
             return this;
         }
 
         public SQL useCursorReader(Class<?> cLass, SQLiteModel.CursorReader reader, boolean assignableTo) {
-            this.cursorReaders.put(cLass, reader);
-            if (assignableTo) {
-                this.cursorReaderAssignableTo.add(cLass);
-            }
+            this.config.putCursorReader(cLass, reader, assignableTo);
             return this;
         }
 
         public SQL useContentValueHandler(Class<?> cLass, SQLiteModel.ContentValueHandler contentValueHandler, boolean assignableTo) {
-            this.contentValueHandlers.put(cLass, contentValueHandler);
-            if (assignableTo) {
-                this.contentValueHandlerAssignableTo.add(cLass);
-            }
+            this.config.putContentValueHandler(cLass, contentValueHandler, assignableTo);
+
             return this;
         }
 
@@ -540,7 +573,7 @@ public final class SQLite {
             try {
                 Class<?> cLass = object.getClass();
                 SQLiteModel model = SQLiteModel.fromClass(cLass);
-                return delete(cLass).where(model.getPrimaryFieldName()).equalTo(model.getPrimaryKey()).execute() > 0;
+                return delete(cLass).where(model.getPrimaryKeyName()).equalTo(model.getPrimaryKeyValue()).execute() > 0;
             } catch (InstantiationException e) {
                 e.printStackTrace();
             } catch (IllegalAccessException e) {
@@ -553,7 +586,7 @@ public final class SQLite {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(cLass);
                 return delete(cLass)
-                        .where(model.getPrimaryFieldName())
+                        .where(model.getPrimaryKeyName())
                         .equalTo(id)
                         .execute() > 0;
             } catch (InstantiationException e) {
@@ -571,7 +604,7 @@ public final class SQLite {
                     throw new RuntimeException("Oups, class:" + cLass + " mapped by table:" + model.getName() + " doesn't has primary field defined.");
                 }
                 return select(cLass)
-                        .where(model.getPrimaryFieldName())
+                        .where(model.getPrimaryKeyName())
                         .equalTo(id)
                         .executeLimit1();
             } catch (InstantiationException e) {
@@ -593,8 +626,10 @@ public final class SQLite {
         public <T> List<T> findAll(Class<T> classTable, boolean distinct, String whereClause, String[] whereParams, String groupBy, String having, String orderBy, String limit) {
             SQLiteSelect select = select(distinct, classTable);
             select.distinct = distinct;
-            select.whereClause = new StringBuilder(whereClause);
-            select.whereParams = whereParams != null ? Arrays.asList(whereParams) : null;
+            if (TextUtils.isEmpty(whereClause)) {
+                select.whereClause = new StringBuilder(whereClause);
+            }
+            select.whereParams = whereParams != null ? Arrays.asList(whereParams) : new ArrayList<String>();
             select.limit = limit;
             select.orderBy = orderBy;
             select.groupBy = groupBy;
@@ -624,7 +659,7 @@ public final class SQLite {
             SQLiteUpdate.Updater update = update(classTable).updater;
             update.model.fillFromContentValues(contentValues);
             update.whereClause = new StringBuilder(whereClause);
-            update.whereParams = whereParams != null ? Arrays.asList(whereParams) : null;
+            update.whereParams = whereParams != null ? Arrays.asList(whereParams) : new ArrayList<String>();
             update.limit = limit;
             update.having = new StringBuilder(having);
             return update.execute();
@@ -639,6 +674,11 @@ public final class SQLite {
         public SQLiteInsert insert(Object... entity) {
             SQLiteInsert insert = new SQLiteInsert(this);
             return insert.insert(entity);
+        }
+
+        public <T> SQLiteInsert insert(boolean asClass, List<T> entity) {
+            SQLiteInsert insert = new SQLiteInsert(this);
+            return insert.insert(asClass, entity);
         }
 
         public <T> SQLiteInsert insert(List<T> entity) {
@@ -714,12 +754,7 @@ public final class SQLite {
         }
 
         public boolean isTableExist(Class<?> cLass) {
-            try {
-                select(cLass).count();
-                return true;
-            } catch (Exception e) {
-                return false;
-            }
+            return TableUtils.exist(getDb(), cLass);
         }
 
         public final void close() {

@@ -60,7 +60,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
     }
 
     protected String[] getWhereParams() {
-        if (whereParams.size() == 0)
+        if (whereParams == null || whereParams.size() == 0)
             return null;
         String[] tmp = new String[whereParams.size()];
         int i = 0;
@@ -101,7 +101,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             orderBy += realColumnName;
         }
         if (!TextUtils.isEmpty(value)) {
-            orderBy += value;
+            orderBy += " " + value;
         }
         return (Clause) this;
     }
@@ -290,7 +290,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         StringBuilder whereClause;
         List<String> whereParams;
 
-         ClauseBuilder(StringBuilder whereClause, List<String> whereParams, int type) {
+        ClauseBuilder(StringBuilder whereClause, List<String> whereParams, int type) {
             this.type = type;
             this.whereClause = whereClause;
             this.whereParams = whereParams;
@@ -498,7 +498,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
         int type = 0;
         String having;
 
-         HavingBuilder(String having, int type) {
+        HavingBuilder(String having, int type) {
             this.having = having;
             this.type = type;
         }

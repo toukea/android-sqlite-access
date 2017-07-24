@@ -2,12 +2,14 @@ package istat.android.data.access.sqlite.utils;
 
 import android.content.Context;
 import android.text.TextUtils;
+import android.util.Log;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -36,9 +38,13 @@ public class Toolkit {
         }
     }
 
-    public static List<Field> getAllFieldFields(Class<?> cLass, boolean includingPrivateAndSuper, boolean acceptStatic) {
-        if (includingPrivateAndSuper) {
-            return getAllFieldIncludingPrivateAndSuper(cLass, acceptStatic);
+    public static List<Field> getAllFieldFields(Class<?> cLass, boolean includeSuper, boolean acceptStatic) {
+        return getAllFieldFields(cLass, true, includeSuper, acceptStatic);
+    }
+
+    public static List<Field> getAllFieldFields(Class<?> cLass, boolean includingPrivate, boolean includingSuper, boolean acceptStatic) {
+        if (includingSuper) {
+            return getAllFieldIncludingPrivateAndSuper(cLass, !includingPrivate, acceptStatic);
         } else {
             List<Field> fields = new ArrayList<Field>();
             Field[] tmp = cLass.getDeclaredFields();
@@ -46,24 +52,32 @@ public class Toolkit {
                 if (f != null && (f.toString().contains("static") && !acceptStatic)) {
                     continue;
                 }
-                fields.add(f);
+                if (!includingPrivate || f.isAccessible()) {
+                    fields.add(f);
+                }
             }
             return fields;
         }
     }
 
     public static List<Field> getAllFieldIncludingPrivateAndSuper(Class<?> cLass) {
-        return getAllFieldIncludingPrivateAndSuper(cLass, false);
+        return getAllFieldIncludingPrivateAndSuper(cLass, true, false);
     }
 
-    public static List<Field> getAllFieldIncludingPrivateAndSuper(Class<?> cLass, boolean acceptStatic) {
+    public static List<Field> getAllFieldIncludingPrivateAndSuper(Class<?> cLass, boolean accessibleOnly) {
+        return getAllFieldIncludingPrivateAndSuper(cLass, accessibleOnly, false);
+    }
+
+    public static List<Field> getAllFieldIncludingPrivateAndSuper(Class<?> cLass, boolean accessibleOnly, boolean acceptStatic) {
         List<Field> fields = new ArrayList<Field>();
-        while (!cLass.equals(Object.class)) {
+        while (/*!cLass.equals(Object.class) ||*/!cLass.getCanonicalName().startsWith("java")) {
             for (Field field : cLass.getDeclaredFields()) {
                 if (field != null && (field.toString().contains("static") && !acceptStatic)) {
                     continue;
                 }
-                fields.add(field);
+                if (!accessibleOnly || field.isAccessible()) {
+                    fields.add(field);
+                }
             }
             cLass = cLass.getSuperclass();
         }
@@ -112,6 +126,22 @@ public class Toolkit {
         }
 
         return classes.toArray(new String[classes.size()]);
+    }
+
+    public final static Class<?> getFieldTypeClass(Field field) {
+        return (Class<?>) getFieldType(field);
+    }
+
+    public final static Type getFieldType(Field field) {
+        Type type;
+        try {
+            type = field.getGenericType();
+            Log.d("asClass", "onTRY=" + type);
+        } catch (Exception e) {
+            type = field.getType();
+            Log.d("asClass", "onCatch=" + type);
+        }
+        return type;
     }
 
 //    public final static List<Class> getClassesForPackage(String packageName) throws ClassNotFoundException {

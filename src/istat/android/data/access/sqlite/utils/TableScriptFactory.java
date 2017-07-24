@@ -95,7 +95,7 @@ public class TableScriptFactory {
             Field field = model.getField(columnName);
             if (field != null) {
                 String line = createStatementLine(model, columnName, field);
-                if (!TextUtils.isEmpty(line)) {
+                if (!isEmpty(line)) {
                     if (index > 0) {
                         line = "," + line;
                     }
@@ -108,6 +108,11 @@ public class TableScriptFactory {
         return sql;
     }
 
+    private boolean isEmpty(String line) {
+        return line != null && line.length() == 0;
+    }
+
+    //TODO add collectionAdapter
     HashMap<Class, FieldAdapter> adapterQueue = new HashMap() {
         {
             put(String.class, STRING_ADAPTER);
@@ -162,7 +167,7 @@ public class TableScriptFactory {
         } else {
             out = adapterQueue.get(String.class).createLine(columnName, field);
         }
-        if (columnName.equals(model.getPrimaryFieldName())) {
+        if (columnName.equals(model.getPrimaryKeyName())) {
             int policy = model.getPrimaryKeyPolicy();
             out += " PRIMARY KEY ";
             if (policy == SQLiteModel.PrimaryKey.POLICY_AUTO_INCREMENT) {

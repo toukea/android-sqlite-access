@@ -1,6 +1,7 @@
 package istat.android.data.access.sqlite;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import istat.android.data.access.sqlite.interfaces.QueryAble;
@@ -29,7 +30,15 @@ public final class SQLiteInsert {
         return this;
     }
 
-    public SQLiteInsert insert(List<?> insert) {
+    public SQLiteInsert insert(boolean asTable, List<?> insert) {
+        if (asTable) {
+            return insertCollectionAsTable(insert);
+        } else {
+            return insertCollection(insert);
+        }
+    }
+
+    private SQLiteInsert insertCollection(Collection<?> insert) {
         if (insert == null || insert.isEmpty()) {
             return this;
         }
@@ -45,6 +54,33 @@ public final class SQLiteInsert {
             }
         }
         return this;
+    }
+
+    private SQLiteInsert insertCollectionAsTable(List<?> insert) {
+        if (insert == null) {
+            return this;
+        }
+        try {
+            QueryAble model = SQLiteModel.fromObject(insert,
+                    sql.getSerializer(insert.getClass()),
+                    sql.getContentValueHandler(insert.getClass()));
+            modelInsertions.add(model);
+            insertions.add(insert);
+            if (!insert.isEmpty()) {
+                Object item0 = insert.get(0);
+                if (sql.isTableExist(item0.getClass())) {
+                    insertCollection(insert);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return this;
+    }
+
+    public SQLiteInsert insert(List<?> insert) {
+        Class<?> cLass = insert.getClass();
+        return insert(sql.isTableExist(cLass), insert);
     }
 
     public SQLiteInsert insert(Object... insert) {

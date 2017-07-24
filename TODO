@@ -1,4 +1,8 @@
 TODO----------------
+
+-if an sql instance is transactionnal and auto closable, close transaction and db safelly. (reflection)
+
+
 -persist nested collection field
 
 -reflection sur insertOrUpdate, persist (bien fondé)

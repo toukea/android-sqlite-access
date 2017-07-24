@@ -262,14 +262,17 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
 
         @Override
         public void onCreate(SQLiteDatabase db) {
-
-            bootDescription.onCreateDb(db);
+            if (bootDescription != null) {
+                bootDescription.onCreateDb(db);
+            }
             registerDbCreationTime();
         }
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            bootDescription.onUpgradeDb(db, oldVersion, newVersion);
+            if (bootDescription != null) {
+                bootDescription.onUpgradeDb(db, oldVersion, newVersion);
+            }
             registerDbUpdateTime();
         }
 

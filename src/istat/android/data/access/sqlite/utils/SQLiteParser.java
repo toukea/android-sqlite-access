@@ -141,7 +141,7 @@ public class SQLiteParser {
             if (statement.length() > 7) {
                 String beginStatement = statement.substring(0, 6)
                         .toLowerCase();
-                if (beginStatement.equals("persist")) {
+                if (beginStatement.equals("insert")) {
                     String insertHeader = statement.substring(0,
                             statement.indexOf("VALUES") + 6);
 
