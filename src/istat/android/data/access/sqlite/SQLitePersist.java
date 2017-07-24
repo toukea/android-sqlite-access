@@ -59,18 +59,24 @@ public final class SQLitePersist {
         return this;
     }
 
-    public long[] execute() {
+    public List<Object> execute() {
+        List<Object> entities = new ArrayList<>();
         if (modelPersist == null || modelPersist.size() == 0)
-            return new long[]{0};
-        long[] out = new long[modelPersist.size()];
+            return entities;
         int index = 0;
-        for (QueryAble insertion : modelPersist) {
-            out[index] = insertion.persist(sql.db);
+        for (SQLiteModel insertion : modelPersist) {
+            long out = insertion.persist(sql.db);
+            Object entity = persists.get(index);
+            if (out > 0) {
+                //TODO update entity to match with new Id state.
+                insertion.flowInto(entity, insertion.getPrimaryKeyName());
+            }
+            entities.add(entity);
             index++;
         }
         modelPersist.clear();
         notifyExecuted();
-        return out;
+        return entities;
     }
 
     private void notifyExecuted() {

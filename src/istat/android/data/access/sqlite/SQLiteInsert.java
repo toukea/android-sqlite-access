@@ -1,5 +1,7 @@
 package istat.android.data.access.sqlite;
 
+import android.database.sqlite.SQLiteException;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -101,22 +103,24 @@ public final class SQLiteInsert {
         return this;
     }
 
-    public long[] execute(boolean ignoreOnDuplicate) {
+    public long[] execute(boolean ignoreOnDuplicate) throws SQLiteException {
         List<Long> tmp = new ArrayList<Long>();
         try {
             if (modelInsertions == null || modelInsertions.size() == 0)
                 return new long[]{0};
             for (QueryAble insertion : modelInsertions) {
-                if (insertion.exist(sql.db)) {
-                    throw new IllegalAccessException("entity :0" + insertion + " already exist inside table " + insertion.getName());
-                }
-                tmp.add(insertion.persist(sql.db));
+//                if (insertion.exist(sql.db)) {
+//                    throw new IllegalAccessException("entity :0" + insertion + " already exist inside table " + insertion.getName());
+//                }
+                tmp.add(insertion.insert(sql.db));
             }
             modelInsertions.clear();
             notifyExecuted();
-        } catch (IllegalAccessException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             if (!ignoreOnDuplicate) {
+                SQLiteException error = new SQLiteException(e.getMessage());
+                error.initCause(e);
                 throw new RuntimeException(e);
             }
         }
@@ -127,16 +131,16 @@ public final class SQLiteInsert {
         return out;
     }
 
-    public long[] execute() throws IllegalAccessException {
+    public long[] execute() throws SQLiteException {
         if (modelInsertions == null || modelInsertions.size() == 0)
             return new long[]{0};
         long[] out = new long[modelInsertions.size()];
         int index = 0;
         for (QueryAble insertion : modelInsertions) {
-            if (insertion.exist(sql.db)) {
-                throw new IllegalAccessException("entity :0" + insertion + " already exist inside table " + insertion.getName());
-            }
-            out[index] = insertion.persist(sql.db);
+//            if (insertion.exist(sql.db)) {
+//                throw new IllegalAccessException("entity :0" + insertion + " already exist inside table " + insertion.getName());
+//            }
+            out[index] = insertion.insert(sql.db);
             index++;
         }
         modelInsertions.clear();

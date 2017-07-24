@@ -58,18 +58,24 @@ public final class SQLiteMerge {
         return this;
     }
 
-    public long[] execute() {
+    public List<Object> execute() {
+        List<Object> entities = new ArrayList<>();
         if (modelMerges == null || modelMerges.isEmpty())
-            return new long[]{0};
-        long[] out = new long[modelMerges.size()];
+            return entities;
         int index = 0;
         for (SQLiteModel merge : modelMerges) {
-            out[index] = merge.merge(sql.db);
+            long out = merge.merge(sql.db);
+            Object entity = merges.get(index);
+            if (out > 0) {
+                //TODO update entity to match with new Id state.
+                merge.flowInto(entity, merge.getColumns());
+            }
+            entities.add(entity);
             index++;
         }
         modelMerges.clear();
         notifyExecuted();
-        return out;
+        return entities;
     }
 
     private void notifyExecuted() {

@@ -28,6 +28,7 @@ import org.json.JSONObject;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -36,9 +37,9 @@ import com.google.gson.Gson;
 public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Iterable {
 
     Class<?> modelClass = Object.class;
-    HashMap<String, Object> fieldNameValuePair = new HashMap<String, Object>();
-    HashMap<String, Field> nameFieldPair = new HashMap<String, Field>();
-    HashMap<String, Field> nestedTableFieldPair = new HashMap<String, Field>();
+    HashMap<String, Object> fieldNameValuePair = new HashMap();
+    HashMap<String, Field> columnNameFieldPair = new HashMap();
+    HashMap<String, Field> nestedTableFieldPair = new HashMap();
     public static final String TAG_CLASS = SQLiteModel.class.getCanonicalName() + ".CLASS";
     public static final String TAG_ITEMS = SQLiteModel.class.getCanonicalName() + ".ITEMS";
 
@@ -214,42 +215,43 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     }
 
     public long merge(SQLiteDatabase db) {
-        long out;
         if (exist(db)) {
-            out = update(db);
+            long out = update(db);
             refresh(db);
+            return out >= 1 ? 0 : -1;
         } else {
-            out = insert(db);
+            return proceedSmartInsertion(db);
         }
-        return out;
     }
 
-    @Override
     public long persist(SQLiteDatabase db) {
         if (exist(db)) {
-            update(db);
-            return 0;
+            long out = update(db);
+            return out >= 1 ? 0 : -1;
         } else {
-            return insert(db);
+            return proceedSmartInsertion(db);
         }
     }
 
-    protected void onPersistEmbeddedDbEntity(SQLiteDatabase db, Class cLass, QueryAble embeddedModel) {
-        embeddedModel.persist(db);
+    private long proceedSmartInsertion(SQLiteDatabase db) {
+        long id = insert(db);
+        if (TextUtils.isEmpty(getPrimaryKeyValue())) {
+            set(getPrimaryKeyName(), id);
+        }
+        return id;
+    }
+
+    protected void onPersistEmbeddedDbEntity(SQLiteDatabase db, Class cLass, SQLiteModel embeddedModel) throws SQLiteException {
+        embeddedModel.insert(db);
     }
 
 
-    public long insert(SQLiteDatabase db) {
-        long out = 0;
-        try {
-            String tbName = getName();
-            ContentValues values = toContentValues();
-            out = db.insert(tbName, null, values);
-            persistNestedEntity(db);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-        }
+    public long insert(SQLiteDatabase db) throws SQLiteException {
+        long out;
+        String tbName = getName();
+        ContentValues values = toContentValues();
+        out = db.insert(tbName, null, values);
+        persistNestedEntity(db);
         return out;
     }
 
@@ -336,7 +338,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         Class<?> cLass = obj.getClass();
         List<String> tmp = new ArrayList<String>();
         HashMap<String, Object> map = new HashMap<String, Object>();
-        HashMap<String, Field> nameFieldPair = new HashMap<String, Field>();
+        HashMap<String, Field> columnNameFieldPair = new HashMap<String, Field>();
         HashMap<String, Field> nestedTableField = new HashMap<String, Field>();
         boolean hasColumnAnnotation = false;
         String primaryKey = null;
@@ -377,7 +379,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
                         tmp.add(columnName);
                         Object value = field.get(obj);
                         map.put(columnName, value);
-                        nameFieldPair.put(columnName, field);
+                        columnNameFieldPair.put(columnName, field);
                         if (isNestedTableProperty(field)) {
                             nestedTableField.put(columnName, field);
                         }
@@ -413,7 +415,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
                 .setColumns(projections)
                 .setPrimaryFieldName(primary)
                 .setFieldNameValuePair(map)
-                .setNameFieldPair(nameFieldPair)
+                .setColumnNameFieldPair(columnNameFieldPair)
                 .setNestedTableNameFieldPair(nestedTableField)
                 .setModelClass(cLass)
                 .setSerializer(serializer)
@@ -517,7 +519,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
             builder.setName(tableName)
                     .setColumns(projections)
                     .setPrimaryFieldName(primary)
-                    .setNameFieldPair(nameFieldPair)
+                    .setColumnNameFieldPair(nameFieldPair)
                     .setNestedTableNameFieldPair(nestedTableField)
                     .setModelClass(cLass);
             BUILDER_BUFFER.put(cLass, builder);
@@ -544,6 +546,9 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
             }
         } catch (Exception e) {
             e.printStackTrace();
+            SQLiteException error = new SQLiteException("Error durring embedded persistance.");
+            error.initCause(e);
+            throw error;
         }
     }
 
@@ -623,9 +628,9 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         }
     }
 
-    public Field getField(String field) {
-        if (nameFieldPair.containsKey(field)) {
-            return nameFieldPair.get(field);
+    public Field getField(String columnName) {
+        if (columnNameFieldPair.containsKey(columnName)) {
+            return columnNameFieldPair.get(columnName);
         } else {
             return null;
         }
@@ -918,8 +923,8 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
             return this;
         }
 
-        public Builder setNameFieldPair(HashMap<String, Field> nameFieldPair) {
-            this.nameFieldPair = nameFieldPair;
+        public Builder setColumnNameFieldPair(HashMap<String, Field> columnNameFieldPair) {
+            this.columnNameFieldPair = columnNameFieldPair;
             return this;
         }
 
@@ -957,7 +962,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
                 }
             };
             model.fieldNameValuePair = this.FieldNameValuePair;
-            model.nameFieldPair = this.nameFieldPair;
+            model.columnNameFieldPair = this.columnNameFieldPair;
             model.nestedTableFieldPair = this.nestedTableNameFieldPair;
             model.modelClass = this.modelClass;
             if (serializer != null) {
@@ -970,7 +975,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         String name, primaryFieldName;
         List<String> projections = new ArrayList<String>();
         HashMap<String, Object> FieldNameValuePair = new HashMap<String, Object>();
-        HashMap<String, Field> nameFieldPair = new HashMap<String, Field>();
+        HashMap<String, Field> columnNameFieldPair = new HashMap<String, Field>();
         HashMap<String, Field> nestedTableNameFieldPair = new HashMap<String, Field>();
 
         public void setContentValueHandler(ContentValueHandler contentValueHandler) {
@@ -1179,5 +1184,12 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
             }
         }
         return null;
+    }
+
+    public <T> T flowInto(T entity, String... columns) {
+        for (String column : columns) {
+
+        }
+        return entity;
     }
 }
