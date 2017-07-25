@@ -64,8 +64,8 @@ public final class SQLiteUpdate {
             }
         }
 
-        protected Updater(String clazz, SQLite.SQL sql) {
-            super(clazz, null, sql);
+        protected Updater(String tableName, SQLite.SQL sql) {
+            super(tableName, null, sql);
         }
 
         public Updater set(String name, Object value) {

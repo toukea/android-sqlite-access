@@ -324,7 +324,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             return in(false, value);
         }
 
-        public Clause in(Object... value) {
+        public <T> Clause in(T... value) {
             return in(true, value);
         }
 
