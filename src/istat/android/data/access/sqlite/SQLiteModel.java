@@ -109,8 +109,12 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         }
     }
 
-    public String getPrimaryKeyValue() {
+    public String getPrimaryKeyStringValue() {
         return getString(getPrimaryKeyName());
+    }
+
+    public Object getPrimaryKeyValue() {
+        return get(getPrimaryKeyName());
     }
 
     public Class<?> getModelClass() {
@@ -223,7 +227,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     }
 
     public void refresh(SQLiteDatabase db) {
-        fillFromPrimaryKey(getPrimaryKeyValue(), db);
+        fillFromPrimaryKey(getPrimaryKeyStringValue(), db);
     }
 
     public long merge(SQLiteDatabase db) {
@@ -232,7 +236,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
             refresh(db);
             return out >= 1 ? 0 : -1;
         } else {
-            return proceedSmartInsertion(db);
+            return insert(db, true);
         }
     }
 
@@ -241,20 +245,12 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
             long out = update(db);
             return out >= 1 ? 0 : -1;
         } else {
-            return proceedSmartInsertion(db);
+            return insert(db, true);
         }
-    }
-
-    private long proceedSmartInsertion(SQLiteDatabase db) {
-        long id = insert(db, true);
-        if (TextUtils.isEmpty(getPrimaryKeyValue())) {
-            set(getPrimaryKeyName(), id);
-        }
-        return id;
     }
 
     protected void onPersistEmbeddedDbEntity(SQLiteDatabase db, Class cLass, SQLiteModel embeddedModel) throws SQLiteException {
-        embeddedModel.insert(db);
+        embeddedModel.persist(db);
     }
 
     @Override
@@ -262,25 +258,34 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         return insert(db, false);
     }
 
-    private long insert(SQLiteDatabase db, boolean updateModel) throws SQLiteException {
-        long out;
+    private long insert(SQLiteDatabase db, boolean updateModelPrimaryKey) throws SQLiteException {
+        long insertId;
         String tbName = getName();
         ContentValues contentValues = toContentValues();
-        if (updateModel
-                && TextUtils.isEmpty(getPrimaryKeyValue())
-                && contentValues.containsKey(getPrimaryKeyName())) {
-            setPrimaryKeyValue(contentValues.get(getPrimaryKeyName()));
+        insertId = db.insert(tbName, null, contentValues);
+        if (updateModelPrimaryKey) {
+            Object primaryKeyValue = insertId;
+            if (TextUtils.isEmpty(getPrimaryKeyStringValue())) {
+                if (contentValues.containsKey(getPrimaryKeyName())) {
+                    primaryKeyValue = contentValues.get(getPrimaryKeyName());
+                }
+            } /*else {
+                primaryKeyValue = getPrimaryKeyValue();
+                if (Number.class.isAssignableFrom(primaryKeyValue.getClass())) {
+                    primaryKeyValue = insertId;
+                }
+            }*/
+            setPrimaryKeyValue(primaryKeyValue);
         }
-        out = db.insert(tbName, null, contentValues);
         persistNestedEntity(db);
-        return out;
+        return insertId;
     }
 
     public int update(SQLiteDatabase db) {
         int out = 0;
         try {
             out = update(db, getPrimaryKeyName() + "= ?",
-                    new String[]{getPrimaryKeyValue()});
+                    new String[]{getPrimaryKeyStringValue()});
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -317,12 +322,13 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
 
     public boolean exist(SQLiteDatabase db) {
         String primary_key_name = getPrimaryKeyName();
+        String primaryKeyValue = getPrimaryKeyStringValue();
         String tb_name = getName();
-        if (TextUtils.isEmpty(primary_key_name)) {
+        if (TextUtils.isEmpty(primary_key_name) || TextUtils.isEmpty(primaryKeyValue)) {
             return false;
         }
         try {
-            String primaryKeyValue = getPrimaryKeyValue();
+
             Cursor c = db.query(tb_name, new String[]{primary_key_name}, primary_key_name
                     + "= ?", new String[]{primaryKeyValue}, null, null, null);
             int count = c.getCount();
@@ -336,7 +342,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
 
     public int delete(SQLiteDatabase db) {
         return delete(db, getPrimaryKeyName() + "= ?",
-                new String[]{getPrimaryKeyValue()});
+                new String[]{getPrimaryKeyStringValue()});
     }
 
     public static SQLiteModel fromObject(final Object obj) throws InstantiationException,
@@ -820,7 +826,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
 
 
     private boolean hasPrimaryKey() {
-        return !TextUtils.isEmpty(getPrimaryKeyValue());
+        return !TextUtils.isEmpty(getPrimaryKeyStringValue());
     }
 
     protected void clear() {

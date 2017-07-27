@@ -573,7 +573,7 @@ public final class SQLite {
             try {
                 Class<?> cLass = object.getClass();
                 SQLiteModel model = SQLiteModel.fromClass(cLass);
-                return delete(cLass).where(model.getPrimaryKeyName()).equalTo(model.getPrimaryKeyValue()).execute() > 0;
+                return delete(cLass).where(model.getPrimaryKeyName()).equalTo(model.getPrimaryKeyStringValue()).execute() > 0;
             } catch (InstantiationException e) {
                 e.printStackTrace();
             } catch (IllegalAccessException e) {
