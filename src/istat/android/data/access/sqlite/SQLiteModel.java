@@ -41,6 +41,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     HashMap<String, Field> nestedTableFieldPair = new HashMap<String, Field>();
     public static final String TAG_CLASS = SQLiteModel.class.getCanonicalName() + ".CLASS";
     public static final String TAG_ITEMS = SQLiteModel.class.getCanonicalName() + ".ITEMS";
+    public final static String DEFAULT_PRIMARY_KEY_NAME = "id";
 
     SQLiteModel() {
 
@@ -258,7 +259,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         try {
             out = update(db, getPrimaryKeyName() + "= ?",
                     new String[]{getPrimaryKeyValue()});
-
+            persistNestedEntity(db);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -335,7 +336,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         Builder builder = new Builder();
         Class<?> cLass = obj.getClass();
         List<String> tmp = new ArrayList<String>();
-        HashMap<String, Object> map = new HashMap<String, Object>();
+        HashMap<String, Object> fieldNameValuePair = new HashMap<String, Object>();
         HashMap<String, Field> nameFieldPair = new HashMap<String, Field>();
         HashMap<String, Field> nestedTableField = new HashMap<String, Field>();
         boolean hasColumnAnnotation = false;
@@ -359,7 +360,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
                     String columnName = null;
                     if (field.isAnnotationPresent(PrimaryKey.class) && primaryKey == null) {
                         primaryKey = field.getName();
-                    } else if (field.getName().equalsIgnoreCase("id")) {
+                    } else if (field.getName().equalsIgnoreCase(DEFAULT_PRIMARY_KEY_NAME)) {
                         eligiblePrimaryName = field.getName();
                     }
                     if (field.isAnnotationPresent(Column.class)) {
@@ -376,9 +377,10 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
                     if (columnName != null && !tmp.contains(columnName)) {
                         tmp.add(columnName);
                         Object value = field.get(obj);
-                        map.put(columnName, value);
+                        fieldNameValuePair.put(columnName, value);
                         nameFieldPair.put(columnName, field);
                         if (isNestedTableProperty(field)) {
+                            //TODO implement more advanced processing with nested table
                             nestedTableField.put(columnName, field);
                         }
                     }
@@ -389,7 +391,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
                 if (!modelAsCollection.isEmpty()) {
                     List tmpList = new ArrayList();
                     tmpList.addAll(modelAsCollection);
-                    map.put(TAG_ITEMS, tmpList);
+                    fieldNameValuePair.put(TAG_ITEMS, tmpList);
                 }
             }
         } catch (Exception e) {
@@ -412,7 +414,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         builder.setName(tableName)
                 .setColumns(projections)
                 .setPrimaryFieldName(primary)
-                .setFieldNameValuePair(map)
+                .setFieldNameValuePair(fieldNameValuePair)
                 .setNameFieldPair(nameFieldPair)
                 .setNestedTableNameFieldPair(nestedTableField)
                 .setModelClass(cLass)
@@ -473,7 +475,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
                         String columnName = null;
                         if (field.isAnnotationPresent(PrimaryKey.class) && primaryKey == null) {
                             primaryKey = field.getName();
-                        } else if (field.getName().equalsIgnoreCase("id")) {
+                        } else if (field.getName().equalsIgnoreCase(DEFAULT_PRIMARY_KEY_NAME)) {
                             eligiblePrimaryName = field.getName();
                         }
                         if (field.isAnnotationPresent(Column.class)) {
@@ -536,6 +538,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
             while (keySet.hasNext()) {
                 String tableName = keySet.next();
                 Field field = nestedTableFieldPair.get(tableName);
+                //TODO query for Annotation embedded persistence mod
                 if (field != null) {
                     Class<?> cLass = Toolkit.getFieldTypeClass(field);
                     SQLiteModel model = SQLiteModel.fromObject(cLass);
