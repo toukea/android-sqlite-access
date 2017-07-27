@@ -51,13 +51,25 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         this.fieldNameValuePair.put(name, value);
     }
 
+    public final void setPrimaryKeyValue(Object value) {
+        this.fieldNameValuePair.put(getPrimaryKeyName(), value);
+    }
+
     public final Object get(String name) {
         return this.fieldNameValuePair.get(name);
     }
 
+    public final boolean isEmpty(String name) {
+        return TextUtils.isEmpty(getString(name));
+    }
+
+    public final boolean isNULL(String name) {
+        return get(name) == null;
+    }
+
     public final String getString(String name) {
         Object value = get(name);
-        return value == null ? "" : value.toString();
+        return value == null ? null : value.toString();
     }
 
     public final boolean getBoolean(String name) {
@@ -234,7 +246,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     }
 
     private long proceedSmartInsertion(SQLiteDatabase db) {
-        long id = insert(db);
+        long id = insert(db, true);
         if (TextUtils.isEmpty(getPrimaryKeyValue())) {
             set(getPrimaryKeyName(), id);
         }
@@ -245,12 +257,21 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         embeddedModel.insert(db);
     }
 
-
+    @Override
     public long insert(SQLiteDatabase db) throws SQLiteException {
+        return insert(db, false);
+    }
+
+    private long insert(SQLiteDatabase db, boolean updateModel) throws SQLiteException {
         long out;
         String tbName = getName();
-        ContentValues values = toContentValues();
-        out = db.insert(tbName, null, values);
+        ContentValues contentValues = toContentValues();
+        if (updateModel
+                && TextUtils.isEmpty(getPrimaryKeyValue())
+                && contentValues.containsKey(getPrimaryKeyName())) {
+            setPrimaryKeyValue(contentValues.get(getPrimaryKeyName()));
+        }
+        out = db.insert(tbName, null, contentValues);
         persistNestedEntity(db);
         return out;
     }
@@ -663,7 +684,11 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
             if (!field.isAnnotationPresent(Ignore.class)) {
                 try {
                     field.setAccessible(true);
-                    Object obj = serializer.onDeSerialize(getString(field.getName()), field);
+                    Object value = get(field.getName());
+                    if (value == null) {
+                        continue;
+                    }
+                    Object obj = serializer.onDeSerialize(String.valueOf(value), field);
                     field.set(instance, obj);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -1110,7 +1135,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
             String[] columns = model.getColumns();
             for (String column : columns) {
                 if (column != null) {
-                    if (model.get(column) != null) {
+                    if (!model.isNULL(column)) {
                         String values = model.getSerializedValue(column);
                         if (column.equals(model.getPrimaryKeyName())) {
                             if (model.getPrimaryKeyPolicy() == PrimaryKey.POLICY_AUTO_INCREMENT && "0".equals(values)) {
@@ -1128,6 +1153,9 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
                                 pairs.put(column, values);
                             }
                         } else {
+                            if (values == null) {
+                                continue;
+                            }
                             pairs.put(column, values);
                         }
                     }
@@ -1186,9 +1214,11 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         return null;
     }
 
-    public <T> T flowInto(T entity, String... columns) {
+    public <T> T flowInto(T entity, String... columns) throws IllegalAccessException {
         for (String column : columns) {
-
+            Field field = getField(column);
+            Object value = get(column);
+            field.set(entity, this.serializer.onDeSerialize(String.valueOf(value), field));
         }
         return entity;
     }

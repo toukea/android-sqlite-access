@@ -11,7 +11,7 @@ public abstract class SQLiteThread<T> extends Thread {
     boolean running = false;
     SQLiteAsyncExecutor.ExecutionCallback<T> callback;
 
-    public SQLiteThread(SQLiteAsyncExecutor.ExecutionCallback<T> callback) {
+    SQLiteThread(SQLiteAsyncExecutor.ExecutionCallback<T> callback) {
         this.callback = callback;
     }
 
