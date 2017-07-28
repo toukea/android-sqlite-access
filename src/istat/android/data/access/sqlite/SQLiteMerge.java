@@ -1,5 +1,7 @@
 package istat.android.data.access.sqlite;
 
+import android.database.sqlite.SQLiteException;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,18 +60,31 @@ public final class SQLiteMerge {
         return this;
     }
 
-    public long[] execute() {
-        if (modelMerges == null || modelMerges.isEmpty())
-            return new long[]{0};
-        long[] out = new long[modelMerges.size()];
-        int index = 0;
-        for (SQLiteModel merge : modelMerges) {
-            out[index] = merge.merge(sql.db);
-            index++;
+    public List<Object> execute() throws SQLiteException {
+        List<Object> entities = new ArrayList<>();
+        try {
+            if (modelMerges == null || modelMerges.isEmpty())
+                return entities;
+            int index = 0;
+            for (SQLiteModel merge : modelMerges) {
+                long out = merge.merge(sql.db);
+                Object entity = merges.get(index);
+                if (out >= 0) {
+                    //TODO update entity to match with new Id state.
+                    merge.flowInto(entity, merge.getColumns());
+                }
+                entities.add(entity);
+                index++;
+            }
+            modelMerges.clear();
+            notifyExecuted();
+        } catch (Exception e) {
+            SQLiteException error = new SQLiteException(e.getMessage());
+            error.initCause(e);
+            error.setStackTrace(e.getStackTrace());
+            throw error;
         }
-        modelMerges.clear();
-        notifyExecuted();
-        return out;
+        return entities;
     }
 
     private void notifyExecuted() {
@@ -86,7 +101,7 @@ public final class SQLiteMerge {
         return executeAsync(null);
     }
 
-    public SQLiteThread executeAsync(final SQLiteAsyncExecutor.ExecutionCallback<long[]> callback) {
+    public SQLiteThread executeAsync(final SQLiteAsyncExecutor.ExecutionCallback<List<Object>> callback) {
         SQLiteAsyncExecutor asyncExecutor = new SQLiteAsyncExecutor();
         return asyncExecutor.execute(this, callback);
     }

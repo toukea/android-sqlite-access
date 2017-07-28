@@ -1,5 +1,6 @@
 package istat.android.data.access.sqlite.utils;
 
+import android.database.sqlite.SQLiteException;
 import android.os.Handler;
 import android.os.Looper;
 
@@ -88,9 +89,11 @@ public class SQLiteAsyncExecutor {
             protected long[] onExecute() {
                 try {
                     return clause.execute();
-                } catch (IllegalAccessException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
-                    throw new RuntimeException(e);
+                    SQLiteException error = new SQLiteException(e.getMessage());
+                    error.initCause(e);
+                    throw error;
                 }
             }
         };
@@ -98,11 +101,11 @@ public class SQLiteAsyncExecutor {
         return thread;
     }
 
-    public SQLiteThread execute(final SQLiteMerge clause, ExecutionCallback<long[]> callback) {
-        SQLiteThread<long[]> thread = new SQLiteThread<long[]>(callback) {
+    public SQLiteThread execute(final SQLiteMerge clause, ExecutionCallback<List<Object>> callback) {
+        SQLiteThread<List<Object>> thread = new SQLiteThread<List<Object>>(callback) {
 
             @Override
-            protected long[] onExecute() {
+            protected List<Object> onExecute() {
                 return clause.execute();
             }
         };
@@ -121,6 +124,18 @@ public class SQLiteAsyncExecutor {
         thread.start();
         return thread;
     }
+
+//    public SQLiteThread execute(final SQLitePersist clause, ExecutionCallback<List<Object>> callback) {
+//        SQLiteThread<List<Object>> thread = new SQLiteThread<List<Object>>(callback) {
+//
+//            @Override
+//            protected List<Object> onExecute() {
+//                return clause.execute();
+//            }
+//        };
+//        thread.start();
+//        return thread;
+//    }
     //---------------------------------
 
 //    public SQLiteThread execute(final SQLiteInsert clause, ExecutionCallback<List<Object>> callback) {
