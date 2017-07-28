@@ -75,6 +75,7 @@ public final class SQLiteAsyncExecutor {
                 return clause.execute(offset, limit);
             }
         };
+        thread.start(false);
         return thread;
     }
 
