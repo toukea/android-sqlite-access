@@ -1144,7 +1144,10 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
                     if (!model.isNULL(column)) {
                         String values = model.getSerializedValue(column);
                         if (column.equals(model.getPrimaryKeyName())) {
-                            if (model.getPrimaryKeyPolicy() == PrimaryKey.POLICY_AUTO_INCREMENT && "0".equals(values)) {
+                            //TODO find a better comparison.
+                            if ((model.getPrimaryKeyPolicy() == PrimaryKey.POLICY_AUTO_INCREMENT
+                                    || model.getPrimaryKeyPolicy() == PrimaryKey.POLICY_DEFAULT)
+                                    && "0".equals(values)) {
                                 //Do nothing id=0 should autoIncremented.
                                 Log.d("SQLiteModel", "toContentValues:" + column + " is primary key should be autoIncremented.");
                             } else if (model.getPrimaryKeyPolicy() == PrimaryKey.POLICY_AUTO_GENERATE) {

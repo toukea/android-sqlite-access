@@ -5,10 +5,11 @@ import android.database.sqlite.SQLiteException;
 import java.util.ArrayList;
 import java.util.List;
 
+import istat.android.data.access.sqlite.interfaces.SQLiteClauseAble;
 import istat.android.data.access.sqlite.utils.SQLiteAsyncExecutor;
 import istat.android.data.access.sqlite.utils.SQLiteThread;
 
-public final class SQLiteMerge {
+public final class SQLiteMerge implements SQLiteClauseAble {
     List<SQLiteModel> modelMerges = new ArrayList<SQLiteModel>();
     List<Object> merges = new ArrayList<Object>();
     SQLite.SQL sql;
@@ -104,5 +105,10 @@ public final class SQLiteMerge {
     public SQLiteThread executeAsync(final SQLiteAsyncExecutor.ExecutionCallback<List<Object>> callback) {
         SQLiteAsyncExecutor asyncExecutor = new SQLiteAsyncExecutor();
         return asyncExecutor.execute(this, callback);
+    }
+
+    @Override
+    public SQLite.SQL getInternalSQL() {
+        return this.sql;
     }
 }

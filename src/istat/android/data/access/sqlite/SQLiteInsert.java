@@ -7,10 +7,11 @@ import java.util.Collection;
 import java.util.List;
 
 import istat.android.data.access.sqlite.interfaces.QueryAble;
+import istat.android.data.access.sqlite.interfaces.SQLiteClauseAble;
 import istat.android.data.access.sqlite.utils.SQLiteAsyncExecutor;
 import istat.android.data.access.sqlite.utils.SQLiteThread;
 
-public final class SQLiteInsert {
+public final class SQLiteInsert implements SQLiteClauseAble {
     List<QueryAble> modelInsertions = new ArrayList<QueryAble>();
     List<Object> insertions = new ArrayList<Object>();
     SQLite.SQL sql;
@@ -165,5 +166,10 @@ public final class SQLiteInsert {
 
     public List<Object> getInsertions() {
         return insertions;
+    }
+
+    @Override
+    public SQLite.SQL getInternalSQL() {
+        return this.sql;
     }
 }

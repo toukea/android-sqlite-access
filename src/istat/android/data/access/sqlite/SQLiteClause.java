@@ -15,8 +15,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
 import istat.android.data.access.sqlite.interfaces.QueryAble;
+import istat.android.data.access.sqlite.interfaces.SQLiteClauseAble;
 
-abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
+abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteClauseAble {
     protected SQLite.SQL sql;
     // protected SQLiteDatabase db;
     protected StringBuilder whereClause = null;
@@ -586,5 +587,10 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> {
             sql += splits[splits.length - 1];
         }
         return sql;
+    }
+
+    @Override
+    public SQLite.SQL getInternalSQL() {
+        return this.sql;
     }
 }

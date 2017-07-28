@@ -5,11 +5,11 @@ import android.database.sqlite.SQLiteException;
 import java.util.ArrayList;
 import java.util.List;
 
-import istat.android.data.access.sqlite.interfaces.QueryAble;
+import istat.android.data.access.sqlite.interfaces.SQLiteClauseAble;
 import istat.android.data.access.sqlite.utils.SQLiteAsyncExecutor;
 import istat.android.data.access.sqlite.utils.SQLiteThread;
 
-public final class SQLitePersist {
+public final class SQLitePersist implements SQLiteClauseAble {
     List<SQLiteModel> modelPersist = new ArrayList<SQLiteModel>();
     List<Object> persists = new ArrayList<Object>();
     SQLite.SQL sql;
@@ -62,8 +62,9 @@ public final class SQLitePersist {
     }
 
     public long[] execute() throws SQLiteException {
-        if (modelPersist == null || modelPersist.size() == 0)
+        if (modelPersist == null || modelPersist.isEmpty()) {
             return new long[]{0};
+        }
         long[] out = new long[modelPersist.size()];
         try {
             int index = 0;
@@ -112,6 +113,11 @@ public final class SQLitePersist {
         if (sql.autoClose) {
             sql.close();
         }
+    }
+
+    @Override
+    public SQLite.SQL getInternalSQL() {
+        return this.sql;
     }
 
     public List<Object> getPersists() {

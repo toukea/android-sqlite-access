@@ -8,10 +8,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import istat.android.data.access.sqlite.interfaces.SQLiteClauseAble;
 import istat.android.data.access.sqlite.utils.SQLiteAsyncExecutor;
 import istat.android.data.access.sqlite.utils.SQLiteThread;
 
-public final class SQLiteUpdate {
+public final class SQLiteUpdate implements SQLiteClauseAble {
     Updater updater;
 
     SQLiteUpdate(Class<?> clazz, SQLite.SQL sql) {
@@ -163,6 +164,11 @@ public final class SQLiteUpdate {
             }
             return new SQLiteUpdateLimit(this, limitS);
         }
+    }
+
+    @Override
+    public SQLite.SQL getInternalSQL() {
+        return this.updater.getInternalSQL();
     }
 
     public class SQLiteUpdateLimit {
