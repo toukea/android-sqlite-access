@@ -3,6 +3,9 @@ package istat.android.data.access.sqlite.utils;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import istat.android.data.access.sqlite.SQLite;
+import istat.android.data.access.sqlite.interfaces.SQLiteClauseAble;
+
 /**
  * Created by istat on 24/03/17.
  */
@@ -10,17 +13,39 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public abstract class SQLiteThread<T> extends Thread {
     boolean running = false;
     SQLiteAsyncExecutor.ExecutionCallback<T> callback;
+    SQLiteClauseAble clauseAble;
+    boolean transactional = false;
+    private boolean autoClose = false;
+    SQLiteAsyncExecutor executor;
 
-    SQLiteThread(SQLiteAsyncExecutor.ExecutionCallback<T> callback) {
+    SQLiteThread(SQLiteAsyncExecutor executor, SQLiteClauseAble clauseAble, SQLiteAsyncExecutor.ExecutionCallback<T> callback) {
+        this.executor = executor;
         this.callback = callback;
+        this.clauseAble = clauseAble;
+        this.autoClose = clauseAble.getInternalSQL().isAutoClose();
+        this.clauseAble.getInternalSQL().setAutoClose(false);
     }
 
     @Override
     public final void run() {
         try {
-            notifySuccess(onExecute());
+            if (transactional) {
+                getSql().beginTransaction();
+            }
+            T result = onExecute();
+            if (transactional) {
+                getSql().endTransaction(true);
+            }
+            notifySuccess(result);
         } catch (Exception e) {
+            if (transactional) {
+                getSql().endTransaction(false);
+            }
             notifyError(e);
+        }
+        if (this.autoClose) {
+            getSql().setAutoClose(true);
+            getSql().close();
         }
     }
 
@@ -29,13 +54,21 @@ public abstract class SQLiteThread<T> extends Thread {
     @Override
     public synchronized void start() {
         running = true;
-        super.start();
         notifyStarted(this);
+        super.start();
+    }
+
+    public synchronized void start(boolean transactional) {
+        this.transactional = transactional;
+        this.start();
     }
 
     @Override
     public void interrupt() {
         running = false;
+        if (transactional) {
+            getSql().endTransaction();
+        }
         if (callback != null) {
             callback.onAborted();
         }
@@ -48,29 +81,44 @@ public abstract class SQLiteThread<T> extends Thread {
 
     T result;
 
-    protected void notifySuccess(T result) {
-        this.result = result;
-        if (callback != null) {
-            notifyCompleted(true);
-            callback.onSuccess(result);
-        }
+    protected void notifySuccess(final T result) {
+        post(new Runnable() {
+            @Override
+            public void run() {
+                SQLiteThread.this.result = result;
+                notifyCompleted(true);
+                if (callback != null) {
+                    callback.onSuccess(result);
+                }
+                int when = WHEN_SUCCEED;
+                ConcurrentLinkedQueue<Runnable> runnableList = runnableTask.get(when);
+                executeWhen(runnableList, when);
+            }
+        });
 
     }
 
-    protected void notifyError(Throwable e) {
-        if (callback != null) {
-            notifyCompleted(false);
-            callback.onError(e);
-        }
-        int when = WHEN_FAILED;
-        ConcurrentLinkedQueue<Runnable> runnableList = runnableTask.get(when);
-        executeWhen(runnableList, when);
+    protected void notifyError(final Throwable e) {
+        post(new Runnable() {
+            @Override
+            public void run() {
+                notifyCompleted(false);
+                if (callback != null) {
+                    callback.onError(e);
+                }
+                int when = WHEN_FAILED;
+                ConcurrentLinkedQueue<Runnable> runnableList = runnableTask.get(when);
+                executeWhen(runnableList, when);
+            }
+        });
 
     }
 
     private void notifyCompleted(boolean state) {
         int when = WHEN_ANYWAY;
-        callback.onComplete(state);
+        if (callback != null) {
+            callback.onComplete(state);
+        }
         ConcurrentLinkedQueue<Runnable> runnableList = runnableTask.get(when);
         executeWhen(runnableList, WHEN_ANYWAY);
     }
@@ -277,5 +325,13 @@ public abstract class SQLiteThread<T> extends Thread {
 
     public T getResult() {
         return result;
+    }
+
+    SQLite.SQL getSql() {
+        return clauseAble.getInternalSQL();
+    }
+
+    void post(Runnable runnable) {
+        executor.getHandler().post(runnable);
     }
 }
