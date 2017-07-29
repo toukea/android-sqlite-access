@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.CancellationSignal;
 import android.text.TextUtils;
+import android.util.Log;
 
 import java.io.File;
 import java.io.IOException;
@@ -123,7 +124,7 @@ public final class SQLite {
             if (access == null) {
                 throw new IllegalAccessException("Oups, no launcher is currently added to Data base with name: " + dbName);
             } else {
-                return connect(access.getContext(), access.getDbName(), access.getDbVersion(), access.getBootDescription());
+                return connect(access.getContext(), access.getDbName(), access.getGivenDbVersion(), access.getBootDescription());
             }
         }
         return connect(connection);
@@ -318,6 +319,8 @@ public final class SQLite {
     public static SQLiteDataAccess connect(Context context, String dbName, int dbVersion, final BootDescription description) {
         SQLiteDataAccess access = new SQLiteDataAccess(context, dbName, dbVersion, description);
         dbNameAccessPair.put(dbName, access);
+//        boolean checkedUp = access.checkUp(true);
+//        Log.d("SQLite", "connected: checkedUp="+checkedUp);
         return access;
     }
 
