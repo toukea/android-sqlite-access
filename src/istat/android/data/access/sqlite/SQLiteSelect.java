@@ -9,11 +9,14 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
+import com.google.gson.Gson;
+
 import istat.android.data.access.sqlite.interfaces.QueryAble;
+import istat.android.data.access.sqlite.interfaces.SelectionExecutable;
 import istat.android.data.access.sqlite.utils.SQLiteAsyncExecutor;
 import istat.android.data.access.sqlite.utils.SQLiteThread;
 
-public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
+public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements SelectionExecutable {
     public final static String ORDER_BY_DESC = "DESC", ORDER_BY_ASC = "ASC";
     public final static int TYPE = 0;
     Class<?> clazz;
@@ -148,12 +151,6 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         return results.isEmpty() ? null : results.get(0);
     }
 
-    @Deprecated
-    public <T> T executeLimitOne() {
-        List<T> results = execute(1);
-        return results.isEmpty() ? null : results.get(0);
-    }
-
     public Cursor getCursor() {
         return onExecute(this.sql.db);
     }
@@ -182,7 +179,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> void execute(List<T> list, Class<?> clazz) {
+    public <T> void execute(List<T> list, Class<?> clazz) {
         if (list == null) {
             return;
         }
@@ -201,6 +198,38 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             notifyExecutionFail(e);
         }
         notifyExecuted();
+    }
+
+    //-----------------------------------------------------
+    @SuppressWarnings("unchecked")
+    public <T> void execute(List<T> list, Class<T> clazz, String uniqueColumn) {
+        if (list == null) {
+            return;
+        }
+        try {
+            Cursor c = onExecute(sql.db);
+            if (c.getCount() > 0) {
+                while (c.moveToNext()) {
+                    String serializedValue = c.getString(c.getColumnIndex(uniqueColumn));
+                    //TODO you can't call Gson there. :-(
+                    T model = new Gson().fromJson(serializedValue, clazz);
+                    list.add(model);
+                }
+            }
+            c.close();
+            notifyExecutionSucceed(TYPE, this, list);
+        } catch (Exception e) {
+            e.printStackTrace();
+            notifyExecutionFail(e);
+        }
+        notifyExecuted();
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> List<T> execute(Class<T> clazz, String uniqueColumn) {
+        List<T> list = new ArrayList();
+        execute(list, clazz, uniqueColumn);
+        return list;
     }
 
 
@@ -774,7 +803,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         }
 
         public SQLiteJoinSelect orderBy(Class<?> cLass, String column) {
-            return orderBy(cLass, column, "ASC");
+            return orderBy(cLass, column, ORDER_BY_ASC);
         }
 
         public SQLiteJoinSelect orderBy(Class<?> cLass, String column, String direction) {
@@ -848,11 +877,11 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
         return new ClauseJoinBuilder(clazz, joinSelection);
     }
 
-    public SQLiteSelectLimit limit(int limit) {
+    public SelectionExecutable limit(int limit) {
         return limit(-1, limit);
     }
 
-    public SQLiteSelectLimit limit(int offset, int limit) {
+    public SelectionExecutable limit(int offset, int limit) {
         String limitS;
         if (limit < 0) {
             limitS = null;
@@ -862,57 +891,8 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> {
             }
             limitS = offset + ", " + limit;
         }
-        return new SQLiteSelectLimit(limitS);
-    }
-
-    public class SQLiteSelectLimit {
-        SQLiteSelectLimit(String limitS) {
-            SQLiteSelect.this.limit = limitS;
-        }
-
-        public List<SQLiteModel> getResults() throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
-            return SQLiteSelect.this.getResults();
-        }
-
-        public Cursor getCursor() {
-            return SQLiteSelect.this.getCursor();
-        }
-
-        public <T> void execute(List<T> list) {
-            SQLiteSelect.this.execute(list);
-        }
-
-        public <T> List<T> execute() {
-            return SQLiteSelect.this.execute();
-        }
-
-        public <T> List<T> execute(Class<T> clazz) {
-            return SQLiteSelect.this.execute(clazz);
-        }
-
-        public <T> SQLiteThread<List<T>> executeAsync() {
-            return SQLiteSelect.this.executeAsync(-1, -1, null);
-        }
-
-        public <T> SQLiteThread<T> executeAsync(final SQLiteAsyncExecutor.ExecutionCallback<T> callback) {
-            return SQLiteSelect.this.executeAsync(callback);
-        }
-
-        public <T> SQLiteThread<List<T>> executeAsync(final SQLiteAsyncExecutor.ResultCallback<T> callback) {
-            return SQLiteSelect.this.executeAsync(-1, -1, callback);
-        }
-
-        public <T> SQLiteThread<List<T>> executeAsync(final int limit, final SQLiteAsyncExecutor.ResultCallback<T> callback) {
-            return SQLiteSelect.this.executeAsync(-1, limit, callback);
-        }
-
-        public <T> SQLiteThread<List<T>> executeAsync(final int offset, final int limit, final SQLiteAsyncExecutor.ResultCallback<T> callback) {
-            return SQLiteSelect.this.executeAsync(offset, limit, callback);
-        }
-
-        public String getStatement() {
-            return SQLiteSelect.this.getStatement();
-        }
+        this.limit = limitS;
+        return this;
     }
 
     ClauseBuilder internalHaving(String or_and, String having) {
