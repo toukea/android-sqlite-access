@@ -473,6 +473,10 @@ public final class SQLite {
             this.autoClose = autoClose;
         }
 
+        public boolean isAutoClose() {
+            return this.autoClose;
+        }
+
         SQL(SQLiteDatabase db) {
             this.db = db;
         }

@@ -237,7 +237,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
         return executeAsync(-1, -1, null);
     }
 
-    public <T> SQLiteThread<List<T>> executeAsync(final SQLiteAsyncExecutor.ResultCallback<T> callback) {
+    public <T> SQLiteThread<List<T>> executeAsync(final SQLiteAsyncExecutor.SelectionCallback<T> callback) {
         return executeAsync(-1, -1, callback);
     }
 
@@ -246,11 +246,11 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
         return asyncExecutor.execute(this, callback);
     }
 
-    public <T> SQLiteThread<List<T>> executeAsync(final int limit, final SQLiteAsyncExecutor.ResultCallback<T> callback) {
+    public <T> SQLiteThread<List<T>> executeAsync(final int limit, final SQLiteAsyncExecutor.SelectionCallback<T> callback) {
         return executeAsync(-1, limit, callback);
     }
 
-    public <T> SQLiteThread<List<T>> executeAsync(final int offset, final int limit, final SQLiteAsyncExecutor.ResultCallback<T> callback) {
+    public <T> SQLiteThread<List<T>> executeAsync(final int offset, final int limit, final SQLiteAsyncExecutor.SelectionCallback<T> callback) {
         SQLiteAsyncExecutor asyncExecutor = new SQLiteAsyncExecutor();
         return asyncExecutor.execute(this, offset, limit, callback);
     }

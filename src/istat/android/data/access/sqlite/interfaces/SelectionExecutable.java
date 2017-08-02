@@ -33,11 +33,11 @@ public interface SelectionExecutable {
 
     <T> SQLiteThread<T> executeAsync(final SQLiteAsyncExecutor.ExecutionCallback<T> callback);
 
-    <T> SQLiteThread<List<T>> executeAsync(final SQLiteAsyncExecutor.ResultCallback<T> callback);
+    <T> SQLiteThread<List<T>> executeAsync(final SQLiteAsyncExecutor.SelectionCallback<T> callback);
 
-    <T> SQLiteThread<List<T>> executeAsync(final int limit, final SQLiteAsyncExecutor.ResultCallback<T> callback);
+    <T> SQLiteThread<List<T>> executeAsync(final int limit, final SQLiteAsyncExecutor.SelectionCallback<T> callback);
 
-    <T> SQLiteThread<List<T>> executeAsync(final int offset, final int limit, final SQLiteAsyncExecutor.ResultCallback<T> callback);
+    <T> SQLiteThread<List<T>> executeAsync(final int offset, final int limit, final SQLiteAsyncExecutor.SelectionCallback<T> callback);
 
     String getStatement();
 
