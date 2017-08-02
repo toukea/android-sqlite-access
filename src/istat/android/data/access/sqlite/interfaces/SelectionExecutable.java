@@ -41,4 +41,5 @@ public interface SelectionExecutable {
 
     String getStatement();
 
+    int count();
 }
