@@ -74,12 +74,12 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
 
     Class<?> tableClass;
 
-    SQLiteClause(Class<?> clazz, String table, String[] projection, SQLite.SQL sql) {
-        this.table = table;
-        this.columns = projection;
-        this.sql = sql;
-        this.tableClass = clazz;
-    }
+//    SQLiteClause(Class<?> clazz, String table, String[] projection, SQLite.SQL sql) {
+//        this.table = table;
+//        this.columns = projection;
+//        this.sql = sql;
+//        this.tableClass = clazz;
+//    }
 
     SQLiteClause(Class<?> clazz, SQLite.SQL sql) {
         this.sql = sql;

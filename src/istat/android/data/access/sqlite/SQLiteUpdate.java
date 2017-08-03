@@ -59,9 +59,9 @@ public final class SQLiteUpdate implements SQLiteClauseAble {
             }
         }
 
-        protected Updater(Class<?> clazz, String tableName, SQLite.SQL sql) {
-            super(clazz, tableName, null, sql);
-        }
+//        protected Updater(Class<?> clazz, String tableName, SQLite.SQL sql) {
+//            super(clazz, tableName, null, sql);
+//        }
 
         public Updater set(String name, Object value) {
             model.set(name, value);
