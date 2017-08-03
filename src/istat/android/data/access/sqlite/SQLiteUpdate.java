@@ -18,21 +18,15 @@ public final class SQLiteUpdate implements SQLiteClauseAble {
     SQLiteUpdate(Class<?> clazz, SQLite.SQL sql) {
         updater = new Updater(clazz, sql);
     }
-//
-//    SQLiteUpdate(String table, SQLiteDatabase db) {
-//        updater = new Updater(table, db);
-//    }
 
     public Updater setAs(Object entity) {
-        String tbName = entity.getClass().getName();
         try {
             SQLiteModel model = SQLiteModel.fromObject(entity);
             updater.model.fieldNameValuePair.putAll(model.fieldNameValuePair);
-            tbName = model.getName();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return new Updater(tbName, this.updater.sql);
+        return updater;
     }
 
     public Updater set(String name, Object value) {
@@ -65,8 +59,8 @@ public final class SQLiteUpdate implements SQLiteClauseAble {
             }
         }
 
-        protected Updater(String tableName, SQLite.SQL sql) {
-            super(tableName, null, sql);
+        protected Updater(Class<?> clazz, String tableName, SQLite.SQL sql) {
+            super(clazz, tableName, null, sql);
         }
 
         public Updater set(String name, Object value) {

@@ -72,16 +72,19 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
         return tmp;
     }
 
-    SQLiteClause(String table, String[] projection, SQLite.SQL sql) {
+    Class<?> tableClass;
+
+    SQLiteClause(Class<?> clazz, String table, String[] projection, SQLite.SQL sql) {
         this.table = table;
         this.columns = projection;
         this.sql = sql;
+        this.tableClass = clazz;
     }
 
     SQLiteClause(Class<?> clazz, SQLite.SQL sql) {
-        //this.db = sql.db;
         this.sql = sql;
-        QueryAble entity = null;//null;//createModelFromClass(clazz);
+        this.tableClass = clazz;
+        QueryAble entity = null;
         try {
             entity = SQLiteModel.fromClass(clazz);
         } catch (Exception e) {

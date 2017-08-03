@@ -1,4 +1,8 @@
 TODO----------------
+-revisiter
+update table SET AS(object)
+
+--------------------------------
 
 -if an sql instance is transactionnal and auto closable, close transaction and db safelly. (reflection)
 
