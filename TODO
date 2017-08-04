@@ -1,10 +1,7 @@
 TODO----------------
--revisiter
-update table SET AS(object)
 
---------------------------------
 
--if an sql instance is transactionnal and auto closable, close transaction and db safelly. (reflection)
+*************************
 
 
 -persist nested collection field
@@ -41,8 +38,18 @@ TableFactory
 
 -make ClauseJoinSelectBuilder and ClauseBuilder familiar inside a beautiful Abstract genericity
 
+DOING----------------------------
+-Selection.fetch
+-SQLiteDataAccess.getGivenVersion: getLastKnownVersion
+
+
 
 DONE-----------------------------
+-revisiter update table SET AS(object)
+
+
+TESTING-------------------------------
+-if an sql instance is transactionnal and auto closable, close transaction and db safelly. (reflection)
 -Nested selection as where param.
 -implement selection negation [NOT] in where clause.
 -sql.useSerializer()
@@ -58,6 +65,9 @@ HAVING COUNT(caseID) < 4 AND COUNT(caseID) > 2
     *add Having/havingCount
 -Create ObjectFactory like CursorFactory, to spécify a way to convert cursor to Object.
 
+FINISH---------------------------
+
 
 ABORTED--------------------------
 -sql.useExecutor()
+
