@@ -295,7 +295,7 @@ public final class SQLite {
 ////        }
 //    }
 //
-//    public static void desconnect(String dbName) {
+//    public static void disconnect(String dbName) {
 ////        SQLiteDataAccess access = dbNameAccessPair.get(dbName);
 ////        if (access != null) {
 ////            access.close();
@@ -632,12 +632,14 @@ public final class SQLite {
             select.distinct = distinct;
             if (!TextUtils.isEmpty(whereClause)) {
                 select.whereClause = new StringBuilder(whereClause);
+                select.whereParams = Arrays.asList(whereParams);
+            } else {
+                select.whereParams = new ArrayList();
             }
-            select.whereParams = whereParams != null ? Arrays.asList(whereParams) : new ArrayList<String>();
             select.limit = limit;
             select.orderBy = orderBy;
             select.groupBy = groupBy;
-            if (!TextUtils.isEmpty(whereClause)) {
+            if (!TextUtils.isEmpty(having)) {
                 select.having = new StringBuilder(having);
             }
             return select.execute();
