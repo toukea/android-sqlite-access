@@ -56,7 +56,7 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
     final int dbVersion;
 
 //    protected SQLiteDataAccess(SQLiteDataAccess accessModel) {
-//        this(accessModel.getContext(), accessModel.getDbName(), accessModel.getGivenDbVersion(), accessModel.getBootDescription());
+//        this(accessModel.getContext(), accessModel.getDbName(), accessModel.getDbVersion(), accessModel.getBootDescription());
 //    }
 
     protected SQLiteDataAccess(Context ctx, String dbName, int dbVersion, SQLite.BootDescription bootDescription) {
@@ -70,7 +70,7 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
         return dbOpenHelper.bootDescription;
     }
 
-    public int getGivenDbVersion() {
+    public int getDbVersion() {
         return dbVersion;
     }
 
@@ -92,7 +92,6 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
     }
 
     public boolean checkUp() {
-//        return checkUp(false);
         try {
             SQLiteDatabase db = open();
             close();
@@ -103,22 +102,6 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
         }
     }
 
-//    boolean checkup(boolean compareversion) {
-//        if (compareversion) {
-//            int givenversion = getgivendbversion();
-//            int lastknownversion = getlastknowndbversion();
-//            if (givenversion >= lastknownversion)
-//                return false;
-//        }
-//        try {
-//            sqlitedatabase db = open();
-//            close();
-//            return db != null;
-//        } catch (exception e) {
-//            e.printstacktrace();
-//            return false;
-//        }
-//    }
 
     public boolean isOpened() {
         return db != null;
@@ -212,7 +195,11 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
     }
 
     private String getNameSpace() {
-        return this.dbName + SHARED_PREF_FILE;
+        return getNameSpace(this.dbName);
+    }
+
+    private static String getNameSpace(String dbName) {
+        return dbName + SHARED_PREF_FILE;
     }
 
     public String getDbUpdateTime() {
@@ -309,13 +296,9 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
 
     }
 
-    public int getLastKnownDbVersion() {
-        if (db != null && db.isOpen()) {
-            return db.getVersion();
-        } else {
-            return context.getSharedPreferences(getNameSpace(), 0).getInt(
-                    DB_CREATION_TIME, dbVersion);
-        }
+    public static int getLastAccessDbVersion(Context context, String dbName) {
+        return context.getSharedPreferences(getNameSpace(dbName), 0).getInt(
+                DB_CREATION_TIME, -1);
     }
 
     private void registerAsDbVersion(int version) {
