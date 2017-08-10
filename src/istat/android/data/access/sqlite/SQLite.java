@@ -634,14 +634,16 @@ public final class SQLite {
         public <T> List<T> findAll(Class<T> classTable, boolean distinct, String whereClause, String[] whereParams, String groupBy, String having, String orderBy, String limit) {
             SQLiteSelect select = select(distinct, classTable);
             select.distinct = distinct;
-            if (TextUtils.isEmpty(whereClause)) {
+            if (!TextUtils.isEmpty(whereClause)) {
                 select.whereClause = new StringBuilder(whereClause);
             }
             select.whereParams = whereParams != null ? Arrays.asList(whereParams) : new ArrayList<String>();
             select.limit = limit;
             select.orderBy = orderBy;
             select.groupBy = groupBy;
-            select.having = new StringBuilder(having);
+            if (!TextUtils.isEmpty(whereClause)) {
+                select.having = new StringBuilder(having);
+            }
             return select.execute();
         }
 
