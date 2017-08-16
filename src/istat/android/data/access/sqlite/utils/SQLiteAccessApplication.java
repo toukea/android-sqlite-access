@@ -31,6 +31,21 @@ public abstract class SQLiteAccessApplication extends Application implements SQL
 
     protected abstract int getDbVersion();
 
+    @Override
+    public void onConfigure(SQLiteDatabase db) {
+
+    }
+
+    @Override
+    public boolean onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        return false;
+    }
+
+    @Override
+    public void onOpen(SQLiteDatabase db) {
+
+    }
+
     protected final static void executeScripts(SQLiteDatabase db, List<String> scripts) {
         for (String script : scripts) {
             db.execSQL(script);

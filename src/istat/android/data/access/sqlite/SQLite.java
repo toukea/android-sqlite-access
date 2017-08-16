@@ -318,11 +318,23 @@ public final class SQLite {
     public static SQLiteDataAccess connect(Context context, String dbName, int dbVersion, final BootDescription description) {
         SQLiteDataAccess access = new SQLiteDataAccess(context, dbName, dbVersion, description);
         dbNameAccessPair.put(dbName, access);
-//        int lastAccessVersion = SQLiteDataAccess.getLastAccessDbVersion(context, dbName);
-//        if (lastAccessVersion > 0 && lastAccessVersion < dbVersion) {
-//            access.checkUp();
-//        }
+        int lastAccessVersion = SQLiteDataAccess.getLastAccessDbVersion(context, dbName);
+        if (lastAccessVersion > 0 && lastAccessVersion < dbVersion) {
+            access.checkUp();
+        }
         return access;
+    }
+
+    public static boolean checkUp(Context context, String dbName) throws IllegalStateException {
+        SQLiteDataAccess access = dbNameAccessPair.get(dbName);
+        if (access == null) {
+            throw new IllegalStateException("Sorry but, no connection with name" + dbName + ", has been added for now.");
+        }
+        int lastAccessVersion = SQLiteDataAccess.getLastAccessDbVersion(context, dbName);
+        if (lastAccessVersion > 0 && lastAccessVersion < access.getDbVersion()) {
+            return access.checkUp();
+        }
+        return false;
     }
 
     public static class SQLConfig {
@@ -873,6 +885,28 @@ public final class SQLite {
                         description.onUpgradeDb(db, oldVersion, newVersion);
                     }
                 }
+
+                @Override
+                public void onConfigure(SQLiteDatabase db) {
+                    if (description != null) {
+                        description.onConfigure(db);
+                    }
+                }
+
+                @Override
+                public boolean onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+                    if (description != null) {
+                        return description.onDowngrade(db, oldVersion, newVersion);
+                    }
+                    return false;
+                }
+
+                @Override
+                public void onOpen(SQLiteDatabase db) {
+                    if (description != null) {
+                        description.onOpen(db);
+                    }
+                }
             };
             return connection;
         }
@@ -888,6 +922,21 @@ public final class SQLite {
                 db.execSQL(script);
             }
         }
+
+        @Override
+        public void onConfigure(SQLiteDatabase db) {
+
+        }
+
+        @Override
+        public boolean onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+            return false;
+        }
+
+        @Override
+        public void onOpen(SQLiteDatabase db) {
+
+        }
     }
 
     public interface BootDescription {
@@ -895,6 +944,14 @@ public final class SQLite {
 
         void onUpgradeDb(SQLiteDatabase db, int oldVersion,
                          int newVersion);
+
+        void onConfigure(SQLiteDatabase db);
+
+        boolean onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion);
+
+        void onOpen(SQLiteDatabase db);
+
+
     }
 
     public static void executeSQLScript(SQLiteDatabase db,

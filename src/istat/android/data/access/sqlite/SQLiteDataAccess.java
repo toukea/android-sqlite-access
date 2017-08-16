@@ -17,6 +17,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Build;
 import android.util.Log;
 
 /*
@@ -94,8 +95,11 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
     public boolean checkUp() {
         try {
             SQLiteDatabase db = open();
+            if (db == null) {
+                return false;
+            }
             close();
-            return db != null;
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -282,7 +286,7 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
                 bootDescription.onCreateDb(db);
             }
             registerDbCreationTime();
-            registerAsDbVersion(db.getVersion());
+            registerAsLastAccessVersion(db.getVersion());
         }
 
         @Override
@@ -291,29 +295,71 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
                 bootDescription.onUpgradeDb(db, oldVersion, newVersion);
             }
             registerDbUpdateTime();
-            registerAsDbVersion(newVersion);
+            registerAsLastAccessVersion(newVersion);
         }
 
+        @Override
+        public void onOpen(SQLiteDatabase db) {
+            if (bootDescription != null) {
+                bootDescription.onOpen(db);
+            }
+        }
+
+        @Override
+        public void onConfigure(SQLiteDatabase db) {
+            if (bootDescription != null) {
+                bootDescription.onConfigure(db);
+            }
+        }
+
+        @Override
+        public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+            if (bootDescription != null) {
+                if (bootDescription.onDowngrade(db, oldVersion, newVersion)) {
+                    super.onDowngrade(db, oldVersion, newVersion);
+                }
+            } else {
+                super.onDowngrade(db, oldVersion, newVersion);
+            }
+        }
     }
 
     public static int getLastAccessDbVersion(Context context, String dbName) {
         return context.getSharedPreferences(getNameSpace(dbName), 0).getInt(
-                DB_CREATION_TIME, -1);
+                DB_CURRENT_VERSION, -1);
     }
 
-    private void registerAsDbVersion(int version) {
+    private void registerAsLastAccessVersion(int version) {
         SharedPreferences p = context.getSharedPreferences(getNameSpace(), 0);
-        p.edit().putInt(DB_CURRENT_VERSION, version);
+        SharedPreferences.Editor editor = p.edit();
+        editor.putInt(DB_CURRENT_VERSION, version);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+            editor.apply();
+        } else {
+            editor.commit();
+        }
     }
 
     private void registerDbCreationTime() {
         SharedPreferences p = context.getSharedPreferences(getNameSpace(), 0);
-        p.edit().putString(DB_CREATION_TIME, simpleDateTime());
+        SharedPreferences.Editor editor = p.edit();
+        editor.putString(DB_CREATION_TIME, simpleDateTime());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+            editor.apply();
+        } else {
+            editor.commit();
+        }
     }
 
     private void registerDbUpdateTime() {
         SharedPreferences p = context.getSharedPreferences(getNameSpace(), 0);
-        p.edit().putString(DB_UPDATE_TIME, simpleDateTime());
+        SharedPreferences.Editor editor = p.edit();
+        editor.putString(DB_UPDATE_TIME, simpleDateTime());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+            editor.apply();
+        } else {
+            editor.commit();
+        }
     }
 
     // ----------------------------------------------------------------------------
