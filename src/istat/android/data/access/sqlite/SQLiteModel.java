@@ -455,6 +455,10 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         return builder.create();
     }
 
+//    public final static <T, Y> SQLiteModel fromMap(String tableName, Map<T, Y> map) {
+//
+//    }
+
     public static <T> List<T> buildAsArrays(Class<T> cLass, Cursor c, CursorReader reader) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
         List<T> list = new ArrayList<T>();
         while (c.moveToNext()) {
@@ -918,6 +922,12 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     public final static class Builder {
         Serializer serializer = SQLiteModel.DEFAULT_SERIALIZER;
         ContentValueHandler contentValueHandler = DEFAULT_CONTAIN_VALUE_HANDLER;
+        Class<?> modelClass = Object.class;
+        String name, primaryFieldName;
+        List<String> projections = new ArrayList<String>();
+        HashMap<String, Object> FieldNameValuePair = new HashMap();
+        HashMap<String, Field> columnNameFieldPair = new HashMap();
+        HashMap<String, Field> nestedTableNameFieldPair = new HashMap();
 
         public Builder setSerializer(Serializer serializer) {
             if (serializer == null) {
@@ -1007,13 +1017,6 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
             }
             return model;
         }
-
-        Class<?> modelClass = Object.class;
-        String name, primaryFieldName;
-        List<String> projections = new ArrayList<String>();
-        HashMap<String, Object> FieldNameValuePair = new HashMap<String, Object>();
-        HashMap<String, Field> columnNameFieldPair = new HashMap<String, Field>();
-        HashMap<String, Field> nestedTableNameFieldPair = new HashMap<String, Field>();
 
         public void setContentValueHandler(ContentValueHandler contentValueHandler) {
             if (contentValueHandler == null) {
