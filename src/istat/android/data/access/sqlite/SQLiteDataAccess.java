@@ -286,7 +286,7 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
                 bootDescription.onCreateDb(db);
             }
             registerDbCreationTime();
-            registerAsLastAccessVersion(db.getVersion());
+//            registerAsLastAccessVersion(db.getVersion());
         }
 
         @Override
@@ -295,7 +295,7 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
                 bootDescription.onUpgradeDb(db, oldVersion, newVersion);
             }
             registerDbUpdateTime();
-            registerAsLastAccessVersion(newVersion);
+//            registerAsLastAccessVersion(newVersion);
         }
 
         @Override
@@ -303,6 +303,7 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
             if (bootDescription != null) {
                 bootDescription.onOpen(db);
             }
+            registerAsLastAccessVersion(db.getVersion());
         }
 
         @Override
