@@ -40,15 +40,16 @@ import android.util.Log;
  */
 public class SQLiteDataAccess implements Closeable, Cloneable {
 
+    private static final String DB_CURRENT_VERSION = "db_last_known_version";
     /*
-     * protected static final int BASE_VERSION = 1; protected static final
-     * String BASE_NOM = "istatLib.db";
-     */
+         * protected static final int BASE_VERSION = 1; protected static final
+         * String BASE_NOM = "istatLib.db";
+         */
     // L�instance de la base qui sera manipul�e au travers de cette classe.
     protected SQLiteDatabase db;
     private DbOpenHelper dbOpenHelper;
     public Context context;
-    protected static String SHARED_PREF_FILE = "db_file",
+    protected final static String SHARED_PREF_FILE = "db_file",
             DB_CREATION_TIME = "creation_time",
             DB_UPDATE_TIME = "creation_time";
     final String dbName;
@@ -82,7 +83,7 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
     }
 
     /**
-     * Ouvre la base de donn�es en �criture.
+     * Ouvre la base de donnees en ecriture.
      */
     public SQLiteDatabase open() {
         db = dbOpenHelper.getWritableDatabase();
@@ -90,12 +91,24 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
         return db;
     }
 
+    public boolean checkUp() {
+        try {
+            SQLiteDatabase db = open();
+            close();
+            return db != null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
     public boolean isOpened() {
         return db != null;
     }
 
     /**
-     * Ferme la base de donn�es.
+     * Ferme la base de donnees.
      */
     public void close() {
         if (db != null)
@@ -181,25 +194,33 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
         return false;
     }
 
+    private String getNameSpace() {
+        return getNameSpace(this.dbName);
+    }
+
+    private static String getNameSpace(String dbName) {
+        return dbName + SHARED_PREF_FILE;
+    }
+
     public String getDbUpdateTime() {
-        return context.getSharedPreferences(SHARED_PREF_FILE, 0).getString(
+        return context.getSharedPreferences(getNameSpace(), 0).getString(
                 DB_UPDATE_TIME, simpleDateTime());
     }
 
     public String getDbCreationTime() {
-        return context.getSharedPreferences(SHARED_PREF_FILE, 0).getString(
+        return context.getSharedPreferences(getNameSpace(), 0).getString(
                 DB_CREATION_TIME, simpleDateTime());
     }
 
     @SuppressWarnings("deprecation")
     public Date getDbUpdateTimeAsDate() {
-        return new Date(context.getSharedPreferences(SHARED_PREF_FILE, 0)
+        return new Date(context.getSharedPreferences(getNameSpace(), 0)
                 .getString(DB_UPDATE_TIME, simpleDateTime()));
     }
 
     @SuppressWarnings("deprecation")
     public Date getDbCreationTimeAsDate() {
-        return new Date(context.getSharedPreferences(SHARED_PREF_FILE, 0)
+        return new Date(context.getSharedPreferences(getNameSpace(), 0)
                 .getString(DB_CREATION_TIME, simpleDateTime()));
     }
 
@@ -208,15 +229,10 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
     }
 
     // -----------------------------------------------------------------------------------------------------------
-//    protected abstract void onUpgradeDb(SQLiteDatabase db, int oldVersion,
-//                                        int newVersion);
-//
-//    protected abstract void onCreateDb(SQLiteDatabase db);
-
-    protected boolean executeRawResource(SQLiteDatabase db, int resid) {
+    protected boolean executeRawResource(SQLiteDatabase db, int resId) {
         try {
             Resources res = getContext().getResources();
-            InputStream resStream = res.openRawResource(resid);
+            InputStream resStream = res.openRawResource(resId);
             executeDbScript(db, resStream);
             return true;
         } catch (Exception e) {
@@ -266,6 +282,7 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
                 bootDescription.onCreateDb(db);
             }
             registerDbCreationTime();
+            registerAsDbVersion(db.getVersion());
         }
 
         @Override
@@ -274,17 +291,28 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
                 bootDescription.onUpgradeDb(db, oldVersion, newVersion);
             }
             registerDbUpdateTime();
+            registerAsDbVersion(newVersion);
         }
 
     }
 
+    public static int getLastAccessDbVersion(Context context, String dbName) {
+        return context.getSharedPreferences(getNameSpace(dbName), 0).getInt(
+                DB_CREATION_TIME, -1);
+    }
+
+    private void registerAsDbVersion(int version) {
+        SharedPreferences p = context.getSharedPreferences(getNameSpace(), 0);
+        p.edit().putInt(DB_CURRENT_VERSION, version);
+    }
+
     private void registerDbCreationTime() {
-        SharedPreferences p = context.getSharedPreferences(SHARED_PREF_FILE, 0);
+        SharedPreferences p = context.getSharedPreferences(getNameSpace(), 0);
         p.edit().putString(DB_CREATION_TIME, simpleDateTime());
     }
 
     private void registerDbUpdateTime() {
-        SharedPreferences p = context.getSharedPreferences(SHARED_PREF_FILE, 0);
+        SharedPreferences p = context.getSharedPreferences(getNameSpace(), 0);
         p.edit().putString(DB_UPDATE_TIME, simpleDateTime());
     }
 
