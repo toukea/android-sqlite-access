@@ -14,8 +14,12 @@ import istat.android.data.access.sqlite.utils.SQLiteThread;
  */
 
 public interface SelectionExecutable {
+    SelectionExecutable limit(int offset, int limit);
 
     List<SQLiteModel> getResults() throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException;
+
+    SQLiteModel getSingleResult() throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException;
+
 
     Cursor getCursor();
 
@@ -35,11 +39,13 @@ public interface SelectionExecutable {
 
     <T> SQLiteThread<List<T>> executeAsync(final SQLiteAsyncExecutor.SelectionCallback<T> callback);
 
-    <T> SQLiteThread<List<T>> executeAsync(final int limit, final SQLiteAsyncExecutor.SelectionCallback<T> callback);
-
-    <T> SQLiteThread<List<T>> executeAsync(final int offset, final int limit, final SQLiteAsyncExecutor.SelectionCallback<T> callback);
-
     String getStatement();
 
     int count();
+
+    <T> List<T> fetch();
+
+    <T> List<T> fetch(Class<T> clazz);
+
+    <T> void fetch(List<T> list, Class<?> clazz);
 }

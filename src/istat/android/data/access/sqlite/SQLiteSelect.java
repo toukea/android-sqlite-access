@@ -3,10 +3,12 @@ package istat.android.data.access.sqlite;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
@@ -153,6 +155,15 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
 
     public Cursor getCursor() {
         return onExecute(this.sql.db);
+    }
+
+    @Override
+    public SQLiteModel getSingleResult() throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+        try {
+            return limit(1).getResults().get(0);
+        } catch (IndexOutOfBoundsException e) {
+            return null;
+        }
     }
 
     public List<SQLiteModel> getResults() throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
@@ -953,5 +964,50 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
 
     public ClauseBuilder orHaving(SQLiteFunction function) {
         return internalHaving("OR", function);
+    }
+
+    @Override
+    public <T> List<T> fetch() {
+        List<T> list = new ArrayList();
+        fetch(list, this.clazz);
+        return list;
+    }
+
+    @Override
+    public <T> List<T> fetch(Class<T> clazz) {
+        List<T> list = new ArrayList();
+        fetch(list, clazz);
+        return list;
+    }
+
+    @Override
+    public <T> void fetch(List<T> list, Class<?> fetchedClass) {
+        if (list == null) {
+            return;
+        }
+        if (this.columns == null) {
+            throw new SQLiteException("column to select can't be null.");
+        }
+        if (this.columns.length > 1) {
+            throw new SQLiteException("when you use fetch you have to select only one colum. current column selection is:" + Arrays.asList(this.columns));
+        }
+        try {
+            Cursor c = onExecute(sql.db);
+            if (c.getCount() > 0) {
+                String column = columns[0];
+                SQLiteModel selectionModel = SQLiteModel.fromClass(this.clazz);
+                while (c.moveToNext()) {
+                    SQLiteModel.Serializer<T> serializer = sql.getSerializer(fetchedClass);
+                    T model = (T) serializer.onDeSerialize(c.getString(c.getColumnIndex(column)), selectionModel.getField(column));
+                    list.add(model);
+                }
+            }
+            c.close();
+            notifyExecutionSucceed(TYPE, this, list);
+        } catch (Exception e) {
+            e.printStackTrace();
+            notifyExecutionFail(e);
+        }
+        notifyExecuted();
     }
 }

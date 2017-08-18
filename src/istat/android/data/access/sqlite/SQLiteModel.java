@@ -348,6 +348,27 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
                 new String[]{getPrimaryKeyStringValue()});
     }
 
+    public static SQLiteModel fromJson(final String tableName, final String primaryKeyName, final String[] columns, JSONObject json) {
+        SQLiteModel model = new SQLiteModel() {
+            @Override
+            public String getName() {
+                return tableName;
+            }
+
+            @Override
+            public String[] getColumns() {
+                return columns;
+            }
+
+            @Override
+            public String getPrimaryKeyName() {
+                return primaryKeyName;
+            }
+        };
+        model.fillFromJson(json);
+        return model;
+    }
+
     public static SQLiteModel fromObject(final Object obj) throws InstantiationException,
             IllegalAccessException {
         return fromObject(obj, SQLiteModel.DEFAULT_SERIALIZER, DEFAULT_CONTAIN_VALUE_HANDLER);
