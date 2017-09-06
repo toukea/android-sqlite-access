@@ -1,7 +1,5 @@
 package istat.android.data.access.sqlite.utils;
 
-import android.text.TextUtils;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -56,7 +54,7 @@ public class TableScriptFactory {
         for (Class<?> cLass : cLassS) {
             TableScriptFactory factory = new TableScriptFactory(cLass);
             if (classAdapterPair != null && !classAdapterPair.isEmpty()) {
-                factory.adapterQueue.putAll(classAdapterPair);
+                factory.ADAPTER_MAP_DEFINITION.putAll(classAdapterPair);
             }
             Class<?>[] nestedClasses = cLass.getClasses();
             if (nestedClasses != null && nestedClasses.length > 0) {
@@ -113,7 +111,7 @@ public class TableScriptFactory {
     }
 
     //TODO add collectionAdapter
-    HashMap<Class, FieldAdapter> adapterQueue = new HashMap() {
+    public final static HashMap<Class, FieldAdapter> ADAPTER_MAP_DEFINITION = new HashMap() {
         {
             put(String.class, STRING_ADAPTER);
             put(Float.class, FLOAT_ADAPTER);
@@ -161,11 +159,11 @@ public class TableScriptFactory {
     private String createStatementLine(SQLiteModel model, String columnName, Field field) {
         String out;
         Type type = field.getType();
-        FieldAdapter adapter = adapterQueue.get(type);
+        FieldAdapter adapter = ADAPTER_MAP_DEFINITION.get(type);
         if (adapter != null) {
             out = adapter.createLine(columnName, field);
         } else {
-            out = adapterQueue.get(String.class).createLine(columnName, field);
+            out = ADAPTER_MAP_DEFINITION.get(String.class).createLine(columnName, field);
         }
         if (columnName.equals(model.getPrimaryKeyName())) {
             int policy = model.getPrimaryKeyPolicy();
