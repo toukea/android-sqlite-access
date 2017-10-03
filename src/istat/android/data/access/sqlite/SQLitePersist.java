@@ -68,9 +68,10 @@ public final class SQLitePersist implements SQLiteClauseAble {
         long[] out = new long[modelPersist.size()];
         try {
             int index = 0;
+            Object entity;
             for (SQLiteModel insertion : modelPersist) {
                 long value = insertion.persist(sql.db);
-                Object entity = persists.get(index);
+                entity = persists.get(index);
                 if (value > 0) {
                     //TODO update entity to match with new Id state.
                     insertion.flowInto(entity, insertion.getPrimaryKeyName());

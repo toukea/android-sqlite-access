@@ -179,7 +179,8 @@ public class TableScriptFactory {
             } else if (policy == SQLiteModel.PrimaryKey.POLICY_NONE) {
 
             } else {// by default, all integer primary key is auto increment.
-                if (field.getType().isAssignableFrom(Integer.class) || field.getType().isAssignableFrom(int.class)) {
+                if (field.getType().isAssignableFrom(Integer.class) || field.getType().isAssignableFrom(int.class)
+                        || field.getType().isAssignableFrom(Long.class) || field.getType().isAssignableFrom(long.class)) {
                     out += " AUTOINCREMENT ";
                 }
             }

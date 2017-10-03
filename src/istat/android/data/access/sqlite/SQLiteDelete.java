@@ -18,8 +18,13 @@ public final class SQLiteDelete extends SQLiteClause<SQLiteDelete> {
     protected Integer onExecute(SQLiteDatabase db) {
         notifyExecuting();
         String whereClause = getWhereClause();
-        whereClause += (TextUtils.isEmpty(orderBy) ? "" : " ORDER BY " + orderBy)
+        String queryEnding = (TextUtils.isEmpty(orderBy) ? "" : " ORDER BY " + orderBy)
                 + (TextUtils.isEmpty(orderBy) ? "" : " LIMIT " + limit);
+        if (whereClause == null) {
+            whereClause = queryEnding;
+        } else {
+            whereClause += queryEnding;
+        }
         String[] whereParams = getWhereParams();
         return db.delete(table, whereClause, whereParams);
     }
