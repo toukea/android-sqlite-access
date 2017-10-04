@@ -20,10 +20,12 @@ public final class SQLiteDelete extends SQLiteClause<SQLiteDelete> {
         String whereClause = getWhereClause();
         String queryEnding = (TextUtils.isEmpty(orderBy) ? "" : " ORDER BY " + orderBy)
                 + (TextUtils.isEmpty(orderBy) ? "" : " LIMIT " + limit);
-        if (whereClause == null) {
-            whereClause = queryEnding;
-        } else {
-            whereClause += queryEnding;
+        if (!TextUtils.isEmpty(queryEnding)) {
+            if (whereClause == null) {
+                whereClause = queryEnding;
+            } else {
+                whereClause += queryEnding;
+            }
         }
         String[] whereParams = getWhereParams();
         return db.delete(table, whereClause, whereParams);

@@ -37,7 +37,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
             TYPE_CLAUSE_OR_HAVING = 5;
 
     protected String getWhereClause() {
-        return whereClause != null ? whereClause.toString() : "1";
+        return whereClause != null ? whereClause.toString() : null;
     }
 
     protected String getOrderBy() {

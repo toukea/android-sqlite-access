@@ -60,6 +60,18 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         return this.fieldNameValuePair.get(name);
     }
 
+    public final boolean hasColumn(String name) {
+        return this.fieldNameValuePair.containsKey(name);
+    }
+
+    public final boolean isPrimaryKeyValueSet() {
+        if (!hasColumn(getPrimaryKeyName())) {
+            return false;
+        }
+        Object primaryKeyValue = getPrimaryKeyValue();
+        return primaryKeyValue != null && !TextUtils.isEmpty(primaryKeyValue.toString());
+    }
+
     public final boolean isEmpty(String name) {
         return TextUtils.isEmpty(getString(name));
     }
@@ -264,19 +276,20 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         String tbName = getName();
         ContentValues contentValues = toContentValues();
         insertId = db.insert(tbName, null, contentValues);
-        if (updateModelPrimaryKey) {
-            Object primaryKeyValue = insertId;
-            if (TextUtils.isEmpty(getPrimaryKeyStringValue())) {
-                if (contentValues.containsKey(getPrimaryKeyName())) {
-                    primaryKeyValue = contentValues.get(getPrimaryKeyName());
-                }
-            } /*else {
-                primaryKeyValue = getPrimaryKeyValue();
-                if (Number.class.isAssignableFrom(primaryKeyValue.getClass())) {
-                    primaryKeyValue = insertId;
-                }
-            }*/
-            setPrimaryKeyValue(primaryKeyValue);
+        if (updateModelPrimaryKey && !isPrimaryKeyValueSet()) {
+//            Object primaryKeyValue = insertId;
+//            if (!TextUtils.isEmpty(getPrimaryKeyStringValue())) {
+//                if (contentValues.containsKey(getPrimaryKeyName())) {
+//                    primaryKeyValue = contentValues.get(getPrimaryKeyName());
+//                }
+//            } /*else {
+//                primaryKeyValue = getPrimaryKeyValue();
+//                if (Number.class.isAssignableFrom(primaryKeyValue.getClass())) {
+//                    primaryKeyValue = insertId;
+//                }
+//            }*/
+//            setPrimaryKeyValue(primaryKeyValue);
+            setPrimaryKeyValue(insertId);
         }
         persistNestedEntity(db);
         return insertId;

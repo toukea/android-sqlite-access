@@ -15,6 +15,50 @@ import istat.android.data.access.sqlite.SQLiteModel;
 
 public class TableScriptFactory {
     Class<?> cLass;
+    static FieldAdapter INTEGER_ADAPTER = new FieldAdapter() {
+        @Override
+        String onCreateLine(String columnName, Field field) {
+            return "`" + columnName + "` INTEGER ";
+        }
+    };
+    static FieldAdapter FLOAT_ADAPTER = new FieldAdapter() {
+        @Override
+        String onCreateLine(String columnName, Field field) {
+            return "`" + columnName + "` FLOAT ";
+        }
+    };
+    static FieldAdapter DOUBLE_ADAPTER = new FieldAdapter() {
+        @Override
+        String onCreateLine(String columnName, Field field) {
+            return "`" + columnName + "` DOUBLE ";
+        }
+    };
+    static FieldAdapter STRING_ADAPTER = new FieldAdapter() {
+        @Override
+        String onCreateLine(String columnName, Field field) {
+            return "`" + columnName + "` VARCHAR ";
+        }
+    };
+    static FieldAdapter DATETIME_ADAPTER = new FieldAdapter() {
+        @Override
+        String onCreateLine(String columnName, Field field) {
+            return "`" + columnName + "` DATETIME ";
+        }
+    };
+    //TODO add collectionAdapter
+    public final static HashMap<Class, FieldAdapter> ADAPTER_MAP_DEFINITION = new HashMap() {
+        {
+            put(String.class, STRING_ADAPTER);
+            put(Float.class, FLOAT_ADAPTER);
+            put(Double.class, DOUBLE_ADAPTER);
+            put(Integer.class, INTEGER_ADAPTER);
+            put(Date.class, DATETIME_ADAPTER);
+
+            put(float.class, FLOAT_ADAPTER);
+            put(double.class, DOUBLE_ADAPTER);
+            put(int.class, INTEGER_ADAPTER);
+        }
+    };
 
     TableScriptFactory(Class<?> cLass) {
         this.cLass = cLass;
@@ -110,61 +154,14 @@ public class TableScriptFactory {
         return line != null && line.length() == 0;
     }
 
-    //TODO add collectionAdapter
-    public final static HashMap<Class, FieldAdapter> ADAPTER_MAP_DEFINITION = new HashMap() {
-        {
-            put(String.class, STRING_ADAPTER);
-            put(Float.class, FLOAT_ADAPTER);
-            put(Double.class, DOUBLE_ADAPTER);
-            put(Integer.class, INTEGER_ADAPTER);
-            put(Date.class, DATETIME_ADAPTER);
-
-            put(float.class, FLOAT_ADAPTER);
-            put(double.class, DOUBLE_ADAPTER);
-            put(int.class, INTEGER_ADAPTER);
-        }
-    };
-
-    static FieldAdapter INTEGER_ADAPTER = new FieldAdapter() {
-        @Override
-        String onCreateLine(String columnName, Field field) {
-            return "`" + columnName + "` INTEGER ";
-        }
-    };
-    static FieldAdapter FLOAT_ADAPTER = new FieldAdapter() {
-        @Override
-        String onCreateLine(String columnName, Field field) {
-            return "`" + columnName + "` FLOAT ";
-        }
-    };
-    static FieldAdapter DOUBLE_ADAPTER = new FieldAdapter() {
-        @Override
-        String onCreateLine(String columnName, Field field) {
-            return "`" + columnName + "` DOUBLE ";
-        }
-    };
-    static FieldAdapter STRING_ADAPTER = new FieldAdapter() {
-        @Override
-        String onCreateLine(String columnName, Field field) {
-            return "`" + columnName + "` VARCHAR ";
-        }
-    };
-    static FieldAdapter DATETIME_ADAPTER = new FieldAdapter() {
-        @Override
-        String onCreateLine(String columnName, Field field) {
-            return "`" + columnName + "` DATETIME ";
-        }
-    };
-
     private String createStatementLine(SQLiteModel model, String columnName, Field field) {
         String out;
         Type type = field.getType();
         FieldAdapter adapter = ADAPTER_MAP_DEFINITION.get(type);
-        if (adapter != null) {
-            out = adapter.createLine(columnName, field);
-        } else {
-            out = ADAPTER_MAP_DEFINITION.get(String.class).createLine(columnName, field);
+        if (adapter == null) {
+            adapter = STRING_ADAPTER;
         }
+        out = adapter.createLine(columnName, field);
         if (columnName.equals(model.getPrimaryKeyName())) {
             int policy = model.getPrimaryKeyPolicy();
             out += " PRIMARY KEY ";
