@@ -38,9 +38,9 @@ public abstract class SQLiteThread<T> extends Thread {
             }
             notifySuccess(result);
         } catch (Exception e) {
-//            if (transactional) {
-//                getSql().endTransaction(false);
-//            }
+            if (transactional) {
+                getSql().endTransaction(false);
+            }
             notifyError(e);
         }
         if (this.autoClose) {
