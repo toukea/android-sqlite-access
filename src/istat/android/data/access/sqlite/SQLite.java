@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -705,7 +706,7 @@ public final class SQLite {
             return insert.insert(asClass, entity);
         }
 
-        public <T> SQLiteInsert insert(List<T> entity) {
+        public <T> SQLiteInsert insert(Collection<T> entity) {
             SQLiteInsert insert = new SQLiteInsert(this);
             return insert.insert(entity);
         }

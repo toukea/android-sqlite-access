@@ -81,7 +81,7 @@ public final class SQLiteInsert implements SQLiteClauseAble {
         return this;
     }
 
-    public SQLiteInsert insert(List<?> insert) {
+    public SQLiteInsert insert(Collection<?> insert) {
         Class<?> cLass = insert.getClass();
         return insert(sql.isTableExist(cLass), insert);
     }

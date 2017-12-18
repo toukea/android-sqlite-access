@@ -600,7 +600,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         return builder.create();
     }
 
-    private final static HashMap<Class, Builder> BUILDER_BUFFER = new HashMap<Class, Builder>();
+    private final static HashMap<Class, Builder> BUILDER_BUFFER = new HashMap();
 
     private void persistNestedEntity(SQLiteDatabase db) {
         try {
@@ -608,11 +608,8 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
             while (keySet.hasNext()) {
                 String tableName = keySet.next();
                 Field field = nestedTableFieldPair.get(tableName);
-                //TODO query for Annotation embedded persistence mod
                 if (field != null) {
-                    Class<?> cLass = Toolkit.getFieldTypeClass(field);
-                    SQLiteModel model = SQLiteModel.fromObject(cLass);
-                    onPersistEmbeddedDbEntity(db, cLass, model);
+                    traitNestedTableField(field, db);
                 }
             }
         } catch (Exception e) {
@@ -621,6 +618,13 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
             error.initCause(e);
             throw error;
         }
+    }
+
+    //TODO query for Annotation embedded persistence mod
+    private void traitNestedTableField(Field field, SQLiteDatabase db) throws IllegalAccessException, InstantiationException {
+        Class<?> cLass = Toolkit.getFieldTypeClass(field);
+        SQLiteModel model = SQLiteModel.fromObject(cLass);
+        onPersistEmbeddedDbEntity(db, cLass, model);
     }
 
     private static JSONObject createJsonFromHashMap(Serializer serializer,
@@ -865,6 +869,14 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     @Target(ElementType.FIELD)
     @Retention(RetentionPolicy.RUNTIME)
     public @interface ManyToMany {
+        String mappedBy() default "";
+    }
+
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface Link {
+        String type();
+
         String mappedBy() default "";
     }
 

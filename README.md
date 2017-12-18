@@ -21,10 +21,10 @@ public class User {
     make this field as table primary key.
     ome thing to know is that:
     If your class doesn't has explicit primary key declaration but contain a
-    property named 'id' (case not sensitive) it will be implicitelly considered as your primaryKey
+    property named 'extra' (case not sensitive) it will be implicitelly considered as your primaryKey
     */
     @PrimaryKey 
-    String id;
+    String extra;
     
     @Ignore     //ignore this field when persisting and querying on Db.
     boolean readOnly=false;
@@ -117,9 +117,9 @@ It is also possible to perform multiple insertions in one step
                                    
         long insertIds[] = sql.insert(user0,user1,user2).execute();// Array List of last insert 'Id'
         
-        System.out.println("user0 id= "+insertIds[0]);
-        System.out.println("user1 id= "+insertIds[1]);
-        System.out.println("user2 id= "+insertIds[2]);
+        System.out.println("user0 extra= "+insertIds[0]);
+        System.out.println("user1 extra= "+insertIds[1]);
+        System.out.println("user2 extra= "+insertIds[2]);
         
      }
   ``` 
@@ -241,7 +241,7 @@ Let consider **Purchase.class** defined by:
 ```java
      public static class Purchase {
             @SQLiteModel.PrimaryKey(policy = SQLiteModel.PrimaryKey.POLICY_AUTO_INCREMENT)
-            int id;
+            int extra;
             int amount = 0;
             String clientName;
 }
@@ -301,7 +301,7 @@ Make and SQL join using Library is "easily" possible.
 Let consider three classes defined by: 
 ```java
      class House {
-            int id;
+            int extra;
             String name;
             String type_id;
             String location_id;
@@ -312,13 +312,13 @@ Let consider three classes defined by:
         }
     
         class Location {
-            int id;
+            int extra;
             String description;
             String name;
         }
     
         class Type {
-            int id;
+            int extra;
             String libelle;
         }
 ```
@@ -327,11 +327,11 @@ You can perform join Query  like:
    List<House> houses = sql.select(House.class)
                       .innerJoin(Type.class)
                       .leftJoin(Location.class)
-                      .where(House.class, "id")
+                      .where(House.class, "extra")
                       .greatThan(2)
                       .and(Location.class, "name")
                       .equalTo("Abidjan")
-                      .and(House.class, "id")
+                      .and(House.class, "extra")
                       .in(1, 2, 3, 4)
                       .execute();
  ```
@@ -339,10 +339,10 @@ You can perform join Query  like:
  ```java
     List<House> houses = sql.select(House.class)
                  .innerJoin(Type.class)
-                 .on(Type.class, "id").equalTo(House.class, "type_id")
+                 .on(Type.class, "extra").equalTo(House.class, "type_id")
                  .leftJoin(Location.class)
-                 .on(Location.class, "id").equalTo(House.class, "location_id")
-                 .where(House.class, "id")
+                 .on(Location.class, "extra").equalTo(House.class, "location_id")
+                 .where(House.class, "extra")
                  .in(1, 2, 3, 4)
                  .execute();
  ```
