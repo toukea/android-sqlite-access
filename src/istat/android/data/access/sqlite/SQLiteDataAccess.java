@@ -61,7 +61,7 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
 //    }
 
     protected SQLiteDataAccess(Context ctx, String dbName, int dbVersion, SQLite.BootDescription bootDescription) {
-        dbOpenHelper = new DbOpenHelper(ctx, dbName, null, dbVersion, bootDescription);
+        dbOpenHelper = new DbOpenHelper(this, dbName, null, dbVersion, bootDescription);
         context = ctx;
         this.dbName = dbName;
         this.dbVersion = dbVersion;
@@ -269,14 +269,14 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
     }
 
     // ----------------------------------------------------------------------------
-    public class DbOpenHelper extends SQLiteOpenHelper {
-        Context context;
+    static class DbOpenHelper extends SQLiteOpenHelper {
         SQLite.BootDescription bootDescription;
+        SQLiteDataAccess access;
 
-        public DbOpenHelper(Context context, String nom,
+        public DbOpenHelper(SQLiteDataAccess access, String nom,
                             CursorFactory cursorfactory, int version, SQLite.BootDescription description) {
-            super(context, nom, cursorfactory, version);
-            this.context = context;
+            super(access.getContext(), nom, cursorfactory, version);
+            this.access = access;
             this.bootDescription = description;
         }
 
@@ -285,7 +285,7 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
             if (bootDescription != null) {
                 bootDescription.onCreateDb(db);
             }
-            registerDbCreationTime();
+            this.access.registerDbCreationTime();
 //            registerAsLastAccessVersion(db.getVersion());
         }
 
@@ -294,7 +294,7 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
             if (bootDescription != null) {
                 bootDescription.onUpgradeDb(db, oldVersion, newVersion);
             }
-            registerDbUpdateTime();
+            this.access.registerDbUpdateTime();
 //            registerAsLastAccessVersion(newVersion);
         }
 
@@ -303,7 +303,7 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
             if (bootDescription != null) {
                 bootDescription.onOpen(db);
             }
-            registerAsLastAccessVersion(db.getVersion());
+            this.access.registerAsLastAccessVersion(db.getVersion());
         }
 
         @Override
