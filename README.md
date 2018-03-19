@@ -1,5 +1,5 @@
 # android-sqlite-access
-android Library to help SQLite db query and Management using a easy and sweet query builder.
+android Library to help SQLite db httpAsyncQuery and Management using a easy and sweet httpAsyncQuery builder.
 
 #Create Some class to persist.
 ```java
@@ -75,12 +75,12 @@ DBVersion=1;
  
 #Prepare SQL instance
 From de DbName given above (when adding connection) you can prepare SQL instance.
-NB: SQL instance will be useful for perform SQL query.
+NB: SQL instance will be useful for perform SQL httpAsyncQuery.
  ```java
     SQLite.prepareSQL(DbName, new SQLite.PrepareHandler() {
         @Override
         public void onSQLReady(SQLite.SQL sql)  throws Exception {
-           //when the prepare succeed, use the SQL instance to query for result.
+           //when the prepare succeed, use the SQL instance to httpAsyncQuery for result.
         }
 
         @Override
