@@ -40,6 +40,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     HashMap<String, Object> fieldNameValuePair = new HashMap();
     HashMap<String, Field> columnNameFieldPair = new HashMap();
     HashMap<String, Field> nestedTableFieldPair = new HashMap();
+    private final static HashMap<Class, Builder> BUILDER_BUFFER = new HashMap();
     public static final String TAG_CLASS = SQLiteModel.class.getCanonicalName() + ".CLASS";
     public static final String TAG_ITEMS = SQLiteModel.class.getCanonicalName() + ".ITEMS";
     public final static String DEFAULT_PRIMARY_KEY_NAME = "id";
@@ -480,13 +481,12 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         builder.setName(tableName)
                 .setColumns(projections)
                 .setPrimaryFieldName(primary)
-                .setFieldNameValuePair(fieldNameValuePair)
                 .setColumnNameFieldPair(columnNameFieldPair)
                 .setNestedTableNameFieldPair(nestedTableField)
                 .setModelClass(cLass)
                 .setSerializer(serializer)
                 .setContentValueHandler(contentValueHandler);
-        return builder.create();
+        return builder.create(fieldNameValuePair);
     }
 
 //    public final static <T, Y> SQLiteModel fromMap(String tableName, Map<T, Y> map) {
@@ -600,7 +600,6 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         return builder.create();
     }
 
-    private final static HashMap<Class, Builder> BUILDER_BUFFER = new HashMap();
 
     private void persistNestedEntity(SQLiteDatabase db) {
         try {
@@ -971,7 +970,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         Class<?> modelClass = Object.class;
         String name, primaryFieldName;
         List<String> projections = new ArrayList<String>();
-        HashMap<String, Object> FieldNameValuePair = new HashMap();
+        // HashMap<String, Object> FieldNameValuePair = new HashMap();
         HashMap<String, Field> columnNameFieldPair = new HashMap();
         HashMap<String, Field> nestedTableNameFieldPair = new HashMap();
 
@@ -1011,10 +1010,10 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
             this.projections = projections;
         }
 
-        public Builder setFieldNameValuePair(HashMap<String, Object> fieldNameValuePair) {
-            FieldNameValuePair = fieldNameValuePair;
-            return this;
-        }
+//        public Builder setFieldNameValuePair(HashMap<String, Object> fieldNameValuePair) {
+//            FieldNameValuePair = fieldNameValuePair;
+//            return this;
+//        }
 
         public Builder setColumnNameFieldPair(HashMap<String, Field> columnNameFieldPair) {
             this.columnNameFieldPair = columnNameFieldPair;
@@ -1032,6 +1031,10 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         }
 
         public SQLiteModel create() {
+            return create(null);
+        }
+
+        public SQLiteModel create(HashMap<String, Object> fieldNameValuePair) {
             SQLiteModel model = new SQLiteModel() {
                 String[] columns;
 
@@ -1054,7 +1057,9 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
                     return primaryFieldName;
                 }
             };
-            model.fieldNameValuePair = this.FieldNameValuePair;
+            if (fieldNameValuePair != null) {
+                model.fieldNameValuePair = fieldNameValuePair;
+            }
             model.columnNameFieldPair = this.columnNameFieldPair;
             model.nestedTableFieldPair = this.nestedTableNameFieldPair;
             model.modelClass = this.modelClass;

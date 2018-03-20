@@ -61,10 +61,10 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
 //    }
 
     protected SQLiteDataAccess(Context ctx, String dbName, int dbVersion, SQLite.BootDescription bootDescription) {
-        dbOpenHelper = new DbOpenHelper(this, dbName, null, dbVersion, bootDescription);
-        context = ctx;
+        this.context = ctx;
         this.dbName = dbName;
         this.dbVersion = dbVersion;
+        this.dbOpenHelper = new DbOpenHelper(this, dbName, null, dbVersion, bootDescription);
     }
 
     public SQLite.BootDescription getBootDescription() {

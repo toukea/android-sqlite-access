@@ -38,8 +38,14 @@ public final class SQLite {
     }
 
     public static SQL from(SQLiteDatabase db) {
+        return from(db, false);
+    }
+
+    public static SQL from(SQLiteDatabase db, boolean closeDataBaseOnExecute) {
         lastOpenedDb = db;
-        return new SQL(db);
+        SQL sql = new SQL(db);
+        sql.setAutoClose(closeDataBaseOnExecute);
+        return sql;
     }
 
     public static SQL fromConnection(String dbName) throws Exception {
