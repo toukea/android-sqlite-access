@@ -136,7 +136,7 @@ public class SQLiteParser {
     }
 
     private static List<String> verifyStatements(List<String> statements) {
-        List<String> out = new ArrayList<String>();
+        List<String> out = new ArrayList();
         for (String statement : statements) {// INSERT
             if (statement.length() > 7) {
                 String beginStatement = statement.substring(0, 6)
@@ -144,10 +144,12 @@ public class SQLiteParser {
                 if (beginStatement.equals("insert")) {
                     String insertHeader = statement.substring(0,
                             statement.indexOf("VALUES") + 6);
-
-                    out.addAll(makeInsertBundle(insertHeader,
-                            splitInsertion(statement), 0));
-
+                    if (statement.endsWith(";")) {
+                        out.add(statement);
+                    } else {
+                        out.addAll(makeInsertBundle(insertHeader,
+                                splitInsertion(statement), 0));
+                    }
                 } else {
                     out.add(statement);
                 }

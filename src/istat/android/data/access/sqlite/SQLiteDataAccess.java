@@ -367,8 +367,9 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
     public static void executeDbScript(SQLiteDatabase db,
                                        InputStream sqlFileInputStream) throws IOException {
         List<String> statements = SQLiteParser.parseSqlStream(sqlFileInputStream);
-        for (String statement : statements)
+        for (String statement : statements) {
             db.execSQL(statement);
+        }
     }
 
     public static boolean isTableExist(SQLiteDatabase db, String table) {
