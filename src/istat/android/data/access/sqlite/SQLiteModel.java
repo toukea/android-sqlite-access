@@ -1258,7 +1258,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     }
 
     public <T> List<T> asCollection() {
-        List<T> list = new ArrayList<T>();
+        List<T> list = new ArrayList();
 //        try {
         Object collection = get(TAG_ITEMS);
         Collection<T> collection1 = (Collection<T>) collection;
