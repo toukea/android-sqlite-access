@@ -188,7 +188,9 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
 
     @Override
     public ContentValues toContentValues() {
-        return contentValueHandler.toContentValues(this);
+        ContentValues contentValues = contentValueHandler.toContentValues(this);
+        //TODO specifier le contentValue afin que les foreignKey sont ajouté a la place du Gson de l'object e lui même.
+        return contentValues;
     }
 
     public boolean isPrimaryFieldDefined() {
@@ -504,7 +506,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     public static <T> T buildAs(Class<T> cLass, Cursor c, CursorReader reader) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
         SQLiteModel model = SQLiteModel.fromClass(cLass);
         model.fillFromCursor(c, reader);
-        return model.asClass(cLass);
+        return model.asInstance(cLass);
     }
 
     public static SQLiteModel fromClass(final Class cLass) throws InstantiationException,
@@ -725,12 +727,12 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         return Object.class;
     }
 
-    public <T> T asClass(Class<T> clazz) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
-        return asClass(clazz, this.serializer);
+    public <T> T asInstance(Class<T> clazz) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
+        return asInstance(clazz, this.serializer);
     }
 
     //TODO update to combine serializer and cursorReader.
-    public <T> T asClass(Class<T> clazz, Serializer serializer) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
+    public <T> T asInstance(Class<T> clazz, Serializer serializer) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
         T instance = Toolkit.newInstance(clazz);
         List<Field> fields = Toolkit.getAllFieldFields(clazz, true, false);
         for (Field field : fields) {
@@ -741,8 +743,16 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
                     if (value == null) {
                         continue;
                     }
-                    Object obj = serializer.onDeSerialize(String.valueOf(value), field);
-                    field.set(instance, obj);
+                    Object obj = null;
+                    if (isNestedTableProperty(field)) {
+                        //TODO a la plca d1e total decerialisation effectuer une nouvelle requete pour determiner l'object a partir de la ou des foreignKey
+                        serializer.onDeSerialize(String.valueOf(value), field);
+                    } else {
+                        serializer.onDeSerialize(String.valueOf(value), field);
+                    }
+                    if (field != null) {
+                        field.set(instance, obj);
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -806,7 +816,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         SQLiteModel model = SQLiteModel.fromClass(clazz,
                 serializer, null);
         model.fillFromCursor(c, cursorReader);
-        T obj = model.asClass(clazz);
+        T obj = model.asInstance(clazz);
         return obj;
     }
 
@@ -1183,7 +1193,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
             try {
                 Gson gson = new Gson();
                 Type type = Toolkit.getFieldType(field);
-                Log.d("asClass", "stringularProperty=" + serialized);
+                Log.d("asInstance", "stringularProperty=" + serialized);
                 Object obj = gson.fromJson(serialized, type);
                 return obj;
             } catch (Exception e) {

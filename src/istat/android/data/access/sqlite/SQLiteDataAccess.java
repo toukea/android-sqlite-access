@@ -206,24 +206,24 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
         return dbName + SHARED_PREF_FILE;
     }
 
-    public String getDbUpdateTime() {
+    public String getDbUpdateDateTime() {
         return context.getSharedPreferences(getNameSpace(), 0).getString(
                 DB_UPDATE_TIME, simpleDateTime());
     }
 
-    public String getDbCreationTime() {
+    public String getDbCreationDateTime() {
         return context.getSharedPreferences(getNameSpace(), 0).getString(
                 DB_CREATION_TIME, simpleDateTime());
     }
 
     @SuppressWarnings("deprecation")
-    public Date getDbUpdateTimeAsDate() {
+    public Date getDbUpdateDateTimeAsDate() {
         return new Date(context.getSharedPreferences(getNameSpace(), 0)
                 .getString(DB_UPDATE_TIME, simpleDateTime()));
     }
 
     @SuppressWarnings("deprecation")
-    public Date getDbCreationTimeAsDate() {
+    public Date getDbCreationDateTimeAsDate() {
         return new Date(context.getSharedPreferences(getNameSpace(), 0)
                 .getString(DB_CREATION_TIME, simpleDateTime()));
     }

@@ -136,10 +136,10 @@ public class Toolkit {
         Type type;
         try {
             type = field.getGenericType();
-            Log.d("asClass", "onTRY=" + type);
+            Log.d("asInstance", "onTRY=" + type);
         } catch (Exception e) {
             type = field.getType();
-            Log.d("asClass", "onCatch=" + type);
+            Log.d("asInstance", "onCatch=" + type);
         }
         return type;
     }
