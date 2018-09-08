@@ -1,7 +1,7 @@
 # android-sqlite-access
 android Library to help SQLite db query and Management using a easy and sweet query builder.
 
-#Create Some class to persist.
+# Create Some class to persist.
 ```java
 @SQLiteModel.Table(name = "User") //if not set, default is class.getSimpleName()
 public class User {
@@ -31,7 +31,7 @@ public class User {
  }
 ```
 
-#Add SQLite Connexion 
+# Add SQLite Connexion 
 you can add one or many 'SQLiteConnexion' to your SQLite context. 
 in this part, we will add connection to the Database defined by:
 DbName="testDB",
@@ -73,7 +73,7 @@ DBVersion=1;
     });
  ```
  
-#Prepare SQL instance
+# Prepare SQL instance
 From de DbName given above (when adding connection) you can prepare SQL instance.
 NB: SQL instance will be useful for perform SQL query.
  ```java
