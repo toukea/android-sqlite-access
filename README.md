@@ -47,7 +47,7 @@ DBVersion=1;
          de SQLiteDataBase param instance
          */
             try {
-            /* here, i am creating User Table form User.class using TableUtils */
+            /* here, i am creating User Table from User.class using TableUtils.class */
                 TableUtils.create(db, User.class);
             /*
              you can also init your table by executing an SQL script File resource.
