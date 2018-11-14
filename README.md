@@ -48,9 +48,14 @@ DBVersion=1;
          */
             try {
             /*
-             here, i am executing a script from my R.raw resource
+             here, i am creating User Table form User.class using TableUtils
             */
-                SQLite.executeSQLScript(db, appContext.getResources().openRawResource(R.raw.test));
+                TableUtils.create(db, User.class);
+            /*
+             you can also init your table by executing an SQL script File resource.
+              SQLite.executeSQLScript(db, appContext.getResources().openRawResource(R.raw.test));
+            */       
+            
             } catch (IOException e) {
                 e.printStackTrace();
             }
