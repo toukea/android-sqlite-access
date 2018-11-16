@@ -24,7 +24,9 @@ public class User {
     property named 'id' (case not sensitive) it will be implicitelly considered as your primaryKey
     */
     @SQLiteModel.PrimaryKey(policy = SQLiteModel.PrimaryKey.POLICY_AUTO_INCREMENT) //usable for integer Id only
-    int id; // if primaryKey policy is not set, SQLiteModel.PrimaryKey.POLICY_DEFAULT is used
+    int id; 
+    /* if primaryKey policy is not set, SQLiteModel.PrimaryKey.POLICY_DEFAULT is used
+    so id is persisted as it has been set */
     
     
     @Ignore     //ignore this field when persisting and querying on Db.
