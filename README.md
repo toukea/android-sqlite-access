@@ -23,8 +23,9 @@ public class User {
     If your class doesn't has explicit primary key declaration but contain a
     property named 'id' (case not sensitive) it will be implicitelly considered as your primaryKey
     */
-    @PrimaryKey 
-    String id;
+    @SQLiteModel.PrimaryKey(policy = SQLiteModel.PrimaryKey.POLICY_AUTO_INCREMENT) //usable for integer Id only
+    int id;// if primaryKey policy is not set, SQLiteModel.PrimaryKey.POLICY_DEFAULT is used
+    
     
     @Ignore     //ignore this field when persisting and querying on Db.
     boolean readOnly=false;
