@@ -1,7 +1,7 @@
 # android-sqlite-access
 android Library to help SQLite db httpAsyncQuery and Management using a easy and sweet httpAsyncQuery builder.
 
-#Create Some class to persist.
+# Create Some class to persist.
 ```java
 @SQLiteModel.Table(name = "User") //if not set, default is class.getSimpleName()
 public class User {
@@ -21,17 +21,19 @@ public class User {
     make this field as table primary key.
     ome thing to know is that:
     If your class doesn't has explicit primary key declaration but contain a
-    property named 'extra' (case not sensitive) it will be implicitelly considered as your primaryKey
+    property named 'id' (case not sensitive) it will be implicitelly considered as your primaryKey
     */
-    @PrimaryKey 
-    String extra;
+    @SQLiteModel.PrimaryKey(policy = SQLiteModel.PrimaryKey.POLICY_AUTO_INCREMENT) //usable for integer Id only
+    int id; 
+    /* if primaryKey policy is not set, SQLiteModel.PrimaryKey.POLICY_DEFAULT is used
+    so "id" is persisted as it has been set event if not defined or NULL */
     
     @Ignore     //ignore this field when persisting and querying on Db.
     boolean readOnly=false;
  }
 ```
 
-#Add SQLite Connexion 
+# Add SQLite Connexion 
 you can add one or many 'SQLiteConnexion' to your SQLite context. 
 in this part, we will add connection to the Database defined by:
 DbName="testDB",
@@ -45,12 +47,16 @@ DBVersion=1;
         /*
         here you can execute script to create your database from
          de SQLiteDataBase param instance
-         */
+        */
             try {
+            /* here, i am creating User Table from User.class using TableUtils.class */
+                TableUtils.create(db, User.class);
             /*
-             here, i am executing a script from my R.raw resource
-            */
-                SQLite.executeSQLScript(db, appContext.getResources().openRawResource(R.raw.test));
+             you can also init your table by executing an SQL script File resource.
+             [in this case R.raw.db_script contain my db script.]
+             SQLite.executeSQLScript(db, appContext.getResources().openRawResource(R.raw.db_script));
+            */       
+            
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -60,7 +66,7 @@ DBVersion=1;
         /*
         here you can execute SQL script to update your database
          from de SQLiteDataBase param instance
-         */
+        */
             try {
             /*
              here, i am executing a script from my R.raw resource
@@ -73,7 +79,7 @@ DBVersion=1;
     });
  ```
  
-#Prepare SQL instance
+# Prepare SQL instance
 From de DbName given above (when adding connection) you can prepare SQL instance.
 NB: SQL instance will be useful for perform SQL httpAsyncQuery.
  ```java
