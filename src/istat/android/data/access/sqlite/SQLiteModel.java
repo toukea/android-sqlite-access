@@ -299,7 +299,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     }
 
     public int update(SQLiteDatabase db) throws SQLiteException {
-        int out = 0;
+        int out;
         try {
             out = update(db, getPrimaryKeyName() + "= ?", new String[]{getPrimaryKeyStringValue()});
             persistNestedEntity(db);
@@ -1211,32 +1211,29 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
             String[] columns = model.getColumns();
             for (String column : columns) {
                 if (column != null) {
-                    if (!model.isNULL(column)) {
-                        String values = model.getSerializedValue(column);
-                        if (column.equals(model.getPrimaryKeyName())) {
-                            //TODO find a better comparison.
-                            if ((model.getPrimaryKeyPolicy() == PrimaryKey.POLICY_AUTO_INCREMENT
-                                    || model.getPrimaryKeyPolicy() == PrimaryKey.POLICY_DEFAULT)
-                                    && "0".equals(values)) {
-                                //Do nothing id=0 should autoIncremented.
-                                Log.d("SQLiteModel", "toContentValues:" + column + " is primary key should be autoIncremented.");
-                            } else if (model.getPrimaryKeyPolicy() == PrimaryKey.POLICY_AUTO_GENERATE) {
-                                if (TextUtils.isEmpty(values)) {
-                                    values = UUID.randomUUID().toString();
-                                } else if ("0".equals(values)) {
-                                    values = "" + (System.currentTimeMillis() + (int) (Math.random() * 100));
-                                }
-                                pairs.put(column, values);
-
-                            } else {
-                                pairs.put(column, values);
-                            }
-                        } else {
-                            if (values == null) {
-                                continue;
+                    String values = model.getSerializedValue(column);
+                    if (column.equals(model.getPrimaryKeyName())) {
+                        //TODO find a better comparison.
+                        if ((model.getPrimaryKeyPolicy() == PrimaryKey.POLICY_AUTO_INCREMENT
+                                || model.getPrimaryKeyPolicy() == PrimaryKey.POLICY_DEFAULT)
+                                && "0".equals(values)) {
+                            //Do nothing id=0 should autoIncremented.
+                            Log.d("SQLiteModel", "toContentValues:" + column + " is primary key should be autoIncremented.");
+                        } else if (model.getPrimaryKeyPolicy() == PrimaryKey.POLICY_AUTO_GENERATE) {
+                            if (TextUtils.isEmpty(values)) {
+                                values = UUID.randomUUID().toString();
+                            } else if ("0".equals(values)) {
+                                values = "" + (System.currentTimeMillis() + (int) (Math.random() * 100));
                             }
                             pairs.put(column, values);
+                        } else {
+                            pairs.put(column, values);
                         }
+                    } else {
+//                        if (values == null) {
+//                            continue;
+//                        }
+                        pairs.put(column, values);
                     }
                 }
             }
