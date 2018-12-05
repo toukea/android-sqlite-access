@@ -743,12 +743,12 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
                     if (value == null) {
                         continue;
                     }
-                    Object obj = null;
+                    Object obj;
                     if (isNestedTableProperty(field)) {
                         //TODO a la plca d1e total decerialisation effectuer une nouvelle requete pour determiner l'object a partir de la ou des foreignKey
-                        serializer.onDeSerialize(String.valueOf(value), field);
+                        obj = serializer.onDeSerialize(String.valueOf(value), field);
                     } else {
-                        serializer.onDeSerialize(String.valueOf(value), field);
+                        obj = serializer.onDeSerialize(String.valueOf(value), field);
                     }
                     if (field != null) {
                         field.set(instance, obj);
