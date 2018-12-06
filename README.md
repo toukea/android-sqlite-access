@@ -79,7 +79,7 @@ DBVersion=1;
     });
  ```
 
-# How to perform query from your Db on a specific table?
+# How to perform query from your Db?
 In order perfom sql-query on your database, you have to get an SQL instance.
 SQL instance can be get using tow way:
 - Using SQL.prepareSQL.
@@ -141,7 +141,7 @@ It is also possible to specify if you want to use an auto closable connection. (
      */
     SQLite.SQL sql= SQLite.fromConnection(DbName, autoClause);
 
-   /*
+    /*
     Code to execute one or more SQL clause...
     .....
     .....
