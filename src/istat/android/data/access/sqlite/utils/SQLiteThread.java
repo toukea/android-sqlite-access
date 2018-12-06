@@ -15,7 +15,7 @@ public abstract class SQLiteThread<T> extends Thread {
     SQLiteAsyncExecutor.ExecutionCallback<T> callback;
     SQLiteClauseAble clauseAble;
     boolean transactional = false;
-    private boolean autoClose = false;
+    private boolean autoClose;
     SQLiteAsyncExecutor executor;
 
     SQLiteThread(SQLiteAsyncExecutor executor, SQLiteClauseAble clauseAble, SQLiteAsyncExecutor.ExecutionCallback<T> callback) {
@@ -38,7 +38,7 @@ public abstract class SQLiteThread<T> extends Thread {
             }
             notifySuccess(result);
         } catch (Exception e) {
-            if (transactional) {
+            if (transactional && getSql().inTransaction()) {
                 getSql().endTransaction(false);
             }
             notifyError(e);

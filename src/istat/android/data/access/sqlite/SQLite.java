@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import istat.android.data.access.sqlite.utils.SQLiteParser;
 import istat.android.data.access.sqlite.utils.TableUtils;
+
 //TODO give possibility to specify if some class should be forced to be considered as a Table.
 public final class SQLite {
     static SQLiteDatabase
@@ -796,19 +797,35 @@ public final class SQLite {
             db.beginTransaction();
         }
 
-        public final void setTransactionSuccessful() {
-            db.setTransactionSuccessful();
-        }
-
-        public final void endTransaction(boolean success) {
-            if (success) {
-                setTransactionSuccessful();
+        public final boolean setTransactionSuccessful() {
+            if (!inTransaction()) {
+                return false;
             }
-            endTransaction();
+            db.setTransactionSuccessful();
+            return true;
         }
 
-        public final void endTransaction() {
+        public final boolean endTransaction(boolean success) {
+            if (!inTransaction()) {
+                return false;
+            }
+            if (success) {
+                db.setTransactionSuccessful();
+            }
             db.endTransaction();
+            return true;
+        }
+
+        public final boolean endTransaction() {
+            if (!inTransaction()) {
+                return false;
+            }
+            db.endTransaction();
+            return true;
+        }
+
+        public boolean inTransaction() {
+            return db.inTransaction();
         }
 
 
