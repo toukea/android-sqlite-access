@@ -78,10 +78,16 @@ DBVersion=1;
         }       
     });
  ```
- 
-# Prepare SQL instance
+
+# How to perform query from your Db on a specific table?
+In order perfom sql-query on your database, you have to get an SQL instance.
+SQL instance can be get using tow way:
+- Using SQL.prepareSQL.
+- Using existing connection without prepare.
+
+# SQL instance using prepare
 From de DbName given above (when adding connection) you can prepare SQL instance.
-NB: SQL instance will be useful for perform SQL httpAsyncQuery.
+NB: SQL instance will be useful for perform SQL Query.
  ```java
     SQLite.prepareSQL(DbName, new SQLite.PrepareHandler() {
         @Override
@@ -100,23 +106,62 @@ You can also make a  transactional Prepare.
     SQLite.prepareTransactionalSQL(DbName, new SQLite.PrepareHandler() { //Some code
 ```
 
+# SQL instance using existing connection without prepare.
+After least one data base connection successfully, it is also possible to execute SQLite clause
+without call explicitly a prepare (prepareSQL or prepareTransactionalSQL).
+Of course, it is possible to get an SQLite.SQL instance directly from connection Name.
+
+Get SQLite.SQL instance from connection Name
+```java
+    /*
+    obtain an SQLite.SQL instance.
+     */
+    SQLite.SQL sql= SQLite.fromConnection(DbName);
+
+    /*
+    Code to execute one or more SQL clause...
+    .....
+    .....
+     */
+
+    /*
+    Clause SQL when not needed anymore
+    */
+    sql.close();
+```
+
+It is also possible to specify if you want to use an auto closable connection. (Auto closable SQL instance, is an SQL which would be auto close after any execution)
+```java
+    /*
+     here i want an auto clauseAble SQL from my connection.
+     */
+    boolean autoClause=true;
+    /*
+    obtain an SQLite.SQL instance.
+     */
+    SQLite.SQL sql= SQLite.fromConnection(DbName, autoClause);
+
+   /*
+    Code to execute one or more SQL clause...
+    .....
+    .....
+     */
+
+    //SQL instance has been auto closed after execution.
+```
+
 # Make SQL Insert 
 After SQL instance has been prepared successfully, you can use them to perform SQL Insert.
 ```java
-    @Override
-    public void onSQLReady(SQLite.SQL sql)  throws Exception {
        User user = new User();
        user.userName = "Toukea";
        user.firstName = "Jephte";
        user.year = 25;
                     
        long insertIds[] = sql.insert(user).execute();// Array List of last insert 'Id'
-    }
  ```   
 It is also possible to perform multiple insertions in one step
  ```java
-     @Override
-     public void onSQLReady(SQLite.SQL sql)  throws Exception {
        /*
        here, some multiple[3] user definitions
        */
@@ -126,79 +171,61 @@ It is also possible to perform multiple insertions in one step
         System.out.println("user0 extra= "+insertIds[0]);
         System.out.println("user1 extra= "+insertIds[1]);
         System.out.println("user2 extra= "+insertIds[2]);
-        
-     }
   ``` 
   
 # Make SQL Delete 
  After SQL instance has been prepared successfully, you can use them to perform SQL delete.
  ```java
-         @Override
-         public void onSQLReady(SQLite.SQL sql)  throws Exception {
-         
-             int deletedCount = sql.delete(User.class)
+         int deletedCount = sql.delete(User.class)
                                 .where("firstname")
                                 .like("%Jephte%")
                                 .execute();
                                 
-             System.out.println("deleted line="+deletedCount);
-             
-         }
+         System.out.println("deleted line="+deletedCount);
   ```    
  
 # Make SQL Update 
 After SQL instance has been prepared successfully, you can use them to perform SQL update.
 ```java
-           @Override
-           public void onSQLReady(SQLite.SQL sql)  throws Exception {
-                int updatedCount = sql.update(User.class)
+          int updatedCount = sql.update(User.class)
                                    .set("userName", "newName")
                                    .where("firstName")
                                    .like("%Jephte%")
                                    .execute();
-                System.out.println("updated line="+updatedCount);
-           }
+
+          System.out.println("updated line="+updatedCount);
            
 ``` 
 It is also possible to update from another model.
 ```java
-           @Override
-           public void onSQLReady(SQLite.SQL sql)  throws Exception {
-                User userModel=new User();
+           User userModel=new User();
                 userModel.firstName="Julie";
                 userModel.year=21;
                 
-                int updatedCount = sql.update(User.class)
+           int updatedCount = sql.update(User.class)
                                    .setAs(userModel)
                                    .where("firstname")
                                    .like("%jephte%")
                                    .execute();
                                    
-                System.out.println("updated line="+updatedCount);
-           }
+           System.out.println("updated line="+updatedCount);
            
 ``` 
 
 # Make SQL Selection 
 After SQL instance has been prepared successfully, you can use them to perform SQL selection.
 ```java
-           @Override
-           public void onSQLReady(SQLite.SQL sql)  throws Exception {
-           
-               List<User> users = sql.select(User.class)
+           List<User> users = sql.select(User.class)
                        .where("firstname")
                        .like("%Jephte%")
                        .execute();
                        
-               for (User u : users) {
-                   System.out.println(u.firstName);
-               }
+           for (User u : users) {
+              System.out.println(u.firstName);
            }
 ```   
 It is also possible to make multiple nested selections:
 ```java
-           @Override
-           public void onSQLReady(SQLite.SQL sql)  throws Exception {
            /*
             this is my first SQLite Selection
            */
@@ -233,7 +260,6 @@ It is also possible to make multiple nested selections:
                for (User u : users) {
                    System.out.println(u.firstName);
                }
-           }
 ```
 # Using SQL function inside where clause args.
 ```java
@@ -352,50 +378,6 @@ You can perform join Query  like:
                  .in(1, 2, 3, 4)
                  .execute();
  ```
-# SQL clause using existing connection without prepare.
-After least one data base connection successfully, it is also possible to execute SQLite clause
-without call explicitly a prepare (prepareSQL or prepareTransactionalSQL).
-Of course, it is possible to get an SQLite.SQL instance directly from connection Name.
-
-Get SQLite.SQL instance from connection Name
-```java
-    /*
-    obtain an SQLite.SQL instance.
-     */
-    SQLite.SQL sql= SQLite.fromConnection(DbName);
-
-    /*
-    Make a selection using SQL instance.
-     */
-    List<User> users = sql.select(User.class)
-                           .where("firstname")
-                           .like("%Jephte%")
-                           .execute();
-    //more code...
-    
-    /*
-    Clause SQL when not needed anymore
-    */
-    sql.close();
-```
-
-It is also possible to specify if you want to use an auto closable connection. (Auto closable SQL instance, is an SQL which would be auto close after any execution)
-```java
-    /*
-     here i want an auto clauseAble SQL from my connection.
-     */
-    boolean autoClause=true;
-    /*
-    obtain an SQLite.SQL instance.
-     */
-    SQLite.SQL sql= SQLite.fromConnection(DbName, autoClause);
-
-    List<User> users = sql.select(User.class)
-                               .where("firstname")
-                               .like("%Jephte%")
-                               .execute();
-    //SQL instance has been auto closed after execution.
-```
 # Make an asynchronous SQL clause execution.
 To perform async SQL clause execution, you just need to use executeAsync instead of execute.
 ```java
