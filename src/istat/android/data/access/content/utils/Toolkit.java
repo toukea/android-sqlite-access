@@ -1,4 +1,4 @@
-package istat.android.data.access.sqlite.utils;
+package istat.android.data.access.content.utils;
 
 import android.content.Context;
 import android.text.TextUtils;

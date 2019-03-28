@@ -1,24 +1,24 @@
-package istat.android.data.access.sqlite.utils;
+package istat.android.data.access.content.utils;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import istat.android.data.access.sqlite.SQLite;
-import istat.android.data.access.sqlite.interfaces.SQLiteClauseAble;
+import istat.android.data.access.content.ContentSQL;
+import istat.android.data.access.content.interfaces.ContentSQLClauseAble;
 
 /**
  * Created by istat on 24/03/17.
  */
 
-public abstract class SQLiteThread<T> extends Thread {
+public abstract class ContentSQLThread<T> extends Thread {
     boolean running = false;
-    SQLiteAsyncExecutor.ExecutionCallback<T> callback;
-    SQLiteClauseAble clauseAble;
+    ContentSQLAsyncExecutor.ExecutionCallback<T> callback;
+    ContentSQLClauseAble clauseAble;
     boolean transactional = false;
     private boolean autoClose;
-    SQLiteAsyncExecutor executor;
+    ContentSQLAsyncExecutor executor;
 
-    SQLiteThread(SQLiteAsyncExecutor executor, SQLiteClauseAble clauseAble, SQLiteAsyncExecutor.ExecutionCallback<T> callback) {
+    ContentSQLThread(ContentSQLAsyncExecutor executor, ContentSQLClauseAble clauseAble, ContentSQLAsyncExecutor.ExecutionCallback<T> callback) {
         this.executor = executor;
         this.callback = callback;
         this.clauseAble = clauseAble;
@@ -85,7 +85,7 @@ public abstract class SQLiteThread<T> extends Thread {
         post(new Runnable() {
             @Override
             public void run() {
-                SQLiteThread.this.result = result;
+                ContentSQLThread.this.result = result;
                 notifyCompleted(true);
                 if (callback != null) {
                     callback.onSuccess(result);
@@ -123,7 +123,7 @@ public abstract class SQLiteThread<T> extends Thread {
         executeWhen(runnableList, WHEN_ANYWAY);
     }
 
-    private void notifyStarted(SQLiteThread thread) {
+    private void notifyStarted(ContentSQLThread thread) {
         int when = WHEN_BEGIN;
         if (callback != null) {
             callback.onStart(thread);
@@ -149,7 +149,7 @@ public abstract class SQLiteThread<T> extends Thread {
     final ConcurrentHashMap<Runnable, Integer> executedRunnable = new ConcurrentHashMap<Runnable, Integer>();
     final ConcurrentHashMap<Integer, ConcurrentLinkedQueue<Runnable>> runnableTask = new ConcurrentHashMap<Integer, ConcurrentLinkedQueue<Runnable>>();
 
-    public SQLiteThread runWhen(final WhenCallback<T> callback, final int... when) {
+    public ContentSQLThread runWhen(final WhenCallback<T> callback, final int... when) {
         if (callback == null)
             return this;
         return runWhen(new Runnable() {
@@ -162,7 +162,7 @@ public abstract class SQLiteThread<T> extends Thread {
         }, when);
     }
 
-    public SQLiteThread runWhen(Runnable runnable, int... when) {
+    public ContentSQLThread runWhen(Runnable runnable, int... when) {
         if (runnable == null) {
             return this;
         }
@@ -204,13 +204,13 @@ public abstract class SQLiteThread<T> extends Thread {
 
     public final static class SQLitePromise<T> {
 
-        SQLiteThread query;
+        ContentSQLThread query;
 
-        public SQLiteThread getQuery() {
+        public ContentSQLThread getQuery() {
             return query;
         }
 
-        SQLitePromise(SQLiteThread query) {
+        SQLitePromise(ContentSQLThread query) {
             this.query = query;
         }
 
@@ -327,7 +327,7 @@ public abstract class SQLiteThread<T> extends Thread {
         return result;
     }
 
-    SQLite.SQL getSql() {
+    ContentSQL.SQL getSql() {
         return clauseAble.getInternalSQL();
     }
 

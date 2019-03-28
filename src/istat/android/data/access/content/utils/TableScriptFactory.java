@@ -1,4 +1,4 @@
-package istat.android.data.access.sqlite.utils;
+package istat.android.data.access.content.utils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
@@ -7,7 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import istat.android.data.access.sqlite.SQLiteModel;
+import istat.android.data.access.content.ContentSQLModel;
 
 /**
  * Created by Istat Toukea on 21/11/2016.
@@ -67,7 +67,7 @@ public class TableScriptFactory {
     public static List<String> drop(Class<?>... cLassS) throws IllegalAccessException, InstantiationException {
         List<String> out = new ArrayList<String>();
         for (Class<?> cLass : cLassS) {
-            SQLiteModel model = SQLiteModel.fromClass(cLass);
+            ContentSQLModel model = ContentSQLModel.fromClass(cLass);
             out.add("DROP TABLE " + model.getName() + ";");
         }
         return out;
@@ -76,7 +76,7 @@ public class TableScriptFactory {
     public static List<String> truncate(Class<?>... cLassS) throws IllegalAccessException, InstantiationException {
         List<String> out = new ArrayList<String>();
         for (Class<?> cLass : cLassS) {
-            SQLiteModel model = SQLiteModel.fromClass(cLass);
+            ContentSQLModel model = ContentSQLModel.fromClass(cLass);
             out.add("TRUNCATE TABLE " + model.getName() + ";");
         }
         return out;
@@ -103,7 +103,7 @@ public class TableScriptFactory {
             Class<?>[] nestedClasses = cLass.getClasses();
             if (nestedClasses != null && nestedClasses.length > 0) {
                 for (Class<?> nestedClass : nestedClasses) {
-                    if (nestedClass.isAnnotationPresent(SQLiteModel.Table.class)) {
+                    if (nestedClass.isAnnotationPresent(ContentSQLModel.Table.class)) {
                         out.addAll(create(classAdapterPair, nestedClass));
                     }
                 }
@@ -130,7 +130,7 @@ public class TableScriptFactory {
      */
 
     public String create() throws IllegalAccessException, InstantiationException {
-        SQLiteModel model = SQLiteModel.fromClass(cLass);
+        ContentSQLModel model = ContentSQLModel.fromClass(cLass);
         String sql = "CREATE TABLE IF NOT EXISTS `" + model.getName() + "` (";
         int index = 0;
         for (String columnName : model.getColumns()) {
@@ -154,7 +154,7 @@ public class TableScriptFactory {
         return line != null && line.length() == 0;
     }
 
-    private String createStatementLine(SQLiteModel model, String columnName, Field field) {
+    private String createStatementLine(ContentSQLModel model, String columnName, Field field) {
         String out;
         Type type = field.getType();
         FieldAdapter adapter = ADAPTER_MAP_DEFINITION.get(type);
@@ -165,15 +165,15 @@ public class TableScriptFactory {
         if (columnName.equals(model.getPrimaryKeyName())) {
             int policy = model.getPrimaryKeyPolicy();
             out += " PRIMARY KEY ";
-            if (policy == SQLiteModel.PrimaryKey.POLICY_AUTO_INCREMENT) {
+            if (policy == ContentSQLModel.PrimaryKey.POLICY_AUTO_INCREMENT) {
                 if (field.getType().isAssignableFrom(Integer.class) || field.getType().isAssignableFrom(int.class)) {
                     out += " AUTOINCREMENT ";
                 } else {
                     throw new RuntimeException(field.getName() + " is not eligible to be autoincrement. Only integer colum can be AutoIncrement.");
                 }
-            } else if (policy == SQLiteModel.PrimaryKey.POLICY_AUTO_GENERATE) {
+            } else if (policy == ContentSQLModel.PrimaryKey.POLICY_AUTO_GENERATE) {
 
-            } else if (policy == SQLiteModel.PrimaryKey.POLICY_NONE) {
+            } else if (policy == ContentSQLModel.PrimaryKey.POLICY_NONE) {
 
             } else {// by default, all integer primary key is auto increment.
                 if (field.getType().isAssignableFrom(Integer.class) || field.getType().isAssignableFrom(int.class)

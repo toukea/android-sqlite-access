@@ -1,10 +1,10 @@
-package istat.android.data.access.sqlite;
+package istat.android.data.access.content;
 
 /**
  * Created by istat on 28/03/17.
  */
 
-public class SQLiteFunction {
+public class ContentSQLFunction {
     public final static String TYPE_ROUND = "ROUND";
     public final static String TYPE_LAST = "LAST";
     public final static String TYPE_FIRST = "FIRST";
@@ -62,24 +62,24 @@ public class SQLiteFunction {
      */
 
 
-    public final static SQLiteFunction SUM = new SQLiteFunction(TYPE_SUM);
-    public final static SQLiteFunction COUNT = new SQLiteFunction(TYPE_COUNT);
-    public final static SQLiteFunction AVG = new SQLiteFunction(TYPE_AVG);
-    public final static SQLiteFunction MIN = new SQLiteFunction(TYPE_MIN);
-    public final static SQLiteFunction MAX = new SQLiteFunction(TYPE_MAX);
+    public final static ContentSQLFunction SUM = new ContentSQLFunction(TYPE_SUM);
+    public final static ContentSQLFunction COUNT = new ContentSQLFunction(TYPE_COUNT);
+    public final static ContentSQLFunction AVG = new ContentSQLFunction(TYPE_AVG);
+    public final static ContentSQLFunction MIN = new ContentSQLFunction(TYPE_MIN);
+    public final static ContentSQLFunction MAX = new ContentSQLFunction(TYPE_MAX);
     String name;
     String column;
 
-    SQLiteFunction(String functionName) {
+    ContentSQLFunction(String functionName) {
         this.column = functionName;
     }
 
-    public SQLiteFunction of(String column) {
+    public ContentSQLFunction of(String column) {
         this.column = column;
         return this;
     }
 
-    public SQLiteFunction of(SQLiteFunction fun) {
+    public ContentSQLFunction of(ContentSQLFunction fun) {
 
         return this;
     }

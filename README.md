@@ -1,5 +1,5 @@
 # android-sqlite-access
-android Library to help SQLite db httpAsyncQuery and Management using a easy and sweet httpAsyncQuery builder.
+android Library to help ContentSQL db httpAsyncQuery and Management using a easy and sweet httpAsyncQuery builder.
 
 # Create Some class to persist.
 ```java
@@ -34,7 +34,7 @@ public class User {
 ```
 
 # Add SQLite Connexion 
-you can add one or many 'SQLiteConnexion' to your SQLite context. 
+you can add one or many 'SQLiteConnexion' to your ContentSQL context.
 in this part, we will add connection to the Database defined by:
 DbName="testDB",
 DBVersion=1;
@@ -107,11 +107,11 @@ You can also make a  transactional Prepare.
 ```
 
 # SQL instance using existing connection without prepare.
-After least one data base connection successfully, it is also possible to execute SQLite clause
+After least one data base connection successfully, it is also possible to execute ContentSQL clause
 without call explicitly a prepare (prepareSQL or prepareTransactionalSQL).
-Of course, it is possible to get an SQLite.SQL instance directly from connection Name.
+Of course, it is possible to get an ContentSQL.SQL instance directly from connection Name.
 
-Get SQLite.SQL instance from connection Name
+Get ContentSQL.SQL instance from connection Name
 ```java
     /*
     obtain an SQLite.SQL instance.

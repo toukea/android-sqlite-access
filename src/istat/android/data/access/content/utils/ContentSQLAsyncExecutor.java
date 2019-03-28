@@ -1,4 +1,4 @@
-package istat.android.data.access.sqlite.utils;
+package istat.android.data.access.content.utils;
 
 import android.database.sqlite.SQLiteException;
 import android.os.Handler;
@@ -7,26 +7,26 @@ import android.os.Looper;
 
 import java.util.List;
 
-import istat.android.data.access.sqlite.SQLiteDelete;
-import istat.android.data.access.sqlite.SQLiteInsert;
-import istat.android.data.access.sqlite.SQLiteMerge;
-import istat.android.data.access.sqlite.SQLitePersist;
-import istat.android.data.access.sqlite.SQLiteSelect;
-import istat.android.data.access.sqlite.SQLiteUpdate;
+import istat.android.data.access.content.ContentSQLPersist;
+import istat.android.data.access.content.ContentSQLSelect;
+import istat.android.data.access.content.ContentSQLDelete;
+import istat.android.data.access.content.ContentSQLInsert;
+import istat.android.data.access.content.ContentSQLMerge;
+import istat.android.data.access.content.ContentSQLUpdate;
 
 /**
  * Created by istat on 08/02/17.
  */
 
-public final class SQLiteAsyncExecutor {
+public final class ContentSQLAsyncExecutor {
     private Handler handler = new Handler(Looper.getMainLooper());
     boolean transactional = true;
 
-    public SQLiteAsyncExecutor(Handler handler) {
+    public ContentSQLAsyncExecutor(Handler handler) {
         this(handler, true);
     }
 
-    public SQLiteAsyncExecutor(Handler handler, boolean transactional) {
+    public ContentSQLAsyncExecutor(Handler handler, boolean transactional) {
         this.handler = handler;
         this.transactional = transactional;
     }
@@ -35,11 +35,11 @@ public final class SQLiteAsyncExecutor {
         return handler;
     }
 
-    public SQLiteAsyncExecutor() {
+    public ContentSQLAsyncExecutor() {
         this(true);
     }
 
-    public SQLiteAsyncExecutor(boolean transactional) {
+    public ContentSQLAsyncExecutor(boolean transactional) {
         this.transactional = transactional;
     }
 
@@ -47,16 +47,16 @@ public final class SQLiteAsyncExecutor {
         this.transactional = transactional;
     }
 
-    public <T> SQLiteThread execute(final SQLiteSelect clause, int limit, final SelectionCallback<T> callback) {
+    public <T> ContentSQLThread execute(final ContentSQLSelect clause, int limit, final SelectionCallback<T> callback) {
         return execute(clause, -1, limit, callback);
     }
 
-    public <T> SQLiteThread execute(final SQLiteSelect clause, final SelectionCallback<T> callback) {
+    public <T> ContentSQLThread execute(final ContentSQLSelect clause, final SelectionCallback<T> callback) {
         return execute(clause, -1, -1, callback);
     }
 
-    public <T> SQLiteThread execute(final SQLiteSelect clause, final ExecutionCallback<T> callback) {
-        SQLiteThread<T> thread = new SQLiteThread<T>(this, clause, callback) {
+    public <T> ContentSQLThread execute(final ContentSQLSelect clause, final ExecutionCallback<T> callback) {
+        ContentSQLThread<T> thread = new ContentSQLThread<T>(this, clause, callback) {
 
             @Override
             protected T onExecute() {
@@ -67,8 +67,8 @@ public final class SQLiteAsyncExecutor {
         return thread;
     }
 
-    public <T> SQLiteThread execute(final SQLiteSelect clause, final int offset, final int limit, final SelectionCallback<T> callback) {
-        SQLiteThread<List<T>> thread = new SQLiteThread<List<T>>(this, clause, callback) {
+    public <T> ContentSQLThread execute(final ContentSQLSelect clause, final int offset, final int limit, final SelectionCallback<T> callback) {
+        ContentSQLThread<List<T>> thread = new ContentSQLThread<List<T>>(this, clause, callback) {
 
             @Override
             protected List<T> onExecute() {
@@ -79,12 +79,12 @@ public final class SQLiteAsyncExecutor {
         return thread;
     }
 
-    public SQLiteThread execute(final SQLiteUpdate.Updater clause, ExecutionCallback<Integer> callback) {
+    public ContentSQLThread execute(final ContentSQLUpdate.Updater clause, ExecutionCallback<Integer> callback) {
         return execute(clause, -1, callback);
     }
 
-    public SQLiteThread execute(final SQLiteUpdate.Updater clause, final int limit, ExecutionCallback<Integer> callback) {
-        SQLiteThread<Integer> thread = new SQLiteThread<Integer>(this, clause, callback) {
+    public ContentSQLThread execute(final ContentSQLUpdate.Updater clause, final int limit, ExecutionCallback<Integer> callback) {
+        ContentSQLThread<Integer> thread = new ContentSQLThread<Integer>(this, clause, callback) {
 
             @Override
             protected Integer onExecute() {
@@ -96,8 +96,8 @@ public final class SQLiteAsyncExecutor {
     }
 
     //--------------------------------
-    public SQLiteThread execute(final SQLiteInsert clause, ExecutionCallback<long[]> callback) {
-        SQLiteThread<long[]> thread = new SQLiteThread<long[]>(this, clause, callback) {
+    public ContentSQLThread execute(final ContentSQLInsert clause, ExecutionCallback<long[]> callback) {
+        ContentSQLThread<long[]> thread = new ContentSQLThread<long[]>(this, clause, callback) {
 
             @Override
             protected long[] onExecute() {
@@ -115,8 +115,8 @@ public final class SQLiteAsyncExecutor {
         return thread;
     }
 
-    public SQLiteThread execute(final SQLiteMerge clause, ExecutionCallback<List<Object>> callback) {
-        SQLiteThread<List<Object>> thread = new SQLiteThread<List<Object>>(this, clause, callback) {
+    public ContentSQLThread execute(final ContentSQLMerge clause, ExecutionCallback<List<Object>> callback) {
+        ContentSQLThread<List<Object>> thread = new ContentSQLThread<List<Object>>(this, clause, callback) {
 
             @Override
             protected List<Object> onExecute() {
@@ -127,8 +127,8 @@ public final class SQLiteAsyncExecutor {
         return thread;
     }
 
-    public SQLiteThread execute(final SQLitePersist clause, ExecutionCallback<long[]> callback) {
-        SQLiteThread<long[]> thread = new SQLiteThread<long[]>(this, clause, callback) {
+    public ContentSQLThread execute(final ContentSQLPersist clause, ExecutionCallback<long[]> callback) {
+        ContentSQLThread<long[]> thread = new ContentSQLThread<long[]>(this, clause, callback) {
 
             @Override
             protected long[] onExecute() {
@@ -139,8 +139,8 @@ public final class SQLiteAsyncExecutor {
         return thread;
     }
 
-//    public SQLiteThread execute(final SQLitePersist clause, ExecutionCallback<List<Object>> callback) {
-//        SQLiteThread<List<Object>> thread = new SQLiteThread<List<Object>>(callback) {
+//    public ContentSQLThread execute(final ContentSQLPersist clause, ExecutionCallback<List<Object>> callback) {
+//        ContentSQLThread<List<Object>> thread = new ContentSQLThread<List<Object>>(callback) {
 //
 //            @Override
 //            protected List<Object> onExecute() {
@@ -152,8 +152,8 @@ public final class SQLiteAsyncExecutor {
 //    }
     //---------------------------------
 
-//    public SQLiteThread execute(final SQLiteInsert clause, ExecutionCallback<List<Object>> callback) {
-//       SQLiteThread<List<Object>> thread = new SQLiteThread<List<Object>>(callback) {
+//    public ContentSQLThread execute(final ContentSQLInsert clause, ExecutionCallback<List<Object>> callback) {
+//       ContentSQLThread<List<Object>> thread = new ContentSQLThread<List<Object>>(callback) {
 //
 //            @Override
 //            protected List<Object> onExecute() {
@@ -170,8 +170,8 @@ public final class SQLiteAsyncExecutor {
 //        return thread;
 //    }
 //
-//    public SQLiteThread execute(final SQLiteMerge clause, ExecutionCallback<List<Object>> callback) {
-//        SQLiteThread<List<Object>> thread = new SQLiteThread<List<Object>>(callback) {
+//    public ContentSQLThread execute(final ContentSQLMerge clause, ExecutionCallback<List<Object>> callback) {
+//        ContentSQLThread<List<Object>> thread = new ContentSQLThread<List<Object>>(callback) {
 //
 //            @Override
 //            protected List<Object> onExecute() {
@@ -183,8 +183,8 @@ public final class SQLiteAsyncExecutor {
 //        return thread;
 //    }
 //
-//    public  SQLiteThread execute(final SQLitePersist clause, ExecutionCallback<List<Object>> callback) {
-//        SQLiteThread<List<Object>> thread = new SQLiteThread<List<Object>>(callback) {
+//    public  ContentSQLThread execute(final ContentSQLPersist clause, ExecutionCallback<List<Object>> callback) {
+//        ContentSQLThread<List<Object>> thread = new ContentSQLThread<List<Object>>(callback) {
 //
 //            @Override
 //            protected List<Object> onExecute() {
@@ -197,8 +197,8 @@ public final class SQLiteAsyncExecutor {
 //    }
     //---------------------------------
 
-    public SQLiteThread execute(final SQLiteDelete clause, ExecutionCallback<Integer> callback) {
-        SQLiteThread<Integer> thread = new SQLiteThread<Integer>(this, clause, callback) {
+    public ContentSQLThread execute(final ContentSQLDelete clause, ExecutionCallback<Integer> callback) {
+        ContentSQLThread<Integer> thread = new ContentSQLThread<Integer>(this, clause, callback) {
 
             @Override
             protected Integer onExecute() {
@@ -214,7 +214,7 @@ public final class SQLiteAsyncExecutor {
     }
 
     public interface ExecutionCallback<T> {
-        void onStart(SQLiteThread thread);
+        void onStart(ContentSQLThread thread);
 
         void onComplete(boolean success);
 

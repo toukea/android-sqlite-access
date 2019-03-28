@@ -1,4 +1,4 @@
-package istat.android.data.access.sqlite.utils;
+package istat.android.data.access.content.utils;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 import java.util.ArrayList;
 import java.util.List;
 
-import istat.android.data.access.sqlite.SQLiteModel;
+import istat.android.data.access.content.ContentSQLModel;
 
 /**
  * Created by istat on 24/01/17.
@@ -20,7 +20,7 @@ public class TableUtils {
 
     public final static boolean exist(SQLiteDatabase db, Class cLass) {
         try {
-            SQLiteModel model = SQLiteModel.fromClass(cLass);
+            ContentSQLModel model = ContentSQLModel.fromClass(cLass);
             db.query(model.getName(), null, null, null, null, null, null);
             return true;
         } catch (Exception e) {
