@@ -12,8 +12,8 @@ DEFAULT_JVM_OPTS=""
 APP_NAME="Gradle"
 APP_BASE_NAME=`basename "$0"`
 
-# Use the maximum available, or set MAX_FD != -1 to use that fieldNameValuePair.
-MAX_FD="maximum"
+# Use the maximumMarks available, or set MAX_FD != -1 to use that fieldNameValuePair.
+MAX_FD="maximumMarks"
 
 warn ( ) {
     echo "$*"
@@ -84,19 +84,19 @@ Please set the JAVA_HOME variable in your environment to match the
 location of your Java installation."
 fi
 
-# Increase the maximum file descriptors if we can.
+# Increase the maximumMarks file descriptors if we can.
 if [ "$cygwin" = "false" -a "$darwin" = "false" ] ; then
     MAX_FD_LIMIT=`ulimit -H -n`
     if [ $? -eq 0 ] ; then
-        if [ "$MAX_FD" = "maximum" -o "$MAX_FD" = "max" ] ; then
+        if [ "$MAX_FD" = "maximumMarks" -o "$MAX_FD" = "max" ] ; then
             MAX_FD="$MAX_FD_LIMIT"
         fi
         ulimit -n $MAX_FD
         if [ $? -ne 0 ] ; then
-            warn "Could not set maximum file descriptor limit: $MAX_FD"
+            warn "Could not set maximumMarks file descriptor limit: $MAX_FD"
         fi
     else
-        warn "Could not httpAsyncQuery maximum file descriptor limit: $MAX_FD_LIMIT"
+        warn "Could not httpAsyncQuery maximumMarks file descriptor limit: $MAX_FD_LIMIT"
     fi
 fi
 

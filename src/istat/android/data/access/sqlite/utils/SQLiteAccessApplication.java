@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 import java.util.List;
 
 import istat.android.data.access.sqlite.SQLite;
+import istat.android.data.access.sqlite.SQLiteDataAccess;
 import istat.android.data.access.sqlite.SQLiteDelete;
 import istat.android.data.access.sqlite.SQLiteInsert;
 import istat.android.data.access.sqlite.SQLiteMerge;
@@ -19,12 +20,21 @@ import istat.android.data.access.sqlite.SQLiteUpdate;
 
 public abstract class SQLiteAccessApplication extends Application implements SQLite.BootDescription {
     static String applicationDbName;
+    SQLiteDataAccess sqLiteDataAccess;
 
     @Override
     public void onCreate() {
         super.onCreate();
         applicationDbName = getDbName();
-        SQLite.connect(this, applicationDbName, getDbVersion(), this);
+        sqLiteDataAccess = SQLite.connect(this, applicationDbName, getDbVersion(), this);
+    }
+
+    public long getDbCreatedAt() {
+        return sqLiteDataAccess.getDbCreationDateTimeAsDate().getTime();
+    }
+
+    public long getDbUpdatedAt() {
+        return sqLiteDataAccess.getDbUpdateDateTimeAsDate().getTime();
     }
 
     protected abstract String getDbName();

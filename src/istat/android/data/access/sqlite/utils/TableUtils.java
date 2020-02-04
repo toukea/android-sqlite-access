@@ -18,7 +18,7 @@ public class TableUtils {
         return c.getColumnNames();
     }
 
-    public final static boolean exist(SQLiteDatabase db, Class cLass) {
+    public final static boolean exists(SQLiteDatabase db, Class cLass) {
         try {
             SQLiteModel model = SQLiteModel.fromClass(cLass);
             db.query(model.getName(), null, null, null, null, null, null);
@@ -61,7 +61,7 @@ public class TableUtils {
     public final static void init(SQLiteDatabase db, Class... tables) throws IllegalAccessException, InstantiationException {
         List<String> scripts = new ArrayList<String>();
         for (Class cLass : tables) {
-            if (TableUtils.exist(db, cLass)) {
+            if (TableUtils.exists(db, cLass)) {
                 scripts.addAll(TableScriptFactory.alter(cLass));
             } else {
                 scripts.addAll(TableScriptFactory.create(cLass));

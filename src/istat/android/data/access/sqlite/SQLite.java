@@ -326,10 +326,7 @@ public final class SQLite {
     public static SQLiteDataAccess connect(Context context, String dbName, int dbVersion, final BootDescription description) {
         SQLiteDataAccess access = new SQLiteDataAccess(context, dbName, dbVersion, description);
         dbNameAccessPair.put(dbName, access);
-        int lastAccessVersion = SQLiteDataAccess.getLastAccessDbVersion(context, dbName);
-        if (lastAccessVersion > 0 && lastAccessVersion < dbVersion) {
-            access.checkUp();
-        }
+        checkUp(access);
         return access;
     }
 
@@ -338,8 +335,12 @@ public final class SQLite {
         if (access == null) {
             throw new IllegalStateException("Sorry but, no connection with name" + dbName + ", has been added for now.");
         }
-        int lastAccessVersion = SQLiteDataAccess.getLastAccessDbVersion(context, dbName);
-        if (lastAccessVersion > 0 && lastAccessVersion < access.getDbVersion()) {
+        return checkUp(access);
+    }
+
+    public static boolean checkUp(SQLiteDataAccess access) throws IllegalStateException {
+        int lastAccessVersion = access.getLastAccessDbVersion();
+        if (lastAccessVersion < 0 || (lastAccessVersion > 0 && lastAccessVersion < access.getDbVersion())) {
             return access.checkUp();
         }
         return false;
@@ -786,7 +787,7 @@ public final class SQLite {
         }
 
         public boolean isTableExist(Class<?> cLass) {
-            return TableUtils.exist(getDb(), cLass);
+            return TableUtils.exists(getDb(), cLass);
         }
 
         public final void close() {

@@ -43,9 +43,9 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
 
     private static final String DB_CURRENT_VERSION = "db_last_known_version";
     /*
-         * protected static final int BASE_VERSION = 1; protected static final
-         * String BASE_NOM = "istatLib.db";
-         */
+     * protected static final int BASE_VERSION = 1; protected static final
+     * String BASE_NOM = "istatLib.db";
+     */
     // L�instance de la base qui sera manipul�e au travers de cette classe.
     protected SQLiteDatabase db;
     private DbOpenHelper dbOpenHelper;
@@ -203,7 +203,7 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
     }
 
     private static String getNameSpace(String dbName) {
-        return dbName + SHARED_PREF_FILE;
+        return dbName.replaceAll("/", "") + SHARED_PREF_FILE;
     }
 
     public String getDbUpdateDateTime() {
@@ -323,6 +323,10 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
                 super.onDowngrade(db, oldVersion, newVersion);
             }
         }
+    }
+
+    public int getLastAccessDbVersion() {
+        return getLastAccessDbVersion(this.getContext(), this.dbName);
     }
 
     public static int getLastAccessDbVersion(Context context, String dbName) {
