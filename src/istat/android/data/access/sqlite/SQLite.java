@@ -881,7 +881,7 @@ public final class SQLite {
 
     public static abstract class SQLiteConnection implements BootDescription {
         String dbName;
-        int dbVersion = 1;
+        int dbVersion;
         Context context;
 
         public static SQLiteConnection create(Context context, File file) {
@@ -891,7 +891,7 @@ public final class SQLite {
         public static SQLiteConnection create(Context context, File file, int version, final BootDescription description) {
             if (version < 0) {
                 SQLiteDatabase db = SQLiteDatabase.openOrCreateDatabase(file, null);
-                db.getVersion();
+                version = db.getVersion();
                 db.close();
             }
             return create(context, file.getAbsolutePath(), version, description);
