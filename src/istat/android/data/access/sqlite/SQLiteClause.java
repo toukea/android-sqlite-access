@@ -1,18 +1,17 @@
 package istat.android.data.access.sqlite;
 
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.text.TextUtils;
+
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.json.JSONObject;
-
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-
-import android.text.TextUtils;
 
 import istat.android.data.access.sqlite.interfaces.QueryAble;
 import istat.android.data.access.sqlite.interfaces.SQLiteClauseAble;
@@ -97,15 +96,15 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
     }
 
     @SuppressWarnings("unchecked")
-    public Clause orderBy(String column, String value) {
+    public Clause orderBy(String column, String descAsc) {
         String realColumnName = buildRealColumnName(column);
         if (TextUtils.isEmpty(orderBy)) {
             orderBy = realColumnName;
         } else {
             orderBy += realColumnName;
         }
-        if (!TextUtils.isEmpty(value)) {
-            orderBy += " " + value;
+        if (!TextUtils.isEmpty(descAsc)) {
+            orderBy += " " + descAsc;
         }
         return (Clause) this;
     }

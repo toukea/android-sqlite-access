@@ -860,19 +860,19 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     @Target(ElementType.FIELD)
     @Retention(RetentionPolicy.RUNTIME)
     public @interface OneToOne {
-        String mappedBy();
+        String mappedBy() default "";
     }
 
     @Target(ElementType.FIELD)
     @Retention(RetentionPolicy.RUNTIME)
     public @interface OneToMany {
-        String mappedBy();
+        String mappedBy() default "";
     }
 
     @Target(ElementType.FIELD)
     @Retention(RetentionPolicy.RUNTIME)
     public @interface ManyToOne {
-        String mappedBy();
+        String mappedBy() default "";
     }
 
     @Target(ElementType.FIELD)

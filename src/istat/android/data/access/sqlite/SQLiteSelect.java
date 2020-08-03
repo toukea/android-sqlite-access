@@ -1,17 +1,17 @@
 package istat.android.data.access.sqlite;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import istat.android.data.access.sqlite.interfaces.QueryAble;
 import istat.android.data.access.sqlite.interfaces.SelectionExecutable;
@@ -206,6 +206,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
             notifyExecutionSucceed(TYPE, this, list);
         } catch (Exception e) {
             e.printStackTrace();
+            //TODO on peut configurer le SQL instance pour qu'elle throw en cas d'exeption au lieu de dispatcher l'echec.
             notifyExecutionFail(e);
         }
         notifyExecuted();

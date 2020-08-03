@@ -110,8 +110,8 @@ public final class SQLiteInsert implements SQLiteClauseAble {
             if (modelInsertions == null || modelInsertions.size() == 0)
                 return new long[]{0};
             for (QueryAble insertion : modelInsertions) {
-//                if (insertion.exist(sql.db)) {
-//                    throw new IllegalAccessException("entity :0" + insertion + " already exist inside table " + insertion.getName());
+//                if (insertion.exists(sql.db)) {
+//                    throw new IllegalAccessException("entity :0" + insertion + " already exists inside table " + insertion.getName());
 //                }
                 tmp.add(insertion.insert(sql.db));
             }
@@ -138,8 +138,8 @@ public final class SQLiteInsert implements SQLiteClauseAble {
         long[] out = new long[modelInsertions.size()];
         int index = 0;
         for (QueryAble insertion : modelInsertions) {
-//            if (insertion.exist(sql.db)) {
-//                throw new IllegalAccessException("entity :0" + insertion + " already exist inside table " + insertion.getName());
+//            if (insertion.exists(sql.db)) {
+//                throw new IllegalAccessException("entity :0" + insertion + " already exists inside table " + insertion.getName());
 //            }
             out[index] = insertion.insert(sql.db);
             index++;
