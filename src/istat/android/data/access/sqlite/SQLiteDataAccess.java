@@ -1,14 +1,5 @@
 package istat.android.data.access.sqlite;
 
-import istat.android.data.access.sqlite.utils.SQLiteParser;
-
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -19,6 +10,15 @@ import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
 import android.util.Log;
+
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
+import istat.android.data.access.sqlite.utils.SQLiteParser;
 
 /*
  * Copyright (C) 2014 Istat Dev.
@@ -52,7 +52,7 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
     public Context context;
     protected final static String SHARED_PREF_FILE = "db_file",
             DB_CREATION_TIME = "creation_time",
-            DB_UPDATE_TIME = "creation_time";
+            DB_UPDATE_TIME = "update_time";
     final String dbName;
     final int dbVersion;
 
