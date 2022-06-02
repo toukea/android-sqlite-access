@@ -18,10 +18,32 @@ public class TableUtils {
         return c.getColumnNames();
     }
 
+    @Deprecated
     public final static boolean exists(SQLiteDatabase db, Class cLass) {
         try {
             SQLiteModel model = SQLiteModel.fromClass(cLass);
             db.query(model.getName(), null, null, null, null, null, null);
+            return true;
+        } catch (Exception e) {
+
+        }
+        return false;
+    }
+
+    public final static boolean isTableExists(SQLiteDatabase db, Class cLass) {
+        try {
+            SQLiteModel model = SQLiteModel.fromClass(cLass);
+            db.query(model.getName(), null, null, null, null, null, null);
+            return true;
+        } catch (Exception e) {
+
+        }
+        return false;
+    }
+
+    public final static boolean isTableExists(SQLiteDatabase db, String tableName) {
+        try {
+            db.query(tableName, new String[]{"count(1)"}, null, null, null, null, null);
             return true;
         } catch (Exception e) {
 

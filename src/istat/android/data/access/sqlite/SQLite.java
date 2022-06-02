@@ -287,7 +287,7 @@ public final class SQLite {
         return connect(context, file, -1, null);
     }
 
-    public static SQLiteDataAccess connect(Context context, File file, int version, BootDescription bootDescription) {
+    public static SQLiteDataAccess connect(Context context, File file, int version, BootLoader bootDescription) {
         SQLiteConnection connection = SQLiteConnection.create(context, file, version, bootDescription);
         return connect(connection);
     }
@@ -323,7 +323,7 @@ public final class SQLite {
 //        dbNameConnectionPair.clear();
 //    }
 
-    public static SQLiteDataAccess connect(Context context, String dbName, int dbVersion, final BootDescription description) {
+    public static SQLiteDataAccess connect(Context context, String dbName, int dbVersion, final BootLoader description) {
         SQLiteDataAccess access = new SQLiteDataAccess(context, dbName, dbVersion, description);
         dbNameAccessPair.put(dbName, access);
         checkUp(access);
@@ -879,7 +879,7 @@ public final class SQLite {
         }
     }
 
-    public static abstract class SQLiteConnection implements BootDescription {
+    public static abstract class SQLiteConnection implements BootLoader {
         String dbName;
         int dbVersion;
         Context context;
@@ -888,50 +888,50 @@ public final class SQLite {
             return create(context, file, -1, null);
         }
 
-        public static SQLiteConnection create(Context context, File file, int version, final BootDescription description) {
+        public static SQLiteConnection create(Context context, File file, int version, final BootLoader bootLoader) {
             if (version < 0) {
                 SQLiteDatabase db = SQLiteDatabase.openOrCreateDatabase(file, null);
                 version = db.getVersion();
                 db.close();
             }
-            return create(context, file.getAbsolutePath(), version, description);
+            return create(context, file.getAbsolutePath(), version, bootLoader);
         }
 
-        public static SQLiteConnection create(Context context, String dbName, int dbVersion, final BootDescription description) {
+        public static SQLiteConnection create(Context context, String dbName, int dbVersion, final BootLoader bootLoader) {
             SQLiteConnection connection = new SQLiteConnection(context, dbName, dbVersion) {
                 @Override
                 public void onCreateDb(SQLiteDatabase db) {
-                    if (description != null) {
-                        description.onCreateDb(db);
+                    if (bootLoader != null) {
+                        bootLoader.onCreateDb(db);
                     }
                 }
 
                 @Override
                 public void onUpgradeDb(SQLiteDatabase db, int oldVersion, int newVersion) {
-                    if (description != null) {
-                        description.onUpgradeDb(db, oldVersion, newVersion);
+                    if (bootLoader != null) {
+                        bootLoader.onUpgradeDb(db, oldVersion, newVersion);
                     }
                 }
 
                 @Override
                 public void onConfigure(SQLiteDatabase db) {
-                    if (description != null) {
-                        description.onConfigure(db);
+                    if (bootLoader != null) {
+                        bootLoader.onConfigure(db);
                     }
                 }
 
                 @Override
                 public boolean onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-                    if (description != null) {
-                        return description.onDowngrade(db, oldVersion, newVersion);
+                    if (bootLoader != null) {
+                        return bootLoader.onDowngrade(db, oldVersion, newVersion);
                     }
                     return false;
                 }
 
                 @Override
                 public void onOpen(SQLiteDatabase db) {
-                    if (description != null) {
-                        description.onOpen(db);
+                    if (bootLoader != null) {
+                        bootLoader.onOpen(db);
                     }
                 }
             };
@@ -966,7 +966,7 @@ public final class SQLite {
         }
     }
 
-    public interface BootDescription {
+    public interface BootLoader {
         void onCreateDb(SQLiteDatabase db);
 
         void onUpgradeDb(SQLiteDatabase db, int oldVersion,
@@ -978,6 +978,11 @@ public final class SQLite {
 
         void onOpen(SQLiteDatabase db);
 
+
+    }
+
+    @Deprecated
+    public interface BootDescription extends BootLoader {
 
     }
 

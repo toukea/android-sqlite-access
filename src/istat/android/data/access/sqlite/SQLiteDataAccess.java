@@ -60,15 +60,15 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
 //        this(accessModel.getContext(), accessModel.getDbName(), accessModel.getDbVersion(), accessModel.getBootDescription());
 //    }
 
-    protected SQLiteDataAccess(Context ctx, String dbName, int dbVersion, SQLite.BootDescription bootDescription) {
+    protected SQLiteDataAccess(Context ctx, String dbName, int dbVersion, SQLite.BootLoader bootDescription) {
         this.context = ctx;
         this.dbName = dbName;
         this.dbVersion = dbVersion;
         this.dbOpenHelper = new DbOpenHelper(this, dbName, null, dbVersion, bootDescription);
     }
 
-    public SQLite.BootDescription getBootDescription() {
-        return dbOpenHelper.bootDescription;
+    public SQLite.BootLoader getBootDescription() {
+        return dbOpenHelper.bootLoader;
     }
 
     public int getDbVersion() {
@@ -109,6 +109,14 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
 
     public boolean isOpened() {
         return db != null;
+    }
+
+    @Deprecated
+    public SQLiteDatabase getDb() {
+        if (db == null) {
+            db = open();
+        }
+        return db;
     }
 
     /**
@@ -171,11 +179,22 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
     // return db.delete(table, null, null);
     // }
 
-
     /**
      * get the current writable Db
      */
     public SQLiteDatabase getDataBase() {
+        return getDataBase(false);
+    }
+
+    /**
+     * get the current writable Db
+     *
+     * @param newOpen define if a new db-open will be required.
+     */
+    public synchronized SQLiteDatabase getDataBase(boolean newOpen) {
+        if (db == null || !db.isOpen() || newOpen) {
+            db = open();
+        }
         return db;
     }
 
@@ -270,20 +289,20 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
 
     // ----------------------------------------------------------------------------
     static class DbOpenHelper extends SQLiteOpenHelper {
-        SQLite.BootDescription bootDescription;
+        SQLite.BootLoader bootLoader;
         SQLiteDataAccess access;
 
         public DbOpenHelper(SQLiteDataAccess access, String nom,
-                            CursorFactory cursorfactory, int version, SQLite.BootDescription description) {
+                            CursorFactory cursorfactory, int version, SQLite.BootLoader description) {
             super(access.getContext(), nom, cursorfactory, version);
             this.access = access;
-            this.bootDescription = description;
+            this.bootLoader = description;
         }
 
         @Override
         public void onCreate(SQLiteDatabase db) {
-            if (bootDescription != null) {
-                bootDescription.onCreateDb(db);
+            if (bootLoader != null) {
+                bootLoader.onCreateDb(db);
             }
             this.access.registerDbCreationTime();
 //            registerAsLastAccessVersion(db.getVersion());
@@ -291,8 +310,8 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            if (bootDescription != null) {
-                bootDescription.onUpgradeDb(db, oldVersion, newVersion);
+            if (bootLoader != null) {
+                bootLoader.onUpgradeDb(db, oldVersion, newVersion);
             }
             this.access.registerDbUpdateTime();
 //            registerAsLastAccessVersion(newVersion);
@@ -300,23 +319,23 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
 
         @Override
         public void onOpen(SQLiteDatabase db) {
-            if (bootDescription != null) {
-                bootDescription.onOpen(db);
+            if (bootLoader != null) {
+                bootLoader.onOpen(db);
             }
             this.access.registerAsLastAccessVersion(db.getVersion());
         }
 
         @Override
         public void onConfigure(SQLiteDatabase db) {
-            if (bootDescription != null) {
-                bootDescription.onConfigure(db);
+            if (bootLoader != null) {
+                bootLoader.onConfigure(db);
             }
         }
 
         @Override
         public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            if (bootDescription != null) {
-                if (bootDescription.onDowngrade(db, oldVersion, newVersion)) {
+            if (bootLoader != null) {
+                if (bootLoader.onDowngrade(db, oldVersion, newVersion)) {
                     super.onDowngrade(db, oldVersion, newVersion);
                 }
             } else {

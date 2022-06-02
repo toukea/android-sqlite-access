@@ -18,7 +18,7 @@ import istat.android.data.access.sqlite.SQLiteUpdate;
  * Created by istat on 10/11/16.
  */
 
-public abstract class SQLiteAccessApplication extends Application implements SQLite.BootDescription {
+public abstract class SQLiteAccessApplication extends Application implements SQLite.BootLoader {
     static String applicationDbName;
     SQLiteDataAccess sqLiteDataAccess;
 
