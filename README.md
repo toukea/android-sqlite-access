@@ -1,5 +1,5 @@
 # android-sqlite-access
-android Library to help SQLite db httpAsyncQuery and Management using a easy and sweet httpAsyncQuery builder.
+android Library to help SQLite db Query and Management using a easy and sweet Query builder.
 
 # Create Some class to persist.
 ```java
