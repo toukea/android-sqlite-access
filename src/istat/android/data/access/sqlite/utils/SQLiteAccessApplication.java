@@ -26,7 +26,22 @@ public abstract class SQLiteAccessApplication extends Application implements SQL
     public void onCreate() {
         super.onCreate();
         applicationDbName = getDbName();
+        connectToApplicationDataBase();
+    }
+
+    private void connectToApplicationDataBase() {
         sqLiteDataAccess = SQLite.connect(this, applicationDbName, getDbVersion(), this);
+    }
+
+    public SQLiteDataAccess getSqLiteDataAccess() {
+        return getSqLiteDataAccess(false);
+    }
+
+    public SQLiteDataAccess getSqLiteDataAccess(boolean allowImmediateConnectIfNeeded) {
+        if (allowImmediateConnectIfNeeded && sqLiteDataAccess == null) {
+            connectToApplicationDataBase();
+        }
+        return sqLiteDataAccess;
     }
 
     public long getDbCreatedAt() {

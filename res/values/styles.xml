@@ -1,7 +1,7 @@
 <resources>
 
     <!--
-        Base application theme, dependent on API level. This theme is replaced
+        Base application themeStyle, dependent on API level. This themeStyle is replaced
         by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
     -->
     <!--<style nom="AppBaseTheme" parent="android:Theme.Light">-->
@@ -12,7 +12,7 @@
         <!--&ndash;&gt;-->
     <!--</style>-->
 
-    <!--&lt;!&ndash; Application theme. &ndash;&gt;-->
+    <!--&lt;!&ndash; Application themeStyle. &ndash;&gt;-->
     <!--<style nom="AppTheme" parent="AppBaseTheme">-->
         <!--&lt;!&ndash; All customizations that are NOT specific to a particular API-level can go here. &ndash;&gt;-->
     <!--</style>-->

@@ -151,7 +151,7 @@ It is also possible to specify if you want to use an auto closable connection. (
 ```
 
 # Make SQL Insert 
-After SQL instance has been prepared successfully, you can use them to perform SQL Insert.
+After SQL instance has been prepared successfully, you can use it to perform SQL Insert.
 ```java
        User user = new User();
        user.userName = "Toukea";
@@ -168,13 +168,13 @@ It is also possible to perform multiple insertions in one step
                                    
         long insertIds[] = sql.insert(user0,user1,user2).execute();// Array List of last insert 'Id'
         
-        System.out.println("user0 extra= "+insertIds[0]);
-        System.out.println("user1 extra= "+insertIds[1]);
-        System.out.println("user2 extra= "+insertIds[2]);
+        System.out.println("user0 id= "+insertIds[0]);
+        System.out.println("user1 id= "+insertIds[1]);
+        System.out.println("user2 id= "+insertIds[2]);
   ``` 
   
 # Make SQL Delete 
- After SQL instance has been prepared successfully, you can use them to perform SQL delete.
+ After SQL instance has been prepared successfully, you can use it to perform SQL delete.
  ```java
          int deletedCount = sql.delete(User.class)
                                 .where("firstname")
@@ -185,7 +185,7 @@ It is also possible to perform multiple insertions in one step
   ```    
  
 # Make SQL Update 
-After SQL instance has been prepared successfully, you can use them to perform SQL update.
+After SQL instance has been prepared successfully, you can use it to perform SQL update.
 ```java
           int updatedCount = sql.update(User.class)
                                    .set("userName", "newName")
@@ -213,7 +213,7 @@ It is also possible to update from another model.
 ``` 
 
 # Make SQL Selection 
-After SQL instance has been prepared successfully, you can use them to perform SQL selection.
+After SQL instance has been prepared successfully, you can use it to perform SQL selection.
 ```java
            List<User> users = sql.select(User.class)
                        .where("firstname")
@@ -273,7 +273,7 @@ Let consider **Purchase.class** defined by:
 ```java
      public static class Purchase {
             @SQLiteModel.PrimaryKey(policy = SQLiteModel.PrimaryKey.POLICY_AUTO_INCREMENT)
-            int extra;
+            int id;
             int amount = 0;
             String clientName;
 }
@@ -333,7 +333,7 @@ Make and SQL join using Library is "easily" possible.
 Let consider three classes defined by: 
 ```java
      class House {
-            int extra;
+            int id;
             String name;
             String type_id;
             String location_id;
@@ -344,13 +344,13 @@ Let consider three classes defined by:
         }
     
         class Location {
-            int extra;
+            int id;
             String description;
             String name;
         }
     
         class Type {
-            int extra;
+            int id;
             String libelle;
         }
 ```
@@ -359,11 +359,11 @@ You can perform join Query  like:
    List<House> houses = sql.select(House.class)
                       .innerJoin(Type.class)
                       .leftJoin(Location.class)
-                      .where(House.class, "extra")
+                      .where(House.class, "id")
                       .greatThan(2)
                       .and(Location.class, "name")
                       .equalTo("Abidjan")
-                      .and(House.class, "extra")
+                      .and(House.class, "id")
                       .in(1, 2, 3, 4)
                       .execute();
  ```
@@ -371,10 +371,10 @@ You can perform join Query  like:
  ```java
     List<House> houses = sql.select(House.class)
                  .innerJoin(Type.class)
-                 .on(Type.class, "extra").equalTo(House.class, "type_id")
+                 .on(Type.class, "id").equalTo(House.class, "type_id")
                  .leftJoin(Location.class)
-                 .on(Location.class, "extra").equalTo(House.class, "location_id")
-                 .where(House.class, "extra")
+                 .on(Location.class, "id").equalTo(House.class, "location_id")
+                 .where(House.class, "id")
                  .in(1, 2, 3, 4)
                  .execute();
  ```

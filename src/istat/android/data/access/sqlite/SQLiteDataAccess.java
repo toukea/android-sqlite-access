@@ -108,15 +108,7 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
 
 
     public boolean isOpened() {
-        return db != null;
-    }
-
-    @Deprecated
-    public SQLiteDatabase getDb() {
-        if (db == null) {
-            db = open();
-        }
-        return db;
+        return db != null && db.isOpen();
     }
 
     /**
@@ -126,7 +118,7 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
         if (db != null)
             if (db.isOpen()) {
                 try {
-                    db.close();
+                    this.dbOpenHelper.close();
                     Log.i("openhelper", "BDD close");
                 } catch (Exception e) {
                     Log.i("openhelper",
@@ -138,7 +130,6 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
                         "BDD can't be close because it is not already Open");
             }
         this.db = null;
-
     }
 
     public final void beginTransaction() {
@@ -322,7 +313,9 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
             if (bootLoader != null) {
                 bootLoader.onOpen(db);
             }
-            this.access.registerAsLastAccessVersion(db.getVersion());
+            if (db.isOpen()) {
+                this.access.registerAsLastAccessVersion(db.getVersion());
+            }
         }
 
         @Override
