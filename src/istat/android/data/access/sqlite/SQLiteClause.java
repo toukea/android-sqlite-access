@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,7 +28,6 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
     protected String limit = null;
     protected String[] columns;
     protected String table;
-    protected Map<String, String> tableAliases = new HashMap<String, String>();
     final static int TYPE_CLAUSE_WHERE = 0,
             TYPE_CLAUSE_AND = 1,
             TYPE_CLAUSE_OR = 2,
@@ -157,64 +155,19 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
         return (Clause) this;
     }
 
-    protected void registerAlias(String tableName, String alias) {
-        if (TextUtils.isEmpty(tableName) || TextUtils.isEmpty(alias)) {
-            return;
-        }
-        tableAliases.put(tableName, alias);
-    }
-
-    protected String resolveTableName(String tableName) {
-        if (TextUtils.isEmpty(tableName)) {
-            return tableName;
-        }
-        String alias = tableAliases.get(tableName);
-        return TextUtils.isEmpty(alias) ? tableName : alias;
-    }
-
-    protected String buildRealColumnName(String tableName, String column) {
-        if (TextUtils.isEmpty(column)) {
+    protected static String buildRealColumnName(String tableName, String column) {
+        if (column.matches(".*\\..*")) {
             return column;
         }
-        Matcher qualifiedMatcher = Pattern.compile("(\\b)(\\w+)(\\.)").matcher(column);
-        StringBuffer buffer = new StringBuffer();
-        boolean hasQualifiedColumn = false;
-        while (qualifiedMatcher.find()) {
-            hasQualifiedColumn = true;
-            String physicalTable = qualifiedMatcher.group(2);
-            String resolvedTable = resolveTableName(physicalTable);
-            qualifiedMatcher.appendReplacement(buffer,
-                    qualifiedMatcher.group(1) + Matcher.quoteReplacement(resolvedTable) + qualifiedMatcher.group(3));
-        }
-        if (hasQualifiedColumn) {
-            qualifiedMatcher.appendTail(buffer);
-            return buffer.toString();
-        }
-        String resolvedTable = resolveTableName(tableName);
         Pattern pattern = Pattern.compile("(\\()(\\w*)(\\))");
         Matcher matcher = pattern.matcher(column);
-        StringBuffer columnBuffer = new StringBuffer();
-        boolean hasParenthesis = false;
         while (matcher.find()) {
             String columnNameOnly = matcher.group(2);
             if (!TextUtils.isEmpty(columnNameOnly)) {
-                hasParenthesis = true;
-                matcher.appendReplacement(columnBuffer, matcher.group(1)
-                        + Matcher.quoteReplacement(resolvedTable) + "." + Matcher.quoteReplacement(columnNameOnly)
-                        + matcher.group(3));
+                column = column.replace(columnNameOnly, tableName + "." + columnNameOnly);
             }
         }
-        if (hasParenthesis) {
-            matcher.appendTail(columnBuffer);
-            return columnBuffer.toString();
-        }
-        if (column.contains("(") || column.contains(")") || !column.matches("\\w+")) {
-            return column;
-        }
-        if (TextUtils.isEmpty(resolvedTable)) {
-            return column;
-        }
-        return resolvedTable + "." + column;
+        return column;
     }
 
     protected String buildRealColumnName(String column) {
