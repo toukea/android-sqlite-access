@@ -626,9 +626,19 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
             Class<?> selectionClass = joinSelect.clazz;
             Class<?> joinClass = this.clazz;
             SQLiteModel selectionModel = SQLiteModel.fromClass(selectionClass);
-            SQLiteModel joinModel = SQLiteModel.fromClass(selectionClass);
+            SQLiteModel joinModel = SQLiteModel.fromClass(joinClass);
             Field[] fields = selectionModel.getNestedTableFields();
             String nestedPrimaryKey = joinModel.getPrimaryKeyName();
+            Field[] joinFields = joinModel.getNestedTableFields();
+            for (Field field : joinFields) {
+                if (field.getType().isAssignableFrom(selectionClass)) {
+                    String mappedPrimaryKey = SQLiteModel.getFieldNestedMappingName(field);
+                    if (!TextUtils.isEmpty(mappedPrimaryKey)) {
+                        nestedPrimaryKey = mappedPrimaryKey;
+                        break;
+                    }
+                }
+            }
             String foreignKey = selectionModel.getPrimaryKeyName();
             for (Field field : fields) {
                 if (field.getType().isAssignableFrom(joinClass)) {
