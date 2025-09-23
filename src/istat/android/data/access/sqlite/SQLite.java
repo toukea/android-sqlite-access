@@ -13,6 +13,7 @@ import android.text.TextUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -576,6 +577,33 @@ public final class SQLite {
             SQLiteSelect select = new SQLiteSelect(this, clazz);
             select.columns = columns;
             return select;
+        }
+
+        public int countSelection(String rawSql, String[] selectionArgs) {
+            Cursor cursor = db.rawQuery(rawSql, selectionArgs);
+            int count = cursor.getCount();
+            cursor.close();
+            return count;
+        }
+
+        public <T> List<T> executeSelection(Class<T> cLass, String rawSql, String[] selectionArgs) throws InvocationTargetException, IllegalAccessException, InstantiationException, NoSuchMethodException {
+            List<T> output = new ArrayList<>();
+            executeSelectionWithListOutput(output, cLass, rawSql, selectionArgs);
+            return output;
+        }
+
+        public <T> void executeSelectionWithListOutput(List<T> outputList, Class<T> cLass, String rawSql, String[] selectionArgs) throws InvocationTargetException, IllegalAccessException, InstantiationException, NoSuchMethodException {
+            if (outputList == null) {
+                return;
+            }
+            Cursor cursor = db.rawQuery(rawSql, selectionArgs);
+            if (cursor.getCount() > 0) {
+                while (cursor.moveToNext()) {
+                    T model = SQLiteModel.cursorAsClass(cursor, cLass, getSerializer(cLass), getCursorReader(cLass));
+                    outputList.add(model);
+                }
+            }
+            cursor.close();
         }
 
         //---------------------------------------

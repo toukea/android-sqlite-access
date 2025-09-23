@@ -1,5 +1,6 @@
 package istat.android.data.access.sqlite;
 
+import android.annotation.SuppressLint;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
@@ -236,6 +237,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
 
     //-----------------------------------------------------
     @SuppressWarnings("unchecked")
+    @SuppressLint("Range")
     public <T> void execute(List<T> list, Class<T> clazz, String uniqueColumn) {
         if (list == null) {
             return;
