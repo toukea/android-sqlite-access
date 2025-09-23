@@ -65,4 +65,16 @@ public class SQLiteSelectTest {
 
         assertTrue("Statement should contain the quoted literal", statement.contains("WHERE dummy_table.name = 'Bob'"));
     }
+
+    @Test
+    public void getStatementShouldUseProjectionWithAliases() {
+        SQLite.SQL sql = new SQLite.SQL(null);
+        String[] projection = new String[]{"COUNT(dummy_table.id) AS size", "dummy_table.name"};
+        SQLiteSelect select = sql.select(projection, DummyEntity.class);
+
+        String statement = select.getStatement();
+
+        assertTrue("Projection should include the COUNT alias", statement.startsWith(
+                "SELECT COUNT(dummy_table.id) AS size,dummy_table.name FROM dummy_table"));
+    }
 }
