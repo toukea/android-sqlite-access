@@ -304,14 +304,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
 //    }
 
     final String getSql() {
-        String columns = "";//"*";
-        for (int i = 0; i < this.columns.length; i++) {
-            columns += this.columns[i];
-            if (i < this.columns.length - 1) {
-                columns += ",";
-            }
-        }
-        String out = buildSelectClause(columns);
+        String out = buildSelectClause(buildColumnExpression());
         String whereClause = getWhereClause();
         String having = getHaving();
         String orderBy = getOrderBy();
@@ -346,22 +339,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
 
     @Override
     public final String getStatement() {
-        String columnParam = "*";
-        try {
-            SQLiteModel entity = SQLiteModel.fromClass(clazz);
-            if (entity.getColumns().length != this.columns.length) {
-                columnParam = "";
-                for (int i = 0; i < this.columns.length; i++) {
-                    columnParam += this.columns[i];
-                    if (i < this.columns.length - 1) {
-                        columnParam += ",";
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        String out = buildSelectClause(columnParam);
+        String out = buildSelectClause(buildColumnExpression());
         String whereClause = getWhereClause();
         String having = getHaving();
         String orderBy = getOrderBy();
@@ -384,6 +362,20 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
             sql += " LIMIT " + limit;
         }
         return sql;
+    }
+
+    private String buildColumnExpression() {
+        if (this.columns == null || this.columns.length == 0) {
+            return "*";
+        }
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < this.columns.length; i++) {
+            if (i > 0) {
+                builder.append(",");
+            }
+            builder.append(this.columns[i]);
+        }
+        return builder.toString();
     }
 
     private String buildSelectClause(String columnExpression) {
