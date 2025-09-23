@@ -1,30 +1,5 @@
 package istat.android.data.access.sqlite;
 
-import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import istat.android.data.access.sqlite.interfaces.JSONable;
-import istat.android.data.access.sqlite.interfaces.QueryAble;
-import istat.android.data.access.sqlite.utils.Toolkit;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -34,16 +9,45 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.function.Function;
+
+import istat.android.data.access.sqlite.interfaces.JSONable;
+import istat.android.data.access.sqlite.interfaces.QueryAble;
+import istat.android.data.access.sqlite.utils.Toolkit;
+
 public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Iterable {
 
     Class<?> modelClass = Object.class;
-    HashMap<String, Object> fieldNameValuePair = new HashMap();
-    HashMap<String, Field> columnNameFieldPair = new HashMap();
-    HashMap<String, Field> nestedTableFieldPair = new HashMap();
-    private final static HashMap<Class, Builder> BUILDER_BUFFER = new HashMap();
+    HashMap<String, Object> fieldNameValuePair = new HashMap<>();
+    HashMap<String, Field> columnNameFieldPair = new HashMap<>();
+    HashMap<String, Field> nestedTableFieldPair = new HashMap<>();
+    private final static HashMap<Class<?>, Builder> BUILDER_BUFFER = new HashMap<>();
     public static final String TAG_CLASS = SQLiteModel.class.getCanonicalName() + ".CLASS";
     public static final String TAG_ITEMS = SQLiteModel.class.getCanonicalName() + ".ITEMS";
     public final static String DEFAULT_PRIMARY_KEY_NAME = "id";
+    Function<SQLiteModel, Boolean> existFunction;
+    SQLitePersist.ConflictStrategy conflictStrategy;
 
     SQLiteModel() {
 
@@ -257,7 +261,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     }
 
     public long persist(SQLiteDatabase db) {
-        if (exist(db)) {
+        if (conflictStrategy == null && exist(db)) {
             long out = update(db);
             return out >= 1 ? 0 : -1;
         } else {
@@ -278,7 +282,11 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         long insertId;
         String tbName = getName();
         ContentValues contentValues = toContentValues();
-        insertId = db.insert(tbName, null, contentValues);
+        if (conflictStrategy == null) {
+            insertId = db.insert(tbName, null, contentValues);
+        } else {
+            insertId = db.insertWithOnConflict(tbName, null, contentValues, conflictStrategy.code);
+        }
         if (updateModelPrimaryKey && !isPrimaryKeyValueSet()) {
 //            Object primaryKeyValue = insertId;
 //            if (!TextUtils.isEmpty(getPrimaryKeyStringValue())) {
@@ -340,6 +348,9 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     }
 
     public boolean exist(SQLiteDatabase db) {
+        if (existFunction != null) {
+            return existFunction.apply(this);
+        }
         String primary_key_name = getPrimaryKeyName();
         String primaryKeyValue = getPrimaryKeyStringValue();
         String tb_name = getName();
@@ -394,8 +405,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     public static SQLiteModel fromObject(final Object obj, Serializer serializer, ContentValueHandler contentValueHandler) throws InstantiationException,
             IllegalAccessException {
         try {
-            if (obj instanceof SQLiteModel) {
-                SQLiteModel model = (SQLiteModel) obj;
+            if (obj instanceof SQLiteModel model) {
                 return (SQLiteModel) model.clone();
             }
         } catch (Exception e) {
@@ -410,10 +420,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         boolean hasColumnAnnotation = false;
         String primaryKey = null;
         String eligiblePrimaryName = null;
-        String tableName = null;
-        if (tableName == null) {
-            tableName = cLass.getSimpleName();
-        }
+        String tableName = tableName = cLass.getSimpleName();
         if (TextUtils.isEmpty(tableName)) {
             cLass = (Class<?>) cLass.getGenericSuperclass();
             tableName = cLass.getSimpleName();
@@ -424,7 +431,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
             for (int i = 0; i < fields.size(); i++) {
                 Field field = fields.get(i);
                 field.setAccessible(true);
-                if (!field.isAnnotationPresent(Ignore.class)) {
+                if (!field.isAnnotationPresent(Ignore.class) && !Modifier.isTransient(field.getModifiers())) {
                     String columnName = null;
                     if (field.isAnnotationPresent(PrimaryKey.class) && primaryKey == null) {
                         primaryKey = field.getName();
@@ -543,7 +550,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
                 List<Field> fields = Toolkit.getAllFieldFields(cLass, true, false);
                 for (int i = 0; i < fields.size(); i++) {
                     Field field = fields.get(i);
-                    if (!field.isAnnotationPresent(Ignore.class)) {
+                    if (!field.isAnnotationPresent(Ignore.class) && !Modifier.isTransient(field.getModifiers())) {
                         String columnName = null;
                         if (field.isAnnotationPresent(PrimaryKey.class) && primaryKey == null) {
                             primaryKey = field.getName();
@@ -818,6 +825,14 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         model.fillFromCursor(c, cursorReader);
         T obj = model.asInstance(clazz);
         return obj;
+    }
+
+    public void setExistCheckFunction(Function<SQLiteModel, Boolean> existFunction) {
+        this.existFunction = existFunction;
+    }
+
+    public void setConflictStrategy(SQLitePersist.ConflictStrategy conflictStrategy) {
+        this.conflictStrategy = conflictStrategy;
     }
 
     @Target(ElementType.TYPE)
@@ -1292,6 +1307,9 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
 
     public <T> T flowInto(T entity, String... columns) throws IllegalAccessException {
         for (String column : columns) {
+            if (column == null) {
+                continue;
+            }
             Field field = getField(column);
             Object value = get(column);
             field.set(entity, this.serializer.onDeSerialize(String.valueOf(value), field));

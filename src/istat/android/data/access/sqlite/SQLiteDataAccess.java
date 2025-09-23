@@ -19,6 +19,7 @@ import java.util.Date;
 import java.util.List;
 
 import istat.android.data.access.sqlite.utils.SQLiteParser;
+import istat.android.data.access.sqlite.utils.TableUtils;
 
 /*
  * Copyright (C) 2014 Istat Dev.
@@ -48,7 +49,7 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
      */
     // L�instance de la base qui sera manipul�e au travers de cette classe.
     protected SQLiteDatabase db;
-    private DbOpenHelper dbOpenHelper;
+    private final DbOpenHelper dbOpenHelper;
     public Context context;
     protected final static String SHARED_PREF_FILE = "db_file",
             DB_CREATION_TIME = "creation_time",
@@ -193,7 +194,42 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
         return dbOpenHelper;
     }
 
-    public boolean doesTableExist(SQLiteDatabase db, String tableName) {
+    public boolean executeScript(List<String> sqlScripts) {
+        if (db == null) {
+            getStatement();
+        }
+        return TableUtils.execute(db, sqlScripts);
+    }
+
+    public boolean executeScript(String... sqlScripts) {
+        if (db == null) {
+            getStatement();
+        }
+        return TableUtils.execute(db, sqlScripts);
+    }
+
+    public void createTable(Class<?> cLass) throws InstantiationException, IllegalAccessException {
+        if (db == null) {
+            getStatement();
+        }
+        TableUtils.create(db, cLass);
+    }
+
+    public boolean doesTableExist(String tableName) {
+        if (db == null) {
+            getStatement();
+        }
+        return _doesTableExist(db, tableName);
+    }
+
+    public boolean doesTableExist(Class<?> cLass) {
+        if (db == null) {
+            getStatement();
+        }
+        return TableUtils.isTableExists(db, cLass);
+    }
+
+    private boolean _doesTableExist(SQLiteDatabase db, String tableName) {
         Cursor cursor = db.rawQuery(
                 "select DISTINCT tbl_name from sqlite_master where tbl_name = '"
                         + tableName + "'", null);
@@ -255,7 +291,7 @@ public class SQLiteDataAccess implements Closeable, Cloneable {
         }
     }
 
-    protected void executeRawRessources(SQLiteDatabase db, int... resourceIds) {
+    protected void executeRawResources(SQLiteDatabase db, int... resourceIds) {
         for (int index : resourceIds) {
             executeRawResource(db, index);
         }
