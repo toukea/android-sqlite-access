@@ -53,4 +53,16 @@ public class SQLiteSelectTest {
         String innerStatement = innerJoin.getStatement();
         assertTrue(innerStatement.contains("ON (child_table.parent_id=parent_table.id)"));
     }
+
+    @Test
+    public void whereEqualToShouldQuoteStringValuesInStatements() {
+        SQLite.SQL sql = new SQLite.SQL(null);
+        SQLiteSelect select = sql.select(DummyEntity.class);
+
+        select.where("name").equalTo("Bob");
+
+        String statement = select.getStatement();
+
+        assertTrue("Statement should contain the quoted literal", statement.contains("WHERE dummy_table.name = 'Bob'"));
+    }
 }

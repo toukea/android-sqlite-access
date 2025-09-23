@@ -657,9 +657,16 @@ public final class SQLite {
             select.distinct = distinct;
             if (!TextUtils.isEmpty(whereClause)) {
                 select.whereClause = new StringBuilder(whereClause);
-                select.whereParams = Arrays.asList(whereParams);
+                if (whereParams != null) {
+                    select.whereParams = new ArrayList<String>(Arrays.asList(whereParams));
+                    select.whereParamValues = new ArrayList<Object>(select.whereParams);
+                } else {
+                    select.whereParams = new ArrayList<String>();
+                    select.whereParamValues = new ArrayList<Object>();
+                }
             } else {
-                select.whereParams = new ArrayList();
+                select.whereParams = new ArrayList<String>();
+                select.whereParamValues = new ArrayList<Object>();
             }
             select.limit = limit;
             select.orderBy = orderBy;
@@ -692,7 +699,13 @@ public final class SQLite {
             SQLiteUpdate.Updater update = update(classTable).updater;
             update.model.fillFromContentValues(contentValues);
             update.whereClause = new StringBuilder(whereClause);
-            update.whereParams = whereParams != null ? Arrays.asList(whereParams) : new ArrayList<String>();
+            if (whereParams != null) {
+                update.whereParams = new ArrayList<String>(Arrays.asList(whereParams));
+                update.whereParamValues = new ArrayList<Object>(update.whereParams);
+            } else {
+                update.whereParams = new ArrayList<String>();
+                update.whereParamValues = new ArrayList<Object>();
+            }
             update.limit = limit;
             update.having = new StringBuilder(having);
             return update.execute();

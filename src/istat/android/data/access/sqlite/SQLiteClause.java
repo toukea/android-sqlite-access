@@ -1,6 +1,7 @@
 package istat.android.data.access.sqlite;
 
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
@@ -16,6 +17,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,7 +29,9 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
     // protected SQLiteDatabase db;
     protected StringBuilder whereClause = null;
     protected List<String> whereParams = new ArrayList<String>();
+    protected List<Object> whereParamValues = new ArrayList<Object>();
     List<String> havingWhereParams = new ArrayList<String>();
+    List<Object> havingWhereParamValues = new ArrayList<Object>();
     protected String orderBy = null;
     protected String groupBy = null;
     protected StringBuilder having = null;
@@ -54,7 +58,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
         if (having == null) {
             return null;
         }
-        String out = compute(this.having.toString(), havingWhereParams);
+        String out = compute(this.having.toString(), havingWhereParams, havingWhereParamValues);
         return out;
     }
 
@@ -235,7 +239,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
             whereClause = new StringBuilder(buildRealColumnName(column));
         } else
             whereClause.append(" AND " + buildRealColumnName(column));
-        return new ClauseBuilder(this.whereClause, this.whereParams, TYPE_CLAUSE_AND);
+        return new ClauseBuilder(this.whereClause, this.whereParams, this.whereParamValues, TYPE_CLAUSE_AND);
     }
 
     public ClauseBuilder or(String column) {
@@ -243,7 +247,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
             whereClause = new StringBuilder(buildRealColumnName(column));
         else
             whereClause.append(" OR " + buildRealColumnName(column));
-        return new ClauseBuilder(this.whereClause, this.whereParams, TYPE_CLAUSE_OR);
+        return new ClauseBuilder(this.whereClause, this.whereParams, this.whereParamValues, TYPE_CLAUSE_OR);
     }
 
     public ClauseBuilder and(String column) {
@@ -251,7 +255,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
             whereClause = new StringBuilder(buildRealColumnName(column));
         else
             whereClause.append(" AND " + buildRealColumnName(column));
-        return new ClauseBuilder(this.whereClause, this.whereParams, TYPE_CLAUSE_AND);
+        return new ClauseBuilder(this.whereClause, this.whereParams, this.whereParamValues, TYPE_CLAUSE_AND);
     }
 
     @SuppressWarnings("unchecked")
@@ -259,9 +263,11 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
         if (whereClause == null) {
             this.whereClause = close.whereClause;
             this.whereParams = close.whereParams;
+            this.whereParamValues = close.whereParamValues;
         } else {
             this.whereClause.append(" AND " + close.whereClause);
             this.whereParams.addAll(close.whereParams);
+            this.whereParamValues.addAll(close.whereParamValues);
         }
         return (Clause) this;
     }
@@ -280,6 +286,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
         this.whereClause.append(close.whereClause
                 + ")");
         this.whereParams.addAll(close.whereParams);
+        this.whereParamValues.addAll(close.whereParamValues);
         return (Clause) this;
     }
 
@@ -291,6 +298,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
         this.whereClause.append(close.whereClause
                 + ")");
         this.whereParams.addAll(close.whereParams);
+        this.whereParamValues.addAll(close.whereParamValues);
         return (Clause) this;
     }
 
@@ -344,11 +352,13 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
         int type = 0;
         StringBuilder whereClause;
         List<String> whereParams;
+        List<Object> whereParamValues;
 
-        ClauseBuilder(StringBuilder whereClause, List<String> whereParams, int type) {
+        ClauseBuilder(StringBuilder whereClause, List<String> whereParams, List<Object> whereParamValues, int type) {
             this.type = type;
             this.whereClause = whereClause;
             this.whereParams = whereParams;
+            this.whereParamValues = whereParamValues;
         }
 
         public Clause isNULL() {
@@ -476,24 +486,28 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
         @SuppressWarnings("unchecked")
         public Clause equalTo(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
+            whereParamValues.addAll(value.whereParamValues);
             whereClause.append(" = (" + value + ") ");
             return (Clause) SQLiteClause.this;
         }
 
         public Clause notEqualTo(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
+            whereParamValues.addAll(value.whereParamValues);
             whereClause.append(" != (" + value + ") ");
             return (Clause) SQLiteClause.this;
         }
 
         public Clause notIn(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
+            whereParamValues.addAll(value.whereParamValues);
             whereClause.append(" NOT IN (" + value.getSql() + ") ");
             return (Clause) SQLiteClause.this;
         }
 
         public Clause in(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
+            whereParamValues.addAll(value.whereParamValues);
             whereClause.append(" IN (" + value.getSql() + ") ");
             return (Clause) SQLiteClause.this;
         }
@@ -509,6 +523,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
         @SuppressWarnings("unchecked")
         public Clause greatThan(SQLiteSelect value, boolean acceptEqual) {
             whereParams.addAll(value.whereParams);
+            whereParamValues.addAll(value.whereParamValues);
             whereClause.append(" >" + (acceptEqual ? "=" : "") + " (" + value.getSql() + ") ");
             return (Clause) SQLiteClause.this;
         }
@@ -516,6 +531,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
         @SuppressWarnings("unchecked")
         public Clause lessThan(SQLiteSelect value, boolean acceptEqual) {
             whereParams.addAll(value.whereParams);
+            whereParamValues.addAll(value.whereParamValues);
             whereClause.append(" <" + (acceptEqual ? "=" : "") + " (" + value.getSql() + ") ");
             return (Clause) SQLiteClause.this;
         }
@@ -523,6 +539,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
         @SuppressWarnings("unchecked")
         public Clause like(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
+            whereParamValues.addAll(value.whereParamValues);
             whereClause.append(" like (" + value.getSql() + ")");
             return (Clause) SQLiteClause.this;
         }
@@ -530,6 +547,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
         @SuppressWarnings("unchecked")
         public Clause notLike(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
+            whereParamValues.addAll(value.whereParamValues);
             whereClause.append(" NOT like (" + value.getSql() + ")");
             return (Clause) SQLiteClause.this;
         }
@@ -537,6 +555,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
         @SuppressWarnings("unchecked")
         public Clause between(SQLiteSelect value, SQLiteSelect value2) {
             whereParams.addAll(value.whereParams);
+            whereParamValues.addAll(value.whereParamValues);
             whereClause.append(" BETWEEN (" + value.getSql() + ") AND (" + value2.getSql() + ")");
             return (Clause) SQLiteClause.this;
         }
@@ -544,6 +563,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
         @SuppressWarnings("unchecked")
         public Clause notBetween(SQLiteSelect value, SQLiteSelect value2) {
             whereParams.addAll(value.whereParams);
+            whereParamValues.addAll(value.whereParamValues);
             whereClause.append(" BETWEEN (" + value.getSql() + ") AND (" + value2.getSql() + ")");
             return (Clause) SQLiteClause.this;
         }
@@ -551,6 +571,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
 
         private void prepare(Object value) {
             whereParams.add(value + "");
+            whereParamValues.add(value);
             switch (type) {
                 case TYPE_CLAUSE_AND:
 
@@ -600,6 +621,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
 
         private void prepare(Object value) {
             whereParams.add(value + "");
+            havingWhereParamValues.add(value);
             switch (type) {
                 case TYPE_CLAUSE_AND:
 
@@ -646,19 +668,65 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
         }
     }
 
-    String compute(String out, List<String> whereParams) {
+    String compute(String out, List<String> whereParams, List<Object> rawParams) {
         String[] splits = out.split("\\?");
-        String sql = "";
-        for (int i = 0; i < (!out.endsWith("?") ? splits.length - 1
-                : splits.length); i++) {
-            sql += splits[i];
-            if (i < whereParams.size())
-                sql += whereParams.get(i);
+        StringBuilder sql = new StringBuilder();
+        int loopBound = !out.endsWith("?") ? splits.length - 1 : splits.length;
+        for (int i = 0; i < loopBound; i++) {
+            sql.append(splits[i]);
+            if (i < whereParams.size()) {
+                sql.append(buildLiteral(whereParams.get(i), rawParams, i));
+            }
         }
         if (!out.endsWith("?")) {
-            sql += splits[splits.length - 1];
+            sql.append(splits[splits.length - 1]);
         }
-        return sql;
+        return sql.toString();
+    }
+
+    private String buildLiteral(String value, List<Object> rawParams, int index) {
+        boolean hasRawValue = rawParams != null && index < rawParams.size();
+        if (hasRawValue) {
+            Object rawValue = rawParams.get(index);
+            if (rawValue == null) {
+                return "NULL";
+            }
+            if (rawValue instanceof Number) {
+                return String.valueOf(rawValue);
+            }
+            if (rawValue instanceof byte[]) {
+                return toHexBlob((byte[]) rawValue);
+            }
+            return DatabaseUtils.sqlEscapeString(String.valueOf(rawValue));
+        }
+        if (value == null) {
+            return "NULL";
+        }
+        if (isNumeric(value)) {
+            return value;
+        }
+        return DatabaseUtils.sqlEscapeString(value);
+    }
+
+    private String toHexBlob(byte[] blob) {
+        StringBuilder builder = new StringBuilder("X'");
+        for (byte b : blob) {
+            builder.append(String.format(Locale.US, "%02X", b));
+        }
+        builder.append("'");
+        return builder.toString();
+    }
+
+    private boolean isNumeric(String value) {
+        if (TextUtils.isEmpty(value)) {
+            return false;
+        }
+        try {
+            Double.parseDouble(value);
+            return true;
+        } catch (NumberFormatException ignored) {
+            return false;
+        }
     }
 
     @Override
