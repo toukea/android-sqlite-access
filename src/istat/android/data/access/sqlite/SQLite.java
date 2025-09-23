@@ -719,6 +719,10 @@ public final class SQLite {
             return insert.insert(entity);
         }
 
+        public SQLiteInsertSelection insertSelection(Class<?> tableClass, SQLiteSelect selection) {
+            return new SQLiteInsertSelection(tableClass, this, selection);
+        }
+
         public SQLitePersist persist(Object entity) {
             SQLitePersist persist = new SQLitePersist(this);
             return persist.persist(entity);

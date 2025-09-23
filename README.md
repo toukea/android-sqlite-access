@@ -150,7 +150,7 @@ It is also possible to specify if you want to use an auto closable connection. (
     //SQL instance has been auto closed after execution.
 ```
 
-# Make SQL Insert 
+# Make SQL Insert
 After SQL instance has been prepared successfully, you can use it to perform SQL Insert.
 ```java
        User user = new User();
@@ -171,9 +171,24 @@ It is also possible to perform multiple insertions in one step
         System.out.println("user0 id= "+insertIds[0]);
         System.out.println("user1 id= "+insertIds[1]);
         System.out.println("user2 id= "+insertIds[2]);
-  ``` 
-  
-# Make SQL Delete 
+  ```
+
+## Insert From A Selection
+You can also duplicate rows using a `SELECT` statement while overriding columns on the fly. The next example copies the user name
+while generating a random hexadecimal identifier thanks to SQLite's `hex(randomblob(16))` helper. `ArchivedUser` is a mapped
+table that mirrors `User` and contains an extra `uuid` column.
+
+```java
+       SQLiteSelect copy = sql.select(new String[]{"userName"}, User.class)
+                              .where("userName")
+                              .equalTo("Toukea");
+
+       int inserted = sql.insertSelection(ArchivedUser.class, copy)
+                        .setExpression("uuid", "hex(randomblob(16))")
+                        .execute();
+```
+
+# Make SQL Delete
  After SQL instance has been prepared successfully, you can use it to perform SQL delete.
  ```java
          int deletedCount = sql.delete(User.class)
