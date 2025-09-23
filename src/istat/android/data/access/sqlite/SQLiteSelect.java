@@ -311,7 +311,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
                 columns += ",";
             }
         }
-        String out = "SELECT " + columns + " FROM " + selectionTable;
+        String out = buildSelectClause(columns);
         String whereClause = getWhereClause();
         String having = getHaving();
         String orderBy = getOrderBy();
@@ -361,7 +361,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
         } catch (Exception e) {
             e.printStackTrace();
         }
-        String out = "SELECT " + columnParam + " FROM " + selectionTable;
+        String out = buildSelectClause(columnParam);
         String whereClause = getWhereClause();
         String having = getHaving();
         String orderBy = getOrderBy();
@@ -384,6 +384,11 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
             sql += " LIMIT " + limit;
         }
         return sql;
+    }
+
+    private String buildSelectClause(String columnExpression) {
+        String distinctKeyword = distinct ? "DISTINCT " : "";
+        return "SELECT " + distinctKeyword + columnExpression + " FROM " + selectionTable;
     }
 
     public class ClauseJoinSelectBuilder {
