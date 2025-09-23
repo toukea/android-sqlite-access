@@ -91,7 +91,7 @@ public class SQLiteJoinProjectionTest {
                 .equalTo("Doc");
 
         String statement = joinSelect.getStatement();
-        assertTrue(statement.contains("ON (bookmarks.folder_id=folders.id AND folders.name = ?"));
+        assertTrue(statement.contains("ON (bookmarks.folder_id=folders.id AND folders.name = 'Work'"));
 
         int whereIndex = statement.indexOf(" WHERE ");
         assertTrue(whereIndex > 0);

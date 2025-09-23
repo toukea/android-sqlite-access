@@ -506,15 +506,13 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
 
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect equalTo(Object value) {
-            prepare(value);
-            SQLiteSelect.this.appendJoinClauseSuffix(selectClause, " = ? ");
+            appendComparison("=", value);
             return selectClause;
         }
 
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect notEqualTo(Object value) {
-            prepare(value);
-            SQLiteSelect.this.appendJoinClauseSuffix(selectClause, " != ? ");
+            appendComparison("!=", value);
             return selectClause;
         }
 
@@ -527,21 +525,9 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
         }
 
         private <T> SQLiteJoinSelect in(boolean truth, T[] value) {
-            String valueIn = "";
-            for (int i = 0; i < value.length; i++) {
-                if (value[i] instanceof Number) {
-                    valueIn += value[i];
-                } else {
-                    valueIn += "'" + value[i] + "'";
-                }
-                if (i < value.length - 1) {
-                    valueIn += ", ";
-                }
-            }
-            if (!valueIn.startsWith("(") && !valueIn.endsWith(")")) {
-                valueIn = "(" + valueIn + ")";
-            }
-            SQLiteSelect.this.appendJoinClauseSuffix(selectClause, (truth ? "" : " NOT ") + " IN " + valueIn);
+            String operator = truth ? " IN " : " NOT IN ";
+            String valueIn = buildInClause(value);
+            SQLiteSelect.this.appendJoinClauseSuffix(selectClause, operator + valueIn);
             return selectClause;
         }
 
@@ -555,61 +541,45 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
 
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect greatThan(Object value, boolean acceptEqual) {
-            prepare(value);
-            SQLiteSelect.this.appendJoinClauseSuffix(selectClause, " >" + (acceptEqual ? "=" : "") + " ? ");
+            appendComparison(">" + (acceptEqual ? "=" : ""), value);
             return selectClause;
         }
 
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect lessThan(Object value, boolean acceptEqual) {
-            prepare(value);
-            SQLiteSelect.this.appendJoinClauseSuffix(selectClause, " <" + (acceptEqual ? "=" : "") + " ? ");
+            appendComparison("<" + (acceptEqual ? "=" : ""), value);
             return selectClause;
         }
 
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect like(Object value) {
-            prepare(value);
-            SQLiteSelect.this.appendJoinClauseSuffix(selectClause, " like ? ");
+            appendComparison("like", value);
             return selectClause;
         }
 
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect notLike(Object value) {
-            prepare(value);
-            SQLiteSelect.this.appendJoinClauseSuffix(selectClause, " NOT like ? ");
+            appendComparison("NOT like", value);
             return selectClause;
         }
 
         //------------------------------------------------
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect equalTo(SQLiteSelect value) {
-            whereParams.addAll(value.whereParams);
-            whereParamValues.addAll(value.whereParamValues);
-            SQLiteSelect.this.appendJoinClauseSuffix(selectClause, " = (" + value + ") ");
-            return selectClause;
+            return appendSubSelect("=", value, true);
         }
 
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect notEqualTo(SQLiteSelect value) {
-            whereParams.addAll(value.whereParams);
-            whereParamValues.addAll(value.whereParamValues);
-            SQLiteSelect.this.appendJoinClauseSuffix(selectClause, " != (" + value.getSql() + ") ");
-            return selectClause;
+            return appendSubSelect("!=", value, false);
         }
 
         public SQLiteJoinSelect in(SQLiteSelect value) {
-            whereParams.addAll(value.whereParams);
-            whereParamValues.addAll(value.whereParamValues);
-            SQLiteSelect.this.appendJoinClauseSuffix(selectClause, " IN (" + value.getSql() + ") ");
-            return selectClause;
+            return appendSubSelect("IN", value, false);
         }
 
         public SQLiteJoinSelect notIn(SQLiteSelect value) {
-            whereParams.addAll(value.whereParams);
-            whereParamValues.addAll(value.whereParamValues);
-            SQLiteSelect.this.appendJoinClauseSuffix(selectClause, " NOT IN (" + value.getSql() + ") ");
-            return selectClause;
+            return appendSubSelect("NOT IN", value, false);
         }
 
         public SQLiteJoinSelect greatThan(SQLiteSelect value) {
@@ -622,37 +592,86 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
 
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect greatThan(SQLiteSelect value, boolean acceptEqual) {
-            whereParams.addAll(value.whereParams);
-            whereParamValues.addAll(value.whereParamValues);
-            SQLiteSelect.this.appendJoinClauseSuffix(selectClause, " >" + (acceptEqual ? "=" : "") + " (" + value.getSql() + ") ");
-            return selectClause;
+            return appendSubSelect(">" + (acceptEqual ? "=" : ""), value, false);
         }
 
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect lessThan(SQLiteSelect value, boolean acceptEqual) {
-            whereParams.addAll(value.whereParams);
-            whereParamValues.addAll(value.whereParamValues);
-            SQLiteSelect.this.appendJoinClauseSuffix(selectClause, " <" + (acceptEqual ? "=" : "") + " (" + value.getSql() + ") ");
-            return selectClause;
+            return appendSubSelect("<" + (acceptEqual ? "=" : ""), value, false);
         }
 
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect like(SQLiteSelect value) {
-            whereParams.addAll(value.whereParams);
-            whereParamValues.addAll(value.whereParamValues);
-            SQLiteSelect.this.appendJoinClauseSuffix(selectClause, " like (" + value.getSql() + ")");
-            return selectClause;
+            return appendSubSelect("like", value, false);
         }
 
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect notLike(SQLiteSelect value) {
-            whereParams.addAll(value.whereParams);
-            whereParamValues.addAll(value.whereParamValues);
-            SQLiteSelect.this.appendJoinClauseSuffix(selectClause, " NOT like (" + value.getSql() + ")");
-            return selectClause;
+            return appendSubSelect("NOT like", value, false);
         }
         //------------------------------------------------
 
+
+        private void appendComparison(String comparator, Object value) {
+            if (isJoinClauseActive()) {
+                SQLiteSelect.this.appendJoinClauseSuffix(selectClause,
+                        " " + comparator + " " + buildLiteral(value) + " ");
+            } else {
+                prepare(value);
+                SQLiteSelect.this.appendJoinClauseSuffix(selectClause,
+                        " " + comparator + " ? ");
+            }
+        }
+
+        private boolean isJoinClauseActive() {
+            return SQLiteSelect.this.activeJoinOnClause != null
+                    && SQLiteSelect.this.activeJoinOnClauseStart >= 0
+                    && (SQLiteSelect.this.activeJoinSelect == null
+                    || SQLiteSelect.this.activeJoinSelect == selectClause);
+        }
+
+        private String buildLiteral(Object value) {
+            if (value == null) {
+                return "NULL";
+            }
+            if (value instanceof Number) {
+                return String.valueOf(value);
+            }
+            if (value instanceof byte[]) {
+                return toHexBlob((byte[]) value);
+            }
+            return DatabaseUtils.sqlEscapeString(String.valueOf(value));
+        }
+
+        private <T> String buildInClause(T[] values) {
+            StringBuilder builder = new StringBuilder("(");
+            for (int i = 0; i < values.length; i++) {
+                if (i > 0) {
+                    builder.append(", ");
+                }
+                builder.append(buildLiteral(values[i]));
+            }
+            builder.append(")");
+            return builder.toString();
+        }
+
+        private SQLiteJoinSelect appendSubSelect(String comparator, SQLiteSelect value, boolean useStatement) {
+            whereParams.addAll(value.whereParams);
+            whereParamValues.addAll(value.whereParamValues);
+            String sql = useStatement ? value.toString() : value.getSql();
+            SQLiteSelect.this.appendJoinClauseSuffix(selectClause,
+                    " " + comparator + " (" + sql + ") ");
+            return selectClause;
+        }
+
+        private String toHexBlob(byte[] blob) {
+            StringBuilder builder = new StringBuilder("X'");
+            for (byte b : blob) {
+                builder.append(String.format(Locale.US, "%02X", b));
+            }
+            builder.append("'");
+            return builder.toString();
+        }
 
         private void prepare(Object value) {
             whereParams.add(value + "");
