@@ -25,9 +25,8 @@ public class TableUtils {
             db.query(model.getName(), null, null, null, null, null, null);
             return true;
         } catch (Exception e) {
-
+            return false;
         }
-        return false;
     }
 
     public final static boolean isTableExists(SQLiteDatabase db, Class cLass) {
@@ -36,9 +35,8 @@ public class TableUtils {
             db.query(model.getName(), null, null, null, null, null, null);
             return true;
         } catch (Exception e) {
-
+            return false;
         }
-        return false;
     }
 
     public final static boolean isTableExists(SQLiteDatabase db, String tableName) {
@@ -46,33 +44,32 @@ public class TableUtils {
             db.query(tableName, new String[]{"count(1)"}, null, null, null, null, null);
             return true;
         } catch (Exception e) {
-
+            return false;
         }
-        return false;
     }
 
-    public static void drop(SQLiteDatabase db, Class... tables) throws InstantiationException, IllegalAccessException {
+    public static void drop(SQLiteDatabase db, Class<?>... tables) throws InstantiationException, IllegalAccessException {
         List<String> scripts = TableScriptFactory.drop(tables);
         for (String sql : scripts) {
             db.execSQL(sql);
         }
     }
 
-    public static void truncate(SQLiteDatabase db, Class... tables) throws InstantiationException, IllegalAccessException {
+    public static void truncate(SQLiteDatabase db, Class<?>... tables) throws InstantiationException, IllegalAccessException {
         List<String> scripts = TableScriptFactory.truncate(tables);
         for (String sql : scripts) {
             db.execSQL(sql);
         }
     }
 
-    public static void create(SQLiteDatabase db, Class... tables) throws InstantiationException, IllegalAccessException {
+    public static void create(SQLiteDatabase db, Class<?>... tables) throws InstantiationException, IllegalAccessException {
         List<String> scripts = TableScriptFactory.create(tables);
         for (String sql : scripts) {
             db.execSQL(sql);
         }
     }
 
-    public static void replace(SQLiteDatabase db, Class... tables) throws InstantiationException, IllegalAccessException {
+    public static void replace(SQLiteDatabase db, Class<?>... tables) throws InstantiationException, IllegalAccessException {
         List<String> scripts = TableScriptFactory.drop(tables);
         scripts.addAll(TableScriptFactory.create(tables));
         for (String sql : scripts) {
@@ -104,17 +101,22 @@ public class TableUtils {
             for (String sql : scripts) {
                 db.execSQL(sql);
             }
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
-        return false;
     }
 
     public static boolean execute(SQLiteDatabase db, List<String> scripts) {
-        for (String sql : scripts) {
-            db.execSQL(sql);
+        try {
+            for (String sql : scripts) {
+                db.execSQL(sql);
+            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
-        return false;
     }
 }

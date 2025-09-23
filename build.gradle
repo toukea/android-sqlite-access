@@ -11,11 +11,12 @@ dependencies {
 }
 
 android {
+    namespace 'istat.android.data.access.sqlite'
     defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 26
+        minSdkVersion 26
+        targetSdkVersion 34
     }
-    compileSdkVersion 26
+    compileSdkVersion 34
 
     sourceSets {
         main {
@@ -53,8 +54,8 @@ android {
 
     makeJar.dependsOn(clearJar, build)
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     lint {
         abortOnError false

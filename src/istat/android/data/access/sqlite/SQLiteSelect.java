@@ -371,15 +371,14 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
             out += " WHERE " + whereClause.trim();
         }
         String sql = compute(out, this.whereParams);
-        if (!TextUtils.isEmpty(orderBy)) {
-            sql += " ORDER BY " + orderBy;
-        }
         if (!TextUtils.isEmpty(groupBy)) {
             sql += " GROUP BY " + groupBy;
         }
-
         if (!TextUtils.isEmpty(having)) {
             sql += " HAVING " + having;
+        }
+        if (!TextUtils.isEmpty(orderBy)) {
+            sql += " ORDER BY " + orderBy;
         }
         if (!TextUtils.isEmpty(limit)) {
             sql += " LIMIT " + limit;
@@ -907,7 +906,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
     public final static String TYPE_JOIN_INNER = " INNER ", TYPE_JOIN_LEFT = " LEFT ", TYPE_JOIN_RIGHT = " RIGHT ", TYPE_JOIN_FULL = " FULL ";
 
     public ClauseJoinBuilder join(Class<?> clazz) {
-        return join(clazz, TYPE_JOIN_INNER);
+        return join(clazz, "");
     }
 
     public ClauseJoinBuilder innerJoin(Class<?> clazz) {

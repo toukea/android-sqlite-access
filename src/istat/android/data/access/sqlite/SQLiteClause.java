@@ -11,6 +11,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -103,7 +108,7 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
         if (TextUtils.isEmpty(orderBy)) {
             orderBy = realColumnName;
         } else {
-            orderBy += realColumnName;
+            orderBy += ", " + realColumnName;
         }
         if (!TextUtils.isEmpty(descAsc)) {
             orderBy += " " + descAsc;
@@ -371,22 +376,40 @@ abstract class SQLiteClause<Clause extends SQLiteClause<?>> implements SQLiteCla
         }
 
         public Clause notIn(Object... value) {
-            return in(false, value);
+            return in(false, Arrays.asList(value));
         }
 
-        public <T> Clause in(T... value) {
-            return in(true, value);
+        public Clause notInArray(Object[] values) {
+            return in(false, Arrays.asList(values));
         }
 
-        private Clause in(boolean truth, Object[] value) {
+        public Clause notInList(List<?> values) {
+            return in(false, values);
+        }
+
+        public Clause in(Object... value) {
+            return in(true, Arrays.asList(value));
+        }
+
+        public Clause inArray(Object[] values) {
+            return in(true, Arrays.asList(values));
+        }
+
+        public Clause inList(List<?> values) {
+            return in(true, values);
+        }
+
+        private Clause in(boolean truth, List<?> values) {
             String valueIn = "";
-            for (int i = 0; i < value.length; i++) {
-                if (value[i] instanceof Number) {
-                    valueIn += value[i];
+            Object value;
+            for (int i = 0; i < values.size(); i++) {
+                value = values.get(i);
+                if (value instanceof Number) {
+                    valueIn += value;
                 } else {
-                    valueIn += "'" + value[i] + "'";
+                    valueIn += "'" + value + "'";
                 }
-                if (i < value.length - 1) {
+                if (i < values.size() - 1) {
                     valueIn += ", ";
                 }
             }
