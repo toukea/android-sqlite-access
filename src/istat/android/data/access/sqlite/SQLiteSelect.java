@@ -720,10 +720,16 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
     public class ClauseSubJoinBuilder {
         SQLiteJoinSelect joinSelect;
         String columnJoinName;
+        String function;
 
         ClauseSubJoinBuilder(SQLiteJoinSelect joinSelect, String name) {
+            this(joinSelect, name, "ON");
+        }
+
+        ClauseSubJoinBuilder(SQLiteJoinSelect joinSelect, String name, String function) {
             this.joinSelect = joinSelect;
             this.columnJoinName = name;
+            this.function = function != null ? function : "ON";
 
         }
 
@@ -734,7 +740,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            selectionTable += " ON (" + columnJoinName + "=" + name + ") ";
+            selectionTable += " " + function + " (" + columnJoinName + "=" + name + ") ";
             this.joinSelect.selectionTable = selectionTable;
             return joinSelect;
         }
