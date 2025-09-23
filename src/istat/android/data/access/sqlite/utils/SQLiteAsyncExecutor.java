@@ -9,6 +9,7 @@ import java.util.List;
 
 import istat.android.data.access.sqlite.SQLiteDelete;
 import istat.android.data.access.sqlite.SQLiteInsert;
+import istat.android.data.access.sqlite.SQLiteInsertSelection;
 import istat.android.data.access.sqlite.SQLiteMerge;
 import istat.android.data.access.sqlite.SQLitePersist;
 import istat.android.data.access.sqlite.SQLiteSelect;
@@ -109,6 +110,18 @@ public final class SQLiteAsyncExecutor {
                     error.initCause(e);
                     throw error;
                 }
+            }
+        };
+        thread.start(transactional);
+        return thread;
+    }
+
+    public SQLiteThread execute(final SQLiteInsertSelection clause, ExecutionCallback<Integer> callback) {
+        SQLiteThread<Integer> thread = new SQLiteThread<Integer>(this, clause, callback) {
+
+            @Override
+            protected Integer onExecute() {
+                return clause.execute();
             }
         };
         thread.start(transactional);
