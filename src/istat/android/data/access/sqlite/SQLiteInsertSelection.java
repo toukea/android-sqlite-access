@@ -38,8 +38,10 @@ public final class SQLiteInsertSelection extends SQLiteClause<SQLiteInsertSelect
         }
         this.whereClause = selection.whereClause != null ? new StringBuilder(selection.whereClause.toString()) : null;
         this.whereParams = new ArrayList<String>(selection.whereParams);
+        this.whereParamValues = new ArrayList<Object>(selection.whereParamValues);
         this.having = selection.having != null ? new StringBuilder(selection.having.toString()) : null;
         this.havingWhereParams = new ArrayList<String>(selection.havingWhereParams);
+        this.havingWhereParamValues = new ArrayList<Object>(selection.havingWhereParamValues);
         this.orderBy = selection.orderBy;
         this.groupBy = selection.groupBy;
         this.limit = selection.limit;
@@ -131,11 +133,12 @@ public final class SQLiteInsertSelection extends SQLiteClause<SQLiteInsertSelect
     @Override
     public String getStatement() {
         String sqlStatement = buildInsertSelectSql();
-        List<String> bindArgs = new ArrayList<String>();
-        for (Object arg : buildBindArgs()) {
-            bindArgs.add(arg == null ? "null" : String.valueOf(arg));
+        List<Object> rawArgs = buildBindArgs();
+        List<String> bindArgs = new ArrayList<String>(rawArgs.size());
+        for (Object arg : rawArgs) {
+            bindArgs.add(arg == null ? null : String.valueOf(arg));
         }
-        return compute(sqlStatement, bindArgs);
+        return compute(sqlStatement, bindArgs, rawArgs);
     }
 
     @Override
@@ -209,8 +212,8 @@ public final class SQLiteInsertSelection extends SQLiteClause<SQLiteInsertSelect
                 args.add(projection.bindArg);
             }
         }
-        args.addAll(whereParams);
-        args.addAll(havingWhereParams);
+        args.addAll(whereParamValues);
+        args.addAll(havingWhereParamValues);
         return args;
     }
 
