@@ -12,6 +12,7 @@ import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(AndroidJUnit4.class)
@@ -75,5 +76,26 @@ public class SQLiteJoinProjectionTest {
         } finally {
             cursor.close();
         }
+    }
+
+    @Test
+    public void additionalJoinPredicateStaysInOnClause() {
+        SQLiteSelect.SQLiteJoinSelect joinSelect = sql.select(new String[]{"bookmarks.id"}, Bookmark.class)
+                .leftJoin(Folder.class)
+                .on(Bookmark.class, "folder_id")
+                .equalTo(Folder.class, "id")
+                .and(Folder.class, "name")
+                .equalTo("Work")
+                .where1()
+                .where(Bookmark.class, "title")
+                .equalTo("Doc");
+
+        String statement = joinSelect.getStatement();
+        assertTrue(statement.contains("ON (bookmarks.folder_id=folders.id AND folders.name = ?"));
+
+        int whereIndex = statement.indexOf(" WHERE ");
+        assertTrue(whereIndex > 0);
+        String whereSegment = statement.substring(whereIndex);
+        assertFalse(whereSegment.contains("folders.name"));
     }
 }
