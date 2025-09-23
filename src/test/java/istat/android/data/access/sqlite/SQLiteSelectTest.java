@@ -55,6 +55,21 @@ public class SQLiteSelectTest {
     }
 
     @Test
+    public void joinWhereNotEqualToShouldUseInequalityOperator() {
+        SQLite.SQL sql = new SQLite.SQL(null);
+
+        SQLiteSelect select = sql.select(ChildEntity.class);
+        select.innerJoin(ParentEntity.class)
+                .where(ParentEntity.class, "id")
+                .notEqualTo(5);
+
+        String statement = select.getStatement();
+
+        assertTrue(statement.contains("parent_table.id != 5"));
+        assertTrue("Join clause should remain intact", statement.contains("ON (child_table.parent_id=parent_table.id)"));
+    }
+
+    @Test
     public void whereEqualToShouldQuoteStringValuesInStatements() {
         SQLite.SQL sql = new SQLite.SQL(null);
         SQLiteSelect select = sql.select(DummyEntity.class);

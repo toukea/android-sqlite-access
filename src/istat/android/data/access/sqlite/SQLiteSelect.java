@@ -414,7 +414,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect notEqualTo(Object value) {
             prepare(value);
-            whereClause.append(" = ? ");
+            whereClause.append(" != ? ");
             return selectClause;
         }
 
@@ -494,7 +494,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
         public SQLiteJoinSelect notEqualTo(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
             whereParamValues.addAll(value.whereParamValues);
-            whereClause.append(" = (" + value + ") ");
+            whereClause.append(" != (" + value.getSql() + ") ");
             return selectClause;
         }
 
