@@ -378,6 +378,17 @@ You can perform join Query  like:
                  .in(1, 2, 3, 4)
                  .execute();
  ```
+You can also alias your selection and joined tables to work with readable column qualifiers.
+
+```java
+List<Bookmark> bookmarks = sql.select(Bookmark.class)
+        .as("my_bookmark")
+        .leftJoin(BookmarkEntry.class)
+        .as("my_bookmark_entry")
+        .on(BookmarkEntry.class, "bookmark_id").equalTo(Bookmark.class, "id")
+        .execute();
+```
+
 # Make an asynchronous SQL clause execution.
 To perform async SQL clause execution, you just need to use executeAsync instead of execute.
 ```java

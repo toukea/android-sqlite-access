@@ -12,6 +12,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import istat.android.data.access.sqlite.interfaces.QueryAble;
 import istat.android.data.access.sqlite.interfaces.SelectionExecutable;
@@ -30,6 +32,26 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
         super(clazz[0], db);
         this.clazz = clazz[0];
         this.selectionTable = this.table;
+    }
+
+    public SQLiteSelect as(String alias) {
+        if (TextUtils.isEmpty(alias) || TextUtils.isEmpty(this.table)) {
+            return this;
+        }
+        registerAlias(this.table, alias);
+        applyAliasToSelectionTable(this.table, alias);
+        return this;
+    }
+
+    private void applyAliasToSelectionTable(String tableName, String alias) {
+        if (TextUtils.isEmpty(selectionTable)) {
+            return;
+        }
+        Pattern tablePattern = Pattern.compile("^" + Pattern.quote(tableName) + "(?:\\s+AS\\s+\\S+)?");
+        Matcher matcher = tablePattern.matcher(selectionTable);
+        if (matcher.find()) {
+            selectionTable = matcher.replaceFirst(Matcher.quoteReplacement(tableName + " AS " + alias));
+        }
     }
 
     public SQLiteJoinSelect joinOn(Class<?> clazz, String on) {
@@ -546,10 +568,12 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
     public class ClauseJoinBuilder {
         SQLiteJoinSelect joinSelect;
         Class<?> clazz;
+        String joinTableName;
 
-        ClauseJoinBuilder(Class<?> clazz, SQLiteJoinSelect selection) {
+        ClauseJoinBuilder(Class<?> clazz, SQLiteJoinSelect selection, String joinTableName) {
             this.clazz = clazz;
             this.joinSelect = selection;
+            this.joinTableName = joinTableName;
         }
 
         public SQLiteJoinSelect where1() {
@@ -559,11 +583,39 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
         public ClauseSubJoinBuilder on(Class<?> clazz, String name) {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(clazz);
-                name = buildRealColumnName(model.getName(), name);
+                name = SQLiteSelect.this.buildRealColumnName(model.getName(), name);
             } catch (Exception e) {
                 e.printStackTrace();
             }
             return new ClauseSubJoinBuilder(joinSelect, name);
+        }
+
+        public ClauseJoinBuilder as(String alias) {
+            if (TextUtils.isEmpty(alias) || TextUtils.isEmpty(joinTableName)) {
+                return this;
+            }
+            SQLiteSelect.this.registerAlias(joinTableName, alias);
+            String joinSegment = " JOIN " + joinTableName;
+            int segmentIndex = selectionTable.lastIndexOf(joinSegment);
+            if (segmentIndex >= 0) {
+                int aliasInsertPosition = segmentIndex + joinSegment.length();
+                if (selectionTable.regionMatches(aliasInsertPosition, " AS ", 0, 4)) {
+                    int aliasStart = aliasInsertPosition + 4;
+                    int aliasEnd = selectionTable.indexOf(' ', aliasStart);
+                    if (aliasEnd < 0) {
+                        aliasEnd = selectionTable.length();
+                    }
+                    selectionTable = selectionTable.substring(0, aliasInsertPosition) + " AS " + alias
+                            + selectionTable.substring(aliasEnd);
+                } else {
+                    selectionTable = selectionTable.substring(0, aliasInsertPosition) + " AS " + alias
+                            + selectionTable.substring(aliasInsertPosition);
+                }
+            } else {
+                selectionTable += " AS " + alias;
+            }
+            this.joinSelect.selectionTable = selectionTable;
+            return this;
         }
 
         private SQLiteJoinSelect buildSubJoin() throws IllegalAccessException, InstantiationException {
@@ -594,9 +646,9 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
             try {
                 SQLiteModel model = SQLiteModel.fromClass(clazz);
                 if (whereClause == null)
-                    whereClause = new StringBuilder(buildRealColumnName(model.getName(), column));
+                    whereClause = new StringBuilder(SQLiteSelect.this.buildRealColumnName(model.getName(), column));
                 else
-                    whereClause.append(" AND " + buildRealColumnName(model.getName(), column));
+                    whereClause.append(" AND " + SQLiteSelect.this.buildRealColumnName(model.getName(), column));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -661,7 +713,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
         public SQLiteJoinSelect equalTo(Class<?> clazz, String name) {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(clazz);
-                name = buildRealColumnName(model.getName(), name);
+                name = SQLiteSelect.this.buildRealColumnName(model.getName(), name);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -679,6 +731,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
             this.whereParams = SQLiteSelect.this.whereParams;
             this.selectionTable = SQLiteSelect.this.selectionTable;
             this.table = SQLiteSelect.this.table;
+            this.tableAliases = SQLiteSelect.this.tableAliases;
         }
 
         public ClauseJoinSelectBuilder where(Class<?> clazz, String column) {
@@ -874,19 +927,16 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
     }
 
     public ClauseJoinBuilder join(Class<?> clazz, String joinType) {
-        String join;
+        String join = null;
         try {
             QueryAble entity = createQueryAble(clazz);
             join = entity.getName();
             selectionTable += joinType + " JOIN " + join;
-//            if (!TextUtils.isEmpty(on)) {
-//                selectionTable += " ON (" + on + ") ";
-//            }
         } catch (Exception e) {
             e.printStackTrace();
         }
         SQLiteJoinSelect joinSelection = new SQLiteJoinSelect(this.sql, this.clazz);
-        return new ClauseJoinBuilder(clazz, joinSelection);
+        return new ClauseJoinBuilder(clazz, joinSelection, join);
     }
 
     public SelectionExecutable limit(int limit) {
