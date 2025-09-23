@@ -748,6 +748,12 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
             this.selectionTable = SQLiteSelect.this.selectionTable;
             this.table = SQLiteSelect.this.table;
             this.tableAliases = SQLiteSelect.this.tableAliases;
+            if (SQLiteSelect.this.columns != null) {
+                this.columns = Arrays.copyOf(SQLiteSelect.this.columns, SQLiteSelect.this.columns.length);
+            } else {
+                this.columns = null;
+            }
+            this.distinct = SQLiteSelect.this.distinct;
         }
 
         public ClauseJoinSelectBuilder where(Class<?> clazz, String column) {
