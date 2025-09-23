@@ -135,7 +135,7 @@ public final class SQLiteUpdate implements SQLiteClauseAble {
             if (!TextUtils.isEmpty(whereClause)) {
                 out += " WHERE " + whereClause.trim();
             }
-            String sql = compute(out, this.whereParams);
+            String sql = compute(out, this.whereParams, this.whereParamValues);
             if (!TextUtils.isEmpty(limit)) {
                 sql += " LIMIT " + limit;
             }

@@ -55,20 +55,20 @@ public final class SQLiteDelete extends SQLiteClause<SQLiteDelete> {
     @Override
     public String getStatement() {
         String out = "DELETE FROM " + table;
+        String whereClause = getWhereClause();
+        String queryEnding = (TextUtils.isEmpty(orderBy) ? "" : " ORDER BY " + orderBy)
+                + (TextUtils.isEmpty(orderBy) ? "" : " LIMIT " + limit);
+        if (!TextUtils.isEmpty(queryEnding)) {
+            if (whereClause == null) {
+                whereClause = queryEnding;
+            } else {
+                whereClause += queryEnding;
+            }
+        }
         if (!TextUtils.isEmpty(whereClause)) {
-            out += " WHERE '" + whereClause.toString().trim() + "'";
+            out += " WHERE " + whereClause.trim();
         }
-        String[] splits = out.split("\\?");
-        String sql = "";
-        for (int i = 0; i < (!out.endsWith("?") ? splits.length - 1
-                : splits.length); i++) {
-            sql += splits[i];
-            sql += "'" + whereParams.get(i) + "'";
-        }
-        if (!out.endsWith("?")) {
-            sql += splits[splits.length - 1];
-        }
-        return sql;
+        return compute(out, this.whereParams, this.whereParamValues);
     }
 
     public SQLiteDelete.SQLiteDeleteLimit limit(int limit) {

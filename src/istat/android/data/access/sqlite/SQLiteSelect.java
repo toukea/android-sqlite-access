@@ -370,7 +370,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
         if (!TextUtils.isEmpty(whereClause)) {
             out += " WHERE " + whereClause.trim();
         }
-        String sql = compute(out, this.whereParams);
+        String sql = compute(out, this.whereParams, this.whereParamValues);
         if (!TextUtils.isEmpty(groupBy)) {
             sql += " GROUP BY " + groupBy;
         }
@@ -491,6 +491,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect equalTo(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
+            whereParamValues.addAll(value.whereParamValues);
             whereClause.append(" = (" + value + ") ");
             return selectClause;
         }
@@ -498,18 +499,21 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect notEqualTo(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
+            whereParamValues.addAll(value.whereParamValues);
             whereClause.append(" = (" + value + ") ");
             return selectClause;
         }
 
         public SQLiteJoinSelect in(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
+            whereParamValues.addAll(value.whereParamValues);
             whereClause.append(" IN (" + value.getSql() + ") ");
             return selectClause;
         }
 
         public SQLiteJoinSelect notIn(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
+            whereParamValues.addAll(value.whereParamValues);
             whereClause.append(" NOT IN (" + value.getSql() + ") ");
             return selectClause;
         }
@@ -525,6 +529,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect greatThan(SQLiteSelect value, boolean acceptEqual) {
             whereParams.addAll(value.whereParams);
+            whereParamValues.addAll(value.whereParamValues);
             whereClause.append(" >" + (acceptEqual ? "=" : "") + " (" + value.getSql() + ") ");
             return selectClause;
         }
@@ -532,6 +537,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect lessThan(SQLiteSelect value, boolean acceptEqual) {
             whereParams.addAll(value.whereParams);
+            whereParamValues.addAll(value.whereParamValues);
             whereClause.append(" <" + (acceptEqual ? "=" : "") + " (" + value.getSql() + ") ");
             return selectClause;
         }
@@ -539,6 +545,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect like(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
+            whereParamValues.addAll(value.whereParamValues);
             whereClause.append(" like (" + value.getSql() + ")");
             return selectClause;
         }
@@ -546,6 +553,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
         @SuppressWarnings("unchecked")
         public SQLiteJoinSelect notLike(SQLiteSelect value) {
             whereParams.addAll(value.whereParams);
+            whereParamValues.addAll(value.whereParamValues);
             whereClause.append(" NOT like (" + value.getSql() + ")");
             return selectClause;
         }
@@ -554,6 +562,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
 
         private void prepare(Object value) {
             whereParams.add(value + "");
+            whereParamValues.add(value);
             switch (type) {
                 case TYPE_CLAUSE_AND:
 
@@ -743,6 +752,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
             super(db, clazz);
             this.whereClause = SQLiteSelect.this.whereClause;
             this.whereParams = SQLiteSelect.this.whereParams;
+            this.whereParamValues = SQLiteSelect.this.whereParamValues;
             this.selectionTable = SQLiteSelect.this.selectionTable;
             this.table = SQLiteSelect.this.table;
             this.tableAliases = SQLiteSelect.this.tableAliases;
@@ -801,7 +811,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
                 this.having = new StringBuilder(buildRealColumnName(table, having));
             else
                 this.having.append(" " + or_and + " " + buildRealColumnName(table, having));
-            ClauseBuilder builder = new ClauseBuilder(this.having, havingWhereParams, TYPE_CLAUSE_AND_HAVING);
+            ClauseBuilder builder = new ClauseBuilder(this.having, havingWhereParams, havingWhereParamValues, TYPE_CLAUSE_AND_HAVING);
             return builder;
         }
 
@@ -820,7 +830,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
                 this.having = new StringBuilder(value);
             else
                 this.having.append(" " + or_and + " " + value);
-            ClauseBuilder builder = new ClauseBuilder(this.having, havingWhereParams, TYPE_CLAUSE_AND_HAVING);
+            ClauseBuilder builder = new ClauseBuilder(this.having, havingWhereParams, havingWhereParamValues, TYPE_CLAUSE_AND_HAVING);
             return builder;
         }
 
@@ -976,7 +986,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
             this.having = new StringBuilder(buildRealColumnName(having));
         else
             this.having.append(" " + or_and + " " + buildRealColumnName(having));
-        ClauseBuilder builder = new ClauseBuilder(this.having, havingWhereParams, TYPE_CLAUSE_AND_HAVING);
+        ClauseBuilder builder = new ClauseBuilder(this.having, havingWhereParams, havingWhereParamValues, TYPE_CLAUSE_AND_HAVING);
         return builder;
     }
 
@@ -986,7 +996,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
             this.having = new StringBuilder(value);
         else
             this.having.append(" " + or_and + " " + value);
-        ClauseBuilder builder = new ClauseBuilder(this.having, havingWhereParams, TYPE_CLAUSE_AND_HAVING);
+        ClauseBuilder builder = new ClauseBuilder(this.having, havingWhereParams, havingWhereParamValues, TYPE_CLAUSE_AND_HAVING);
         return builder;
     }
 
