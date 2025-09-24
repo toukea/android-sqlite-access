@@ -1,5 +1,9 @@
 package istat.android.data.access.sqlite;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
@@ -9,10 +13,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 @RunWith(AndroidJUnit4.class)
 public class SQLiteJoinProjectionTest {
@@ -57,15 +57,15 @@ public class SQLiteJoinProjectionTest {
                 "folders.name AS folder_name"
         };
 
-        SQLiteSelect.SQLiteJoinSelect joinSelect = sql.select(projection, Bookmark.class)
+        SQLiteSelect.ClauseSubJoinBuilder joinSelect = sql.select(projection, Bookmark.class)
                 .leftJoin(Folder.class)
                 .on(Bookmark.class, "folder_id")
                 .equalTo(Folder.class, "id");
 
-        String statement = joinSelect.getStatement();
+        String statement = joinSelect.where1().getStatement();
         assertTrue(statement.contains("bookmarks.title AS bookmark_title,folders.name AS folder_name"));
 
-        Cursor cursor = joinSelect.getCursor();
+        Cursor cursor = joinSelect.where1().getCursor();
         try {
             assertEquals(1, cursor.getCount());
             cursor.moveToFirst();

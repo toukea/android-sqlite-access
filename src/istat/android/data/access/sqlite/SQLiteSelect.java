@@ -648,7 +648,7 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
                     foreignKey = selectionModel.getFieldNestedMappingName(field);
                 }
             }
-            return on(selectionClass, foreignKey).equalTo(joinClass, nestedPrimaryKey);
+            return on(selectionClass, foreignKey).equalTo(joinClass, nestedPrimaryKey).joinSelect;
         }
 
         public ClauseJoinSelectBuilder where(Class<?> clazz, String column) {
@@ -733,16 +733,62 @@ public class SQLiteSelect extends SQLiteClause<SQLiteSelect> implements Selectio
 
         }
 
-        public SQLiteJoinSelect equalTo(Class<?> clazz, String name) {
+        public ClauseSubJoinBuilder equalTo(Class<?> clazz, String name) {
+            if (clazz != null) {
+                try {
+                    SQLiteModel model = SQLiteModel.fromClass(clazz);
+                    name = SQLiteSelect.this.buildRealColumnName(model.getName(), name);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+                name = "'" + name + "'";
+            }
+            selectionTable += " " + function + " (" + columnJoinName + "=" + name + ") ";
+            this.joinSelect.selectionTable = selectionTable;
+            return this;
+        }
+
+        public ClauseSubJoinBuilder equalTo(String name) {
+            return equalTo(null, name);
+        }
+
+        public ClauseSubJoinBuilder and(String name) {
+            return and(clazz, name);
+        }
+
+        public ClauseSubJoinBuilder and(Class<?> clazz, String name) {
             try {
                 SQLiteModel model = SQLiteModel.fromClass(clazz);
                 name = SQLiteSelect.this.buildRealColumnName(model.getName(), name);
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            selectionTable += " " + function + " (" + columnJoinName + "=" + name + ") ";
-            this.joinSelect.selectionTable = selectionTable;
-            return joinSelect;
+            return new ClauseSubJoinBuilder(this.joinSelect, name, "AND");
+        }
+
+        public ClauseJoinSelectBuilder where(Class<?> clazz, String name) {
+            return joinSelect.where(clazz, name);
+        }
+
+        public ClauseBuilder where(String column) {
+            return joinSelect.where(column);
+        }
+
+        public SQLiteSelect where1() {
+            return joinSelect.where1();
+        }
+
+        public ClauseJoinBuilder leftJoin(Class<?> clazz) {
+            return joinSelect.leftJoin(clazz);
+        }
+
+        public ClauseJoinBuilder rightJoin(Class<?> clazz) {
+            return joinSelect.rightJoin(clazz);
+        }
+
+        public ClauseJoinBuilder joint(Class<?> clazz) {
+            return joinSelect.join(clazz);
         }
     }
 
