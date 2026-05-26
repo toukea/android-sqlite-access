@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -194,6 +195,20 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     public ContentValues toContentValues() {
         ContentValues contentValues = contentValueHandler.toContentValues(this);
         //TODO specifier le contentValue afin que les foreignKey sont ajouté a la place du Gson de l'object e lui même.
+        return contentValues;
+    }
+
+    public ContentValues toContentValues(boolean allowNullValues) {
+        ContentValues contentValues = contentValueHandler.toContentValues(this);
+        if (allowNullValues) {
+            return contentValues;
+        }
+        Set<Map.Entry<String, Object>> entryList = Set.copyOf(contentValues.valueSet());
+        for (Map.Entry<String, Object> entry : entryList) {
+            if (entry.getValue() == null) {
+                contentValues.remove(entry.getKey());
+            }
+        }
         return contentValues;
     }
 
@@ -919,8 +934,13 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
 
     protected int update(SQLiteDatabase db, String whereClause,
                          String[] whereArgs) {
-        return db.update(getName(), toContentValues(), whereClause,
-                whereArgs);
+        if (conflictStrategy != null) {
+            return db.updateWithOnConflict(getName(), toContentValues(), whereClause,
+                    whereArgs, conflictStrategy.code);
+        } else {
+            return db.update(getName(), toContentValues(), whereClause,
+                    whereArgs);
+        }
     }
 
     protected int delete(SQLiteDatabase db, String whereClause,
@@ -1219,42 +1239,84 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     };
 
 
-    static ContentValueHandler DEFAULT_CONTAIN_VALUE_HANDLER = new ContentValueHandler() {
+    static ContentValueHandler NULLABLE_CONTAIN_VALUE_HANDLER = new ContentValueHandler() {
         @Override
         public ContentValues toContentValues(SQLiteModel model) {
             ContentValues pairs = new ContentValues();
             String[] columns = model.getColumns();
             for (String column : columns) {
                 if (column != null) {
-                    String values = model.getSerializedValue(column);
+                    String value = model.getSerializedValue(column);
                     if (column.equals(model.getPrimaryKeyName())) {
                         //TODO find a better comparison.
                         if ((model.getPrimaryKeyPolicy() == PrimaryKey.POLICY_AUTO_INCREMENT
                                 || model.getPrimaryKeyPolicy() == PrimaryKey.POLICY_DEFAULT)
-                                && "0".equals(values)) {
+                                && "0".equals(value)) {
                             //Do nothing id=0 should autoIncremented.
                             Log.d("SQLiteModel", "toContentValues:" + column + " is primary key should be autoIncremented.");
                         } else if (model.getPrimaryKeyPolicy() == PrimaryKey.POLICY_AUTO_GENERATE) {
-                            if (TextUtils.isEmpty(values)) {
-                                values = UUID.randomUUID().toString();
-                            } else if ("0".equals(values)) {
-                                values = "" + (System.currentTimeMillis() + (int) (Math.random() * 100));
+                            if (TextUtils.isEmpty(value)) {
+                                value = UUID.randomUUID().toString();
+                            } else if ("0".equals(value)) {
+                                value = "" + (System.currentTimeMillis() + (int) (Math.random() * 100));
                             }
-                            pairs.put(column, values);
+                            pairs.put(column, value);
                         } else {
-                            pairs.put(column, values);
+                            pairs.put(column, value);
                         }
                     } else {
 //                        if (values == null) {
 //                            continue;
 //                        }
-                        pairs.put(column, values);
+                        pairs.put(column, value);
                     }
                 }
             }
             return pairs;
         }
     };
+
+    static ContentValueHandler NOT_NULLABLE_FILTERED_CONTAIN_VALUE_HANDLER = new ContentValueHandler() {
+        @Override
+        public ContentValues toContentValues(SQLiteModel model) {
+            ContentValues pairs = new ContentValues();
+            String[] columns = model.getColumns();
+            for (String column : columns) {
+                if (column != null) {
+                    String value = model.getSerializedValue(column);
+                    if (value == null) {
+                        continue;
+                    }
+                    if (column.equals(model.getPrimaryKeyName())) {
+                        //TODO find a better comparison.
+                        if ((model.getPrimaryKeyPolicy() == PrimaryKey.POLICY_AUTO_INCREMENT
+                                || model.getPrimaryKeyPolicy() == PrimaryKey.POLICY_DEFAULT)
+                                && "0".equals(value)) {
+                            //Do nothing id=0 should autoIncremented.
+                            Log.d("SQLiteModel", "toContentValues:" + column + " is primary key should be autoIncremented.");
+                        } else if (model.getPrimaryKeyPolicy() == PrimaryKey.POLICY_AUTO_GENERATE) {
+                            if (TextUtils.isEmpty(value)) {
+                                value = UUID.randomUUID().toString();
+                            } else if ("0".equals(value)) {
+                                value = "" + (System.currentTimeMillis() + (int) (Math.random() * 100));
+                            }
+                            pairs.put(column, value);
+                        } else {
+                            pairs.put(column, value);
+                        }
+                    } else {
+//                        if (values == null) {
+//                            continue;
+//                        }
+                        pairs.put(column, value);
+                    }
+                }
+            }
+            return pairs;
+        }
+    };
+
+    static ContentValueHandler DEFAULT_CONTAIN_VALUE_HANDLER = NULLABLE_CONTAIN_VALUE_HANDLER;
 
     public boolean isCollection() {
         return Collection.class.isAssignableFrom(this.modelClass);

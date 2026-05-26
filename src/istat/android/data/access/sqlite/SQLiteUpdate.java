@@ -5,7 +5,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import istat.android.data.access.sqlite.interfaces.SQLiteClauseAble;
@@ -14,9 +13,15 @@ import istat.android.data.access.sqlite.utils.SQLiteThread;
 
 public final class SQLiteUpdate implements SQLiteClauseAble {
     Updater updater;
+    SQLitePersist.ConflictStrategy conflictStrategy;
 
     SQLiteUpdate(Class<?> clazz, SQLite.SQL sql) {
         updater = new Updater(clazz, sql);
+    }
+
+    public SQLiteUpdate setConflictStrategy(SQLitePersist.ConflictStrategy conflictStrategy) {
+        this.conflictStrategy = conflictStrategy;
+        return this;
     }
 
     public Updater setAs(Object entity) {
@@ -76,8 +81,14 @@ public final class SQLiteUpdate implements SQLiteClauseAble {
             }
             String whereClause = getWhereClause();
             String[] whereParams = getWhereParams();
-            return db.update(model.getName(), model.toContentValues(),
-                    whereClause, whereParams);
+            ContentValues contentValues = model.toContentValues(false);
+            if (conflictStrategy != null) {
+                return db.update(model.getName(), contentValues,
+                        whereClause, whereParams);
+            } else {
+                return db.updateWithOnConflict(model.getName(), contentValues,
+                        whereClause, whereParams, conflictStrategy.code);
+            }
         }
 
         public int execute() {

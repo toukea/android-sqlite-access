@@ -15,9 +15,15 @@ public final class SQLiteInsert implements SQLiteClauseAble {
     List<QueryAble> modelInsertions = new ArrayList<QueryAble>();
     List<Object> insertions = new ArrayList<Object>();
     SQLite.SQL sql;
+    SQLitePersist.ConflictStrategy conflictStrategy;
 
     SQLiteInsert(SQLite.SQL sql) {
         this.sql = sql;
+    }
+
+    public SQLiteInsert setConflictStrategy(SQLitePersist.ConflictStrategy conflictStrategy) {
+        this.conflictStrategy = conflictStrategy;
+        return this;
     }
 
     public SQLiteInsert insert(Object insert) {
@@ -64,9 +70,10 @@ public final class SQLiteInsert implements SQLiteClauseAble {
             return this;
         }
         try {
-            QueryAble model = SQLiteModel.fromObject(insert,
+            SQLiteModel model = SQLiteModel.fromObject(insert,
                     sql.getSerializer(insert.getClass()),
                     sql.getContentValueHandler(insert.getClass()));
+            model.setConflictStrategy(conflictStrategy);
             modelInsertions.add(model);
             insertions.add(insert);
             if (!insert.isEmpty()) {
