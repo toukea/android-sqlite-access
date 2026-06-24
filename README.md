@@ -1,6 +1,39 @@
 # android-sqlite-access
 android Library to help SQLite db Query and Management using a easy and sweet Query builder.
 
+**istat-access-sqlite** is a lightweight ORM and fluent query builder over Android's native SQLite.
+You map plain Java objects to tables, then read and write them with a chainable DSL — no raw SQL
+strings, no code generation, no annotation processor at build time.
+
+## Features at a glance
+- **POJO mapping, minimal annotations** — any class becomes a table; `@Table` / `@Column` /
+  `@PrimaryKey` are all optional (defaults derived from class and field names; an `id` field is the
+  implicit primary key).
+- **Fluent CRUD** — `insert`, `persist` (insert-or-update), `update`, `delete`, `select`, all chainable.
+- **Rich SELECT** — `where`/`and`/`or`, nested sub-selections, `LIKE`/`IN`/comparators, SQL functions
+  inside clauses, `GROUP BY` / `HAVING`, `DISTINCT`, `LIMIT`, custom projections and result-set class
+  conversion.
+- **Joins** — `innerJoin` / `leftJoin` with implicit `mappedBy` keys or explicit `on(...)`, plus table
+  aliases for readable column qualifiers.
+- **Relations** — `@OneToOne` / `@OneToMany` / `@ManyToOne` / `@ManyToMany` with embedded persistence.
+- **Two hydration models** — classic field injection **and** constructor injection for **immutable**
+  entities (`final` fields, no setters, no no-arg constructor).
+- **Pluggable (de)serialization** — custom `Serializer` / `CursorReader`, with a Gson fallback for
+  complex types.
+- **Asynchronous execution** — `executeAsync(...)` variants to run queries off the main thread.
+- **Schema helpers** — auto `CREATE TABLE` from a class via `TableUtils.create` / `drop`, plus a
+  connection manager (`SQLite.addConnection` / `prepareSQL`).
+- **R8-ready** — ships `consumer-rules.pro`; immutable entities keep working under minification.
+
+## Table of contents
+- [Define an entity](#create-some-class-to-persist)
+- [Annotations reference](#annotations-reference)
+- [Hydration strategies (immutable & legacy)](#hydration-strategies-reading-rows-back-into-objects)
+- [Add a SQLite connection](#add-sqlite-connexion)
+- [Get an SQL instance](#how-to-perform-query-from-your-db)
+- [Insert](#make-sql-insert) · [Delete](#make-sql-delete) · [Update](#make-sql-update) · [Select](#make-sql-selection)
+- [Joins](#using-join-with-sql-selection) · [Async execution](#make-an-asynchronous-sql-clause-execution)
+
 # Create Some class to persist.
 ```java
 @SQLiteModel.Table(name = "User") //if not set, default is class.getSimpleName()
@@ -32,6 +65,111 @@ public class User {
     boolean readOnly=false;
  }
 ```
+
+# Annotations reference
+All annotations are nested types of `SQLiteModel` (e.g. `@SQLiteModel.Column`). They are **optional**:
+a plain POJO already maps by class and field names, with an implicit `id` primary key. `transient`
+fields are never persisted.
+
+| Annotation | Applies to | Purpose |
+|---|---|---|
+| `@Table(name)` | type | Custom table name (default: the class simple name). |
+| `@Column(name, nullable)` | field, **parameter** | Custom column name. On a **constructor parameter** it maps that argument to a column (constructor-based hydration). |
+| `@PrimaryKey(policy)` | field | Marks the primary key. `policy` ∈ `POLICY_DEFAULT` / `POLICY_AUTO_INCREMENT` / `POLICY_AUTO_GENERATE` / `POLICY_NONE`. If absent, a field named `id` (case-insensitive) is used. |
+| `@Ignore(when)` | field | Excludes the field from persistence and queries. |
+| `@NotNull` | field | Intent marker for non-null columns. |
+| `@OneToOne` / `@OneToMany` / `@ManyToOne` / `@ManyToMany(mappedBy)` | field | Relationships with embedded persistence. `mappedBy` defaults to `<Type>_id`. |
+| `@Link(type, mappedBy)` | field | Generic relationship link. |
+| `@CreatorConstructor` | constructor | *(new)* Forces/disambiguates the constructor used to hydrate immutable entities. Optional — auto-detection works without it. |
+| `@Persistable` | type | *(new)* Marker so the shipped `consumer-rules.pro` keeps the entity's constructors and fields under R8. |
+
+# Hydration strategies (reading rows back into objects)
+When a row is read from the database, the ORM turns it into an instance of your entity class using
+one of two strategies. They are tried in this order and are fully interoperable — pick per entity.
+
+## Strategy A — Constructor-based (immutable entities)
+Lets you use **`final` fields, no setters and no no-arg constructor**. The ORM instantiates the row
+by calling a constructor and passing each column value as an argument. A constructor parameter is
+matched to a column in one of two ways:
+
+1. **By annotation (recommended, obfuscation-proof, API-independent):** annotate the parameter with
+   `@SQLiteModel.Column(name = "column_name")`.
+2. **By parameter name:** if the parameter is not annotated, its name is used as the column name.
+   This requires the entity to be compiled with `-parameters` (so `Parameter.isNamePresent()` is
+   `true`; available on Android API ≥ 26).
+
+```java
+@SQLiteModel.Persistable                     // marker kept by R8 (see ProGuard below)
+public class User {
+    final String id;
+    final String userName;
+    final int year;
+
+    @SQLiteModel.CreatorConstructor          // optional: forces/disambiguates the creator constructor
+    User(@SQLiteModel.Column(name = "id") String id,
+         @SQLiteModel.Column(name = "userName") String userName,
+         @SQLiteModel.Column(name = "year") int year) {
+        this.id = id;
+        this.userName = userName;
+        this.year = year;
+    }
+}
+```
+
+**Constructor selection.** Among constructors whose every parameter resolves to a known column, the
+one covering the **most** columns is chosen. Ties prefer a `@SQLiteModel.CreatorConstructor`-annotated
+constructor, then higher arity — annotate the intended one to remove ambiguity. A constructor may be
+`private` (it is made accessible reflectively). If a `@CreatorConstructor` is present but not fully
+resolvable, hydration fails fast with a clear message.
+
+**Hybrid entities.** Columns not covered by the chosen constructor are completed by field injection
+afterwards (only on non-`final` fields), so you can mix constructor args and mutable fields.
+
+## Strategy B — Field injection (legacy, default fallback)
+The historical behaviour, unchanged: the entity needs a **public no-arg constructor** and
+**non-`final` fields**; columns are assigned by reflection on fields. Used automatically whenever no
+exploitable creator constructor is found. Existing entities keep working without any change.
+
+## Requirements
+Constructor-based hydration uses `java.lang.reflect.Parameter`, available on **Android API ≥ 26**.
+The `@Column` strategy works on any supported API; the parameter-name strategy additionally needs
+`Parameter.isNamePresent() == true`, which requires the `-parameters` compiler flag (see below).
+Strategy B (field injection) is unchanged and has no extra requirement.
+
+## ProGuard / R8 (consumers)
+This library ships `consumer-rules.pro` automatically (it is merged into the consuming app's R8
+configuration), so in most cases you write **no** rule yourself. It keeps:
+
+- `RuntimeVisibleAnnotations` + `RuntimeVisibleParameterAnnotations` — so `@Column` and the other ORM
+  annotations stay readable by reflection at runtime;
+- the three hydration annotation interfaces;
+- the **constructors and fields** of every `@SQLiteModel.Persistable` class.
+
+It deliberately does **not** ship `-keepattributes MethodParameters`: that attribute would retain
+original parameter *names* app-wide and is only useful for the parameter-name strategy — which
+already forces you to opt into `-parameters`. None of the shipped rules disable name obfuscation.
+
+### Choosing a strategy under minification
+
+| Strategy | Annotate parameters | App needs `-parameters` | Extra ProGuard rule in your app | Trade-off |
+|---|---|---|---|---|
+| **`@Column` (recommended)** | `@SQLiteModel.Column(name = …)` on every param | No | None (covered by the shipped rules) | Obfuscation-proof; no parameter names retained |
+| **Parameter name** | none | **Yes** — `options.compilerArgs << '-parameters'` | **Yes** — `-keepattributes MethodParameters` | Retains parameter names of any `-parameters`-compiled module |
+
+If you prefer not to annotate entities with `@SQLiteModel.Persistable`, keep their members with your
+own rule instead (apps frequently already do this):
+
+```proguard
+-keep class com.your.app.entities.** { *; }
+```
+
+> **Security note.** Keeping `MethodParameters` only makes decompiled code slightly easier to read
+> for modules compiled with `-parameters`; it does **not** weaken signature-based anti-tamper or
+> license checks (those rely on the APK signature, not on bytecode attributes). In security-sensitive
+> apps, prefer the `@Column` strategy so no parameter names are ever retained.
+
+> Out of scope: relational fields (`@OneToOne`/`@OneToMany`/`@ManyToOne`/`@ManyToMany`) are not
+> resolved as constructor parameters — keep them as fields (they are completed by the hybrid path).
 
 # Add SQLite Connexion 
 you can add one or many 'SQLiteConnexion' to your SQLite context. 

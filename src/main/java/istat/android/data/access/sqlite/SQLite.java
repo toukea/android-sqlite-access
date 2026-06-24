@@ -1012,22 +1012,16 @@ public final class SQLite {
     }
 
     public interface BootLoader {
-        void onCreateDb(SQLiteDatabase db);
+        default void onCreateDb(SQLiteDatabase db){}
 
-        void onUpgradeDb(SQLiteDatabase db, int oldVersion,
-                         int newVersion);
+        default void onUpgradeDb(SQLiteDatabase db, int oldVersion, int newVersion){}
 
-        void onConfigure(SQLiteDatabase db);
+        default void onConfigure(SQLiteDatabase db){}
 
-        boolean onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion);
+        default boolean onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion){ return false;}
 
-        void onOpen(SQLiteDatabase db);
+        default void onOpen(SQLiteDatabase db){}
 
-
-    }
-
-    @Deprecated
-    public interface BootDescription extends BootLoader {
 
     }
 

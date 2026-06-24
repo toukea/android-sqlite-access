@@ -18,14 +18,17 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +47,7 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
     HashMap<String, Field> columnNameFieldPair = new HashMap<>();
     HashMap<String, Field> nestedTableFieldPair = new HashMap<>();
     private final static HashMap<Class<?>, Builder> BUILDER_BUFFER = new HashMap<>();
+    private final static HashMap<Class<?>, CreatorPlan> CREATOR_PLAN_BUFFER = new HashMap<>();
     public static final String TAG_CLASS = SQLiteModel.class.getCanonicalName() + ".CLASS";
     public static final String TAG_ITEMS = SQLiteModel.class.getCanonicalName() + ".ITEMS";
     public final static String DEFAULT_PRIMARY_KEY_NAME = "id";
@@ -755,7 +759,29 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
 
     //TODO update to combine serializer and cursorReader.
     public <T> T asInstance(Class<T> clazz, Serializer serializer) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
-        T instance = Toolkit.newInstance(clazz);
+        CreatorPlan plan = resolveCreatorPlan(clazz);
+        if (plan.isExploitable()) {
+            // Strategy A: constructor-based hydration (supports immutable / final-field entities).
+            Object[] args = buildConstructorArgs(plan, serializer);
+            @SuppressWarnings("unchecked")
+            T instance = (T) plan.constructor.newInstance(args);
+            // Hybrid entities: complete any column not covered by the constructor via field injection.
+            injectRemainingFields(instance, clazz, serializer, plan.coveredColumns);
+            return instance;
+        }
+        // Strategy B (legacy fallback): no-arg constructor + field injection. Unchanged behaviour.
+        T instance;
+        try {
+            instance = Toolkit.newInstance(clazz);
+        } catch (Exception e) {
+            InstantiationException error = new InstantiationException(
+                    "Cannot hydrate " + clazz.getName() + ": no usable no-arg constructor and no "
+                            + "exploitable constructor was found. Either add a public no-arg constructor, "
+                            + "annotate a constructor's parameters with @SQLiteModel.Column(name=\"column\"), "
+                            + "or compile the entity with javac -parameters so parameter names match columns.");
+            error.initCause(e);
+            throw error;
+        }
         List<Field> fields = Toolkit.getAllFieldFields(clazz, true, false);
         for (Field field : fields) {
             if (!field.isAnnotationPresent(Ignore.class)) {
@@ -782,6 +808,196 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         }
 
         return instance;
+    }
+
+    //------------------------------------------------------------------
+    // Constructor-based hydration for immutable entities.
+    // See the library README, section "Hydration strategies".
+    //------------------------------------------------------------------
+
+    private CreatorPlan resolveCreatorPlan(Class<?> clazz) {
+        CreatorPlan cached = CREATOR_PLAN_BUFFER.get(clazz);
+        if (cached != null) {
+            return cached;
+        }
+        Set<String> columns = columnNameFieldPair.keySet();
+        Constructor<?> forced = null;
+        String[] forcedColumns = null;
+        Constructor<?> best = null;
+        String[] bestColumns = null;
+        int bestCoverage = -1;
+        boolean hasAnnotatedCreator = false;
+        boolean annotatedCreatorExploitable = false;
+        for (Constructor<?> ctor : clazz.getDeclaredConstructors()) {
+            Parameter[] params = ctor.getParameters();
+            if (params.length < 1) {
+                continue; // a no-arg constructor belongs to the legacy fallback path, not a creator
+            }
+            boolean annotated = ctor.isAnnotationPresent(CreatorConstructor.class);
+            if (annotated) {
+                hasAnnotatedCreator = true;
+            }
+            String[] cols = new String[params.length];
+            boolean exploitable = true;
+            for (int i = 0; i < params.length; i++) {
+                String col = resolveParamColumn(params[i]);
+                if (col == null || !columns.contains(col)) {
+                    exploitable = false;
+                    break;
+                }
+                cols[i] = col;
+            }
+            if (!exploitable) {
+                continue;
+            }
+            if (annotated) {
+                annotatedCreatorExploitable = true;
+                if (forced == null) {
+                    forced = ctor;
+                    forcedColumns = cols;
+                }
+                continue;
+            }
+            int coverage = params.length;
+            if (coverage > bestCoverage) {
+                best = ctor;
+                bestColumns = cols;
+                bestCoverage = coverage;
+            } else if (coverage == bestCoverage && best != null) {
+                Log.w("SQLiteModel", "Ambiguous creator constructors for " + clazz.getName()
+                        + " (two constructors cover " + coverage + " columns). Annotate the intended one "
+                        + "with @SQLiteModel.CreatorConstructor to disambiguate.");
+            }
+        }
+        if (hasAnnotatedCreator && !annotatedCreatorExploitable) {
+            throw new IllegalStateException("@CreatorConstructor on " + clazz.getName()
+                    + " is not exploitable: every parameter must map (via @Column(name=...) or, with "
+                    + "javac -parameters, by its name) to a known column among " + columns + ".");
+        }
+        Constructor<?> chosen = forced != null ? forced : best;
+        String[] chosenColumns = forced != null ? forcedColumns : bestColumns;
+        CreatorPlan plan;
+        if (chosen != null) {
+            chosen.setAccessible(true);
+            plan = new CreatorPlan(chosen, chosenColumns);
+        } else {
+            plan = new CreatorPlan(null, null);
+        }
+        CREATOR_PLAN_BUFFER.put(clazz, plan);
+        return plan;
+    }
+
+    private static String resolveParamColumn(Parameter parameter) {
+        // Strategy 1: explicit @Column(name=...) on the parameter (obfuscation-proof).
+        if (parameter.isAnnotationPresent(Column.class)) {
+            String name = parameter.getAnnotation(Column.class).name();
+            if (!TextUtils.isEmpty(name)) {
+                return name;
+            }
+        }
+        // Strategy 2: deduce from the parameter name (requires javac -parameters).
+        if (parameter.isNamePresent()) {
+            return parameter.getName();
+        }
+        return null;
+    }
+
+    private Object[] buildConstructorArgs(CreatorPlan plan, Serializer serializer) {
+        Parameter[] params = plan.constructor.getParameters();
+        Object[] args = new Object[params.length];
+        for (int i = 0; i < params.length; i++) {
+            String column = plan.paramColumns[i];
+            Object value = get(column);
+            Class<?> paramType = params[i].getType();
+            if (value == null) {
+                args[i] = paramType.isPrimitive() ? primitiveDefault(paramType) : null;
+                continue;
+            }
+            Field field = getField(column);
+            if (field != null) {
+                // Reuse the (possibly custom) Serializer with the matching field for type-correct conversion.
+                args[i] = serializer.onDeSerialize(String.valueOf(value), field);
+            } else {
+                // Pure value-arg column with no declared field: the Serializer needs a Field, so coerce by type.
+                args[i] = coerceWithoutField(String.valueOf(value), paramType);
+            }
+        }
+        return args;
+    }
+
+    private void injectRemainingFields(Object instance, Class<?> clazz, Serializer serializer, Set<String> coveredColumns) {
+        List<Field> fields = Toolkit.getAllFieldFields(clazz, true, false);
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(Ignore.class) || Modifier.isFinal(field.getModifiers())) {
+                continue; // never attempt to write final fields
+            }
+            String column = getFieldColumnName(field);
+            if (column == null) {
+                column = field.getName();
+            }
+            if (coveredColumns.contains(column)) {
+                continue; // already set by the constructor
+            }
+            try {
+                field.setAccessible(true);
+                Object value = get(column);
+                if (value == null) {
+                    continue;
+                }
+                field.set(instance, serializer.onDeSerialize(String.valueOf(value), field));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static Object primitiveDefault(Class<?> type) {
+        if (type == int.class) return 0;
+        if (type == long.class) return 0L;
+        if (type == double.class) return 0d;
+        if (type == float.class) return 0f;
+        if (type == boolean.class) return false;
+        if (type == char.class) return '\0';
+        if (type == byte.class) return (byte) 0;
+        if (type == short.class) return (short) 0;
+        return null;
+    }
+
+    private static Object coerceWithoutField(String value, Class<?> type) {
+        try {
+            if (type == String.class || CharSequence.class.isAssignableFrom(type)) return value;
+            if (type == int.class || type == Integer.class) return Integer.valueOf(value);
+            if (type == long.class || type == Long.class) return Long.valueOf(value);
+            if (type == double.class || type == Double.class) return Double.valueOf(value);
+            if (type == float.class || type == Float.class) return Float.valueOf(value);
+            if (type == boolean.class || type == Boolean.class) return Boolean.valueOf(value);
+            if (type == short.class || type == Short.class) return Short.valueOf(value);
+            if (type == byte.class || type == Byte.class) return Byte.valueOf(value);
+            if (type == char.class || type == Character.class) return value.isEmpty() ? '\0' : value.charAt(0);
+            return new Gson().fromJson(value, type);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return type.isPrimitive() ? primitiveDefault(type) : null;
+        }
+    }
+
+    private static final class CreatorPlan {
+        final Constructor<?> constructor;       // null => no exploitable creator constructor (use legacy path)
+        final String[] paramColumns;            // paramColumns[i] = column name feeding constructor argument i
+        final Set<String> coveredColumns;       // = set(paramColumns), for the hybrid skip-check
+
+        CreatorPlan(Constructor<?> constructor, String[] paramColumns) {
+            this.constructor = constructor;
+            this.paramColumns = paramColumns;
+            this.coveredColumns = new HashSet<>();
+            if (paramColumns != null) {
+                Collections.addAll(this.coveredColumns, paramColumns);
+            }
+        }
+
+        boolean isExploitable() {
+            return constructor != null;
+        }
     }
 
     private static boolean isNestedTableProperty(Field field) {
@@ -856,12 +1072,32 @@ public abstract class SQLiteModel implements JSONable, QueryAble, Cloneable, Ite
         String name() default "";
     }
 
-    @Target(ElementType.FIELD)
+    @Target({ElementType.FIELD, ElementType.PARAMETER})
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Column {
         String name() default "";
 
         boolean nullable() default true;
+    }
+
+    /**
+     * Marks a constructor as the one to use for constructor-based hydration of immutable entities.
+     * Optional: when several exploitable constructors exist, the annotated one is selected and any
+     * ambiguity warning is silenced. If annotated but not exploitable, hydration fails fast.
+     */
+    @Target(ElementType.CONSTRUCTOR)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface CreatorConstructor {
+    }
+
+    /**
+     * Marker for entity types hydrated via a creator constructor. Consumed only by the library's
+     * {@code consumer-rules.pro}, which keeps the constructors, fields and parameter metadata of
+     * annotated classes under R8/ProGuard.
+     */
+    @Target(ElementType.TYPE)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface Persistable {
     }
 
     @Target(ElementType.FIELD)
