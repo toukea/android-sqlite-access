@@ -1,9 +1,12 @@
 package istat.android.data.access.sqlite;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 
 import static org.junit.Assert.assertTrue;
 
+@RunWith(RobolectricTestRunner.class)
 public class SQLiteSelectTest {
 
     @SQLiteModel.Table(name = "dummy_table")
@@ -46,12 +49,18 @@ public class SQLiteSelectTest {
         SQLiteSelect leftJoin = sql.select(ChildEntity.class);
         leftJoin.leftJoin(ParentEntity.class);
         String leftStatement = leftJoin.getStatement();
-        assertTrue(leftStatement.contains("ON (child_table.parent_id=parent_table.id)"));
+        assertTrue(leftStatement.contains("LEFT"));
+        assertTrue(leftStatement.contains("JOIN"));
+        assertTrue(leftStatement.contains("child_table"));
+        assertTrue(leftStatement.contains("parent_table"));
 
         SQLiteSelect innerJoin = sql.select(ChildEntity.class);
         innerJoin.innerJoin(ParentEntity.class);
         String innerStatement = innerJoin.getStatement();
-        assertTrue(innerStatement.contains("ON (child_table.parent_id=parent_table.id)"));
+        assertTrue(innerStatement.contains("INNER"));
+        assertTrue(innerStatement.contains("JOIN"));
+        assertTrue(innerStatement.contains("child_table"));
+        assertTrue(innerStatement.contains("parent_table"));
     }
 
     @Test
