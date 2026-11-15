@@ -25,7 +25,7 @@ android {
         // constructor-based hydration (annotations, parameter names, entity members).
         consumerProguardFiles "consumer-rules.pro"
     }
-    compileSdkVersion 34
+    compileSdkVersion 36
 
     sourceSets {
         main {

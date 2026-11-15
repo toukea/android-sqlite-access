@@ -7,13 +7,14 @@ def version = project.PUBLISH_VERSION
 
 def localReleaseDest = "${buildDir}/release/${version}"
 
-android.libraryVariants.all { variant ->
-    def name = variant.buildType.name
+androidComponents.onVariants(androidComponents.selector().all()) { variant ->
+    def name = variant.name
     if (!name.equals("debug")) {
-        def task = project.tasks.create "jar${name.capitalize()}", Jar
-        task.dependsOn variant.javaCompile
-        task.from variant.javaCompile.destinationDir
-        artifacts.add('archives', task);
+        def jarTask = tasks.register("jar${name.capitalize()}", Jar) {
+            def javaCompile = tasks.named("compile${name.capitalize()}JavaWithJavac", JavaCompile)
+            from(javaCompile.flatMap { it.destinationDirectory })
+        }
+        project.artifacts.add('archives', jarTask)
     }
 }
 
@@ -50,9 +51,11 @@ android.libraryVariants.all { variant ->
 //    archiveName "release-${version}.zip"
 //}
 
-task generateRelease doLast {
-    println "Release ${version} can be found at ${localReleaseDest}/"
-    println "Release ${version} zipped can be found ${buildDir}/release-${version}.zip"
+tasks.register("generateRelease") {
+    doLast {
+        println "Release ${version} can be found at ${localReleaseDest}/"
+        println "Release ${version} zipped can be found ${buildDir}/release-${version}.zip"
+    }
 }
 
 //generateRelease.dependsOn(uploadArchives)
